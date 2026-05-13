@@ -1,6 +1,0 @@
-Scene: POV shot of hands holding phone showing ALPA mobile leads app, quick scrolling, natural cafe or street background, slight motion blur.
-Format: 9:16 vertical.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Show ALPA mobile leads screen clearly in hand; natural phone grip, slight movement for realism; lived-in environment around.
-Realism rules: Creator-native, mobile-first, fast workflow vibe, imperfect framing, candid energy.
-Avoid: Polished studio lighting, floating UI overlays.

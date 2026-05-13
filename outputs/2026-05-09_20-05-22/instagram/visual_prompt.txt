@@ -1,6 +1,0 @@
-Scene: Quiet success moment—clean workspace with soft evening light, closed laptop next to a weekend bag, phone displaying ALPA mobile leads list, subtle human presence shown by relaxed posture or hand resting nearby.
-Format: 4:5 portrait.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Place the mobile leads UI onto the phone screen naturally, avoid oversized logos or floating overlays, keep minimal branding.
-Realism rules: Editorial realism, low-key confidence, calm and clear atmosphere, believable lifestyle details.
-Avoid: Over-polished or staged look, artificial colors, motivational poster vibes.

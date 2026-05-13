@@ -1,6 +1,0 @@
-Scene: A coffee shop table with a laptop and phone, candid hands scrolling through ALPA mobile lead list.
-Format: 4:5 portrait.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Naturally place the ALPA mobile lead list screenshot on the phone screen; scene includes ambient daylight, ceramic cup, soft background blur with real-world cafe textures.
-Realism rules: Editorial realism with purposeful imperfect surroundings, natural reflections, and everyday operator energy.
-Avoid: Overly staged props, perfect lighting, detached models, flashy overlays.

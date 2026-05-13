@@ -1,6 +1,0 @@
-Scene: Vertical shot of an operator’s hand holding a phone showing the ALPA mobile leads list on screen. The background is a busy cafe table with coffee, notes, and a laptop partly visible. Natural reflections and slight screen glare on the phone.
-Format: 9:16 vertical.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Composite the real ALPA mobile leads interface onto the phone screen, preserving scale and clarity. Environment realistic, no floating product overlays.
-Realism rules: Mobile hustle vibe, mobile-first framing, authentic usage setting, candid and practical.
-Avoid: artificial polish, staged poses, flashy animation overlays.

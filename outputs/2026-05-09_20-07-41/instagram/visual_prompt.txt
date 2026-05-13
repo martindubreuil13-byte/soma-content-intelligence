@@ -1,6 +1,0 @@
-Scene: Evening light filters in on a home workspace with a closed laptop, gym bag beside a family kitchen table. Subtle ALPA branding visible on a quiet phone screen nearby, indicating leads delivered and work wrapped up for the day.
-Format: 4:5 portrait.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Place the ALPA mobile leads interface naturally on a smartphone screen resting on the table, no exaggerated branding.
-Realism rules: Quiet success style, soft natural light, believable objects, relaxed human environment, emotionally grounded.
-Avoid: artificial lighting, polished advertising style, fake motivational setups.

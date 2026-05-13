@@ -1,6 +1,29 @@
+# dependencies
 node_modules
+
+# next
 .next
+out
+tsconfig.tsbuildinfo
+
+# env
 .env
+.env.local
+.env.production
+
+# python
 .venv
+__pycache__
+*.pyc
+
+# mac
 .DS_Store
 
+# generated outputs
+outputs
+generated
+temp
+
+# logs
+logs
+*.log

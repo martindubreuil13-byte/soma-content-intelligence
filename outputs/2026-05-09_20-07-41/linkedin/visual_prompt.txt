@@ -1,6 +1,0 @@
-Scene: Lived-in founder workspace with a laptop open showing ALPA desktop dashboard featuring verified leads. On the desk, a cold coffee beside a stack of printed old lead research notes and multiple browser tabs open on a secondary monitor. A wall clock shows early end of work hours.
-Format: 4:5 or landscape.
-Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png
-Asset usage instructions: Naturally composite the real ALPA leads list screenshot onto the laptop screen, preserving proportions. Include subtle ALPA branding only if natural; avoid oversized logos or promotional overlays.
-Realism rules: Documentary-style observational realism with natural window light, realistic posture, a slightly tired but capable entrepreneur focused on the screen, imperfect desk surfaces.
-Avoid: staged poses, futuristic UI elements, exaggerated lighting, corporate stock photo vibes.

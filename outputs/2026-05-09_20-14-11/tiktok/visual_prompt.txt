@@ -1,6 +1,0 @@
-Scene: Vertical phone-first shot, operator holding a smartphone showing ALPA mobile leads UI while walking through an airport or cafe. Natural light and motion blur suggest movement. Phone screen glare visible, thumb actively scrolling. Background real and casual — a backpack strap, street noise, candid worry-free operator glance.
-Format: 9:16 vertical.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Integrate the real ALPA mobile leads screenshot onto the phone screen naturally, preserve proportions and perspective. No floating overlays or logos.
-Realism rules: Documentary mobile realism, candid framing, natural light, subtle motion blur, no polish.
-Avoid: Futuristic UI elements, overdone polish, staged poses.

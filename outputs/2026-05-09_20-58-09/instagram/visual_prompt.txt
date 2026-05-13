@@ -1,6 +1,0 @@
-Scene: Intimate late-night desk corner illuminated by the warm glow of a small lamp and the cool light of a laptop screen showing the ALPA dashboard. A tired operator leans back, coffee cup half-empty, notes pushed aside. The clock on the wall shows late evening.
-Format: 4:5 portrait
-Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png
-Asset usage instructions: Integrate the ALPA main dashboard screen realistically on the laptop, preserving color temperature contrast between lamp and screen glow.
-Realism rules: Documentary-style low-light realism emphasizing fatigue and quiet focus. Include small environment details like coffee rings, soft shadows, and realistic posture.
-Avoid: Bright, artificial lighting or sci-fi effects, staged perfection.

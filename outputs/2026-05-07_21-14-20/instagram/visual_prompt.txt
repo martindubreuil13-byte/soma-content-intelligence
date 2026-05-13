@@ -1,6 +1,0 @@
-Scene: A close-up photo of a phone screen held by a hand, casually scrolling through ALPA's mobile lead discovery interface.
-Format: 4:5 portrait.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Composite the ALPA mobile lead list screenshot convincingly on the phone display. Keep it natural and grounded, showing visible fingers and slight device wear.
-Realism rules: Editorial realism with soft natural light, slightly imperfect, real-world textures, intimate creator workspace vibe.
-Avoid: Overly bright saturation, perfect nails, or fake influencer staging.

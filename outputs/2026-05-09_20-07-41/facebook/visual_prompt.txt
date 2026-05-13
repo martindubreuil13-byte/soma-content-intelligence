@@ -1,6 +1,0 @@
-Scene: Minimalistic, calm home office with a operator pushing aside messy paper notes and a laptop showing a quiet ALPA lead list screen. The environment is clean with soft natural light and relaxed presence, implying relief and practical clarity.
-Format: 4:5 or square.
-Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png
-Asset usage instructions: Subtly integrate ALPA leads screen on laptop, keep branding subtle and believable, no large logos.
-Realism rules: Editorial minimalism combined with quiet success; soft shadows, muted palette, human presence natural and relaxed.
-Avoid: overly posed shots, flashy or busy environments, promotional text overlays.

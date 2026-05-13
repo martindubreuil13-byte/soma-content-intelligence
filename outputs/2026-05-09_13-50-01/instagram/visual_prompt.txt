@@ -1,6 +1,0 @@
-Scene: Quiet post-work moment. A clean desk with a laptop showing subtle ALPA lead confirmation on screen, soft natural light, relaxed shoulders visible as the person leans back, notebook open with neat next-step notes.
-Format: 4:5 portrait
-Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png
-Asset usage instructions: Integrate ALPA’s leads list on laptop screen naturally, minimal branding, focus on calm and quiet momentum.
-Realism rules: Editorial realism with restrained aesthetic, believable human presence, soft light, subtle confidence.
-Avoid: Overdone visuals, staged smiles, excessive branding.

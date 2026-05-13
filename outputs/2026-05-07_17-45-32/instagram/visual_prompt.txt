@@ -1,6 +1,0 @@
-Scene: Close-up shot of a phone screen with ALPA’s lead list visible, resting on a textured wooden table next to a coffee cup and notes. The lighting is soft, moody, and editorial.
-Format: 4:5 portrait
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Display the ALPA mobile lead interface clearly on the phone screen. Surrounding objects should feel like a creator’s workspace—real, imperfect, human.
-Realism rules: Editorial realism with aesthetic restraint. Emotional and practical mood. No fake hype or glossy polish.
-Avoid: Overly bright colors, obvious ad-like staging, or fake productivity glam.

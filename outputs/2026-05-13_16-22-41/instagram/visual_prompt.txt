@@ -1,6 +1,0 @@
-Scene: Late night at a dimly lit desk. Close-up of a laptop keyboard and screen edge showing ALPA dashboard leads on display. Coffee cup with cold rings nearby, soft shadows cast from a desk lamp. Tired posture visible from a blurred operator hand or shoulder in frame.
-Format: 4:5 portrait
-Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png
-Asset usage instructions: Subtly place the real ALPA leads screenshot on the laptop display. Focus on intimacy and quiet fatigue, avoid bright or colorful distractions.
-Realism rules: Editorial documentary realism, daily operator mood, realistic laptop glow, subtle background blur.
-Avoid: Overly stylized or glamorized lighting, perfect posture, saturated color grading.

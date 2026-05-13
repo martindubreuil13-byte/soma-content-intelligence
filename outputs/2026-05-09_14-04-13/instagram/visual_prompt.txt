@@ -1,6 +1,0 @@
-Scene: Low-light intimate shot of a late-night operator’s desk. Soft glow from laptop with ALPA mobile lead list on screen, coffee mug with residue beside the keyboard, faint shadows cast by dim desk lamp. Operator looks focused but tired.
-Format: 4:5 portrait.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Display the mobile ALPA leads screen realistically on smartphone held or resting on desk, natural positioning.
-Realism rules: Documentary style, subdued shadows, authentic fatigue, no glamorized lighting.
-Avoid: Bright, colorful filters, posed smiles, fake productivity visuals.

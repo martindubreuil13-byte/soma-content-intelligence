@@ -1,6 +1,0 @@
-Scene: An intimate editorial real-life setting at an evening kitchen table. A tired freelancer is rubbing their eyes, surrounded by messy notes and coffee cups, contrasted by a calm phone showing ALPA’s mobile lead list in use.
-Format: 4:5
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Place ALPA’s mobile leads interface naturally on the phone screen. Show the tension and fatigue transitioning into a quiet moment of clarity.
-Realism rules: Grounded editorial realism, imperfect lighting, real workspace pressure, human-centered framing.
-Avoid: Staged enthusiasm, exaggerated props, corporate looking environment.

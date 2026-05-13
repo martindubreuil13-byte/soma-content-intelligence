@@ -1,6 +1,0 @@
-Scene: Vertical video style shot inside a rideshare car. Hand scrolling ALPA’s leads on a smartphone, quick decisive finger taps. Background city lights blur lightly through the window.
-Format: 9:16 vertical.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Integrate the real ALPA mobile leads UI onto the phone screen, handheld and dynamic but believable.
-Realism rules: Documentary mobile work in motion, natural lighting, slight motion blur.
-Avoid: Futuristic UI, floating overlays, perfect framing, over-polished visuals.

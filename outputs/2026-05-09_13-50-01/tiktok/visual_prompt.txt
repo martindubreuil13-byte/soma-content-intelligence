@@ -1,6 +1,0 @@
-Scene: Creator POV angle from first-person view holding a phone, quick thumb scroll through ALPA’s mobile leads list, desk cluttered with notes and coffee, natural daylight through window, hands tapping confidently.
-Format: 9:16 vertical
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Display ALPA mobile leads UI prominently on phone screen from a candid handheld perspective, dynamic but genuine framing.
-Realism rules: Creator-native realism, slight motion blur, imperfect framing, lived-in context.
-Avoid: Overly polished shots, staged gestures, corporate setups.

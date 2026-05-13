@@ -1,6 +1,0 @@
-Scene: Vertical shot of a person using a smartphone showing the ALPA mobile leads screen, fingers scrolling through verified contacts. Behind them is a working freelancer environment—desk, notes, maybe a coffee mug.
-Format: 9:16 vertical
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Integrate the ALPA mobile leads interface naturally on the phone screen held in hand. The environment should feel authentic and unpolished, like a real day working freelance.
-Realism rules: Creator-native realism, natural lighting, dynamic but grounded framing.
-Avoid: Polished hyped ad style, AI-perfect humans, fake productivity porn.

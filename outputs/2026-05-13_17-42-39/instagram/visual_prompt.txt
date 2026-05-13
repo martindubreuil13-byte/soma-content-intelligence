@@ -1,6 +1,0 @@
-Scene: Quiet success with a minimal, tidy workspace. Medium shot focused on a hand holding a tablet or phone showing ALPA’s clean lead count screen. A half-drunk coffee sits nearby. The operator's shoulders appear relaxed, glancing away from the device.
-Format: 4:5 portrait
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png, assets/logos/alpa-logo-main.png
-Asset usage instructions: Composite the ALPA mobile leads interface realistically on the device screen, keep the scene calm and unforced. Use the ALPA logo subtly on a desk item or in background décor.
-Realism rules: Soft natural light, believable human presence, restrained editorial realism.
-Avoid: Bright filters, posed expressions, flashy digital effects.

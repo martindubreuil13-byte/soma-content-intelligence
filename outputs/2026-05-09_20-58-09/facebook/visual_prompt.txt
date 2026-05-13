@@ -1,6 +1,0 @@
-Scene: Medium shot of a freelancer’s workspace in a cozy coffee shop. A laptop sits on a wooden table alongside a ceramic coffee cup with slight steam rising. On the laptop screen, subtly visible, is the ALPA dashboard showing lead results. Natural light filters in, softly illuminating a notebook and a phone nearby. Background includes blurred cafe patrons.
-Format: 4:5 vertical or square
-Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png
-Asset usage instructions: Blend the dashboard lightly onto the laptop screen so it looks genuine but not dominant. Use the ALPA logo subtly if it fits the scene naturally.
-Realism rules: Relatable environment with ambient daylight, imperfect table texture, candid setup, and everyday operator feel.
-Avoid: Overly staged or pristine setups, fake productivity aesthetics, or large logos.

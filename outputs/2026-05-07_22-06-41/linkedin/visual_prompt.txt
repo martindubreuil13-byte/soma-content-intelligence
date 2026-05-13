@@ -1,6 +1,0 @@
-Scene: Close-up shot focusing on hands typing on a keyboard with an ALPA desktop dashboard faintly visible on a widescreen monitor edge; detail on fingers, keyboard textures, partial screen showing verified lead lists.
-Format: 4:5 vertical
-Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png
-Asset usage instructions: Integrate the ALPA desktop leads UI naturally within the monitor, preserving realistic proportions; subtle screen reflection; avoid oversized branding.
-Realism rules: Photographic macro-detail, textured keyboard, visible fingerprints, soft natural light, authentic workspace feel.
-Avoid: Overly staged poses, corporate stock photo clichés.

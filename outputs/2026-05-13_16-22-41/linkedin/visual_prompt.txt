@@ -1,6 +1,0 @@
-Scene: Mid-morning at a tidy home office. A medium shot showing a relaxed operator with a clear desk. Next to a cold cup of coffee, there's a laptop screen subtly displaying the ALPA desktop dashboard main interface. Some old research tabs minimized on screen, a clock showing early hours passed. Soft, natural daylight streams through a window.
-Format: 4:5 vertical
-Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png
-Asset usage instructions: Naturally composite the ALPA desktop dashboard screenshot into the laptop screen, keep proportions accurate, use the logo subtly on a desk item like a notebook or mug, avoid oversized branding.
-Realism rules: Documentary-style realism, authentic workspace with believable operator fatigue easing, soft natural light, minimal staging.
-Avoid: Fake polish, futuristic UI effects, posed expressions, exaggerated lighting.

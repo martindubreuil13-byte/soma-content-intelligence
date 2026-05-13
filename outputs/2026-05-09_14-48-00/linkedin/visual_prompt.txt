@@ -1,6 +1,0 @@
-Scene: Dimly lit late-night home office. A focused entrepreneur leans toward a laptop with subtle coffee cup rings nearby. ALPA dashboard visible on the laptop screen, showing a calm lead list and quiet notification updates. 
-Format: 4:5 portrait.
-Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png
-Asset usage instructions: Embed the real ALPA dashboard screenshot naturally on the laptop screen, preserving proportions and realism. 
-Realism rules: Documentary realism, subdued shadows, realistic screen glow, natural fatigue cues.
-Avoid: Over-polished UI effects, bright or futuristic overlays, exaggerated lighting.

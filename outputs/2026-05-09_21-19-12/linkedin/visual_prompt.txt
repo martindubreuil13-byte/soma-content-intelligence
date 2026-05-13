@@ -1,6 +1,0 @@
-Scene: Calm workspace with a laptop showing ALPA desktop dashboard, operator focused, natural light filtering in, minimal clutter.
-Format: 4:5 vertical.
-Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png, assets/logos/alpa-logo-main.png
-Asset usage instructions: Integrate ALPA dashboard naturally on laptop screen; subtle logo on background or desk item; preserve proportions and realistic lighting.
-Realism rules: Documentary realism, believable founder/operator, low-key confidence, soft daylight.
-Avoid: Over-branding, futuristic UI, staged poses.

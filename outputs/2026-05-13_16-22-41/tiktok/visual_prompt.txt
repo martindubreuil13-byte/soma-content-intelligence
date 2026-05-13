@@ -1,6 +1,0 @@
-Scene: Vertical phone POV shot. Hands holding phone with ALPA mobile leads interface visible, the user scrolling quickly. Background shows a cafe table with a coffee cup, touchscreen smudges, and notebook. Natural street light filtering through nearby window.
-Format: 9:16 vertical
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Composite the ALPA mobile leads screenshot onto the phone screen naturally. Keep a handheld, candid feel with slight motion blur.
-Realism rules: Creator-native, first-person realism; mobile-led real environment; dynamic but practical framing.
-Avoid: Polished ad vibes, rigid framing, artificial lighting.

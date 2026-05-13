@@ -1,6 +1,0 @@
-Scene: Vertical phone-centric frame showing a hand scrolling through ALPA mobile leads on a phone. Background is a casual cafe table with coffee, papers, and earbuds. Natural daylight, slight screen glare on phone. Operator’s thumb visible interacting with the UI.
-Format: 9:16 vertical.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Realistically composite ALPA mobile leads screenshot into phone held by hand. Place in a natural setting without distracting overlays or logo placements.
-Realism rules: Mobile-first documentary realism, quick interaction vibe, natural human motion, everyday environment.
-Avoid: Polished studio lighting, artificial effects, oversized branding or unrealistic UI elements.

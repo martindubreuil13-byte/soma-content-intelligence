@@ -1,6 +1,0 @@
-Scene: First-person POV of hands holding a smartphone, scrolling through ALPA lead results with partial phone screen in frame.
-Format: 9:16 vertical.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Composite the ALPA mobile leads UI onto the phone screen with natural handheld framing; lightly messy surroundings in the background to convey everyday work in progress.
-Realism rules: Slight motion blur, natural phone gestures, authentic lighting, lived-in environment.
-Avoid: Perfect framing, static poses, overly polished screens, fake smiles.

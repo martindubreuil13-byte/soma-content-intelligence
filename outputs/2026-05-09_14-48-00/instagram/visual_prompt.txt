@@ -1,6 +1,0 @@
-Scene: Minimalist desktop portrait with a closed laptop beside a cup of cold coffee, soft evening light from a window. Nearby, a smartphone subtly shows ALPA’s lead results on screen. Clean aesthetic with muted palette.
-Format: 4:5 portrait.
-Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
-Asset usage instructions: Subtly incorporate the mobile screen showing a lead list, with natural device placement reflecting a break in work.
-Realism rules: Editorial minimalism, natural shadows, tactile textures, grounded and relatable.
-Avoid: Overstyling, bright colors, ad-like typography, staged perfection.
