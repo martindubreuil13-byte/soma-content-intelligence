@@ -395,7 +395,7 @@ export function ContentViewer({
             {imageExists ? (
               <a
                 className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.07] px-3.5 py-2 text-sm font-semibold text-peach transition duration-300 hover:-translate-y-0.5 hover:border-plasma/40 hover:bg-white/[0.12] hover:text-white"
-                download={`alpa-${activeChannel}-${run.id}.png`}
+                download={`soma-${activeChannel}-${run.id}.png`}
                 href={downloadUrl}
               >
                 <Download size={16} />

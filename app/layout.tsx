@@ -14,8 +14,8 @@ const display = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "ALPA Content Autopilot",
-  description: "Mobile-first human-in-the-loop content operating system"
+  title: "SOMA",
+  description: "Adaptive content intelligence and multimodal organizational memory."
 };
 
 export default function RootLayout({

@@ -488,7 +488,7 @@ export default function TrainingInjectionsClient() {
         )}
       </div>
       <p className="mb-5 text-sm text-white/45 leading-6">
-        Inject references — images, PDFs, captions, ideas — so ALPA can extract reusable creative intelligence. The original is discarded after extraction by default.
+        Inject references — images, PDFs, captions, ideas — so SOMA can extract reusable creative intelligence. The original is discarded after extraction by default.
       </p>
 
       {/* Add button */}
@@ -669,7 +669,7 @@ export default function TrainingInjectionsClient() {
                 type="text"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="What should ALPA learn from this?"
+                placeholder="What should SOMA learn from this?"
                 className="rounded-xl border border-white/10 bg-charcoal/45 px-3.5 py-2.5 text-sm text-white/80 outline-none placeholder:text-white/28 focus:border-plasma/40"
               />
             </label>

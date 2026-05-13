@@ -91,7 +91,7 @@ export function AppNav() {
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-white/[0.07] bg-charcoal/95 backdrop-blur-xl lg:flex">
         <div className="flex h-14 items-center gap-2.5 border-b border-white/[0.07] px-4">
-          <span className="font-display text-xl text-white">ALPA</span>
+          <span className="font-display text-xl text-white">SOMA</span>
           <span className="rounded-full border border-plasma/30 bg-plasma/[0.08] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-peach">
             Autopilot
           </span>

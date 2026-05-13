@@ -1471,7 +1471,7 @@ export default function IntelligencePage() {
           </p>
           <h1 className="mt-2 font-display text-4xl text-white sm:text-5xl">Brand Intelligence</h1>
           <p className="mt-2 text-sm text-white/45">
-            Describe your business. ALPA extracts the strategy that drives every generated piece.
+            Describe your business. SOMA extracts the strategy that drives every generated piece.
           </p>
         </div>
 

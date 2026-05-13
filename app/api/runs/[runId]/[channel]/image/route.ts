@@ -47,7 +47,7 @@ export async function GET(request: Request, context: RouteContext) {
         "Cache-Control": "no-store",
         ...(download
           ? {
-              "Content-Disposition": `attachment; filename="alpa-${channel}-${runId}.png"`
+              "Content-Disposition": `attachment; filename="soma-${channel}-${runId}.png"`
             }
           : {})
       }

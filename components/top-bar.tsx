@@ -7,7 +7,7 @@ export function TopBar() {
     <header className="glass-panel flex flex-col gap-4 rounded-[30px] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
       <div>
         <p className="text-xs uppercase tracking-[0.32em] text-peach/65">Local-first studio cockpit</p>
-        <h1 className="mt-1 font-display text-3xl leading-none text-white sm:text-4xl">ALPA Content Engine</h1>
+        <h1 className="mt-1 font-display text-3xl leading-none text-white sm:text-4xl">SOMA</h1>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

@@ -536,7 +536,7 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
             <section className="rounded-[24px] border border-white/10 bg-white/[0.045] p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.22em] text-peach/60">ALPA Agent Training Program</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-peach/60">SOMA Training Program</p>
                   <h2 className="mt-1 font-display text-2xl text-white">{trainingSummary.stage}</h2>
                   <p className="mt-1 text-sm text-white/55">
                     {trainingSummary.stageDescription} · {trainingSummary.evaluatedSamples} evaluated · {trainingSummary.approved} approved · {trainingSummary.rejected} rejected
