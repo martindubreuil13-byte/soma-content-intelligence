@@ -1,0 +1,137 @@
+{
+  "linkedin": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-13T08:39:00.918Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T08:39:00.919Z",
+        "text": "When I launched my consulting business, I didn’t expect to lose hours chasing down leads.\n\nResearching websites, hunting emails, building lists by hand — none of it felt like real work.\n\nThat frustration was the spark behind ALPA.\n\nWe cut the hours of manual digging into seconds. Clean, contact-ready leads with all the info you actually need.\n\nBecause the real win isn’t in chasing data. It’s in spending your time where it matters — talking to people.\n\nExperience what operational speed really looks like.\n\nSee what happens when lead generation takes seconds instead of hours. https://alpa.mindrasolutions.com",
+        "caption_excerpt": "When I launched my consulting business, I didn’t expect to lose hours chasing down leads. Researching websites, hunting emails, building lists by hand — none of it felt like real work. That frustration was the spark behi",
+        "regeneration_index": 0
+      }
+    ],
+    "visual_prompt_versions": [
+      {
+        "id": "visual_prompt_001",
+        "created_at": "2026-05-13T08:39:39.867Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Medium-wide documentary style shot of a cluttered, lived-in freelance workspace with a slightly tired entrepreneur at a desk. A laptop shows a natural, subtle ALPA dashboard on screen with lead lists, cold coffee nearby, and messy notes scattered around reminding of manual research. Evening light casts soft shadows. The human's posture shows a mix of fatigue and focus, with old browser tabs visible on a secondary screen faded out. Format: 4:5 or landscape. Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png, assets/logos/alpa-logo-main.png. Asset usage instructions: Naturally composite the ALPA lead list screenshot into the laptop screen, preserving proportions, subtle use of ALPA logo only if it fits without overpowering. Realism rules: Observational documentary realism, imperfect desk surfaces, authentic human posture, natural window light, no staged poses. Avoid: Futuristic or overly polished SaaS UI, corporate stock photo style, exaggerated cinematic effects.",
+        "prompt_excerpt": "Scene: Medium-wide documentary style shot of a cluttered, lived-in freelance workspace with a slightly tired entrepreneur at a desk. A laptop shows a natural, subtle ALPA dashboard on screen with lead lists, cold coffee"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-13T08:39:39.873Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T08:39:55.685Z",
+        "archetype": "Documentary Workspace + Emotional Friction",
+        "concept_angle": "Time Compression + Reclaiming Time",
+        "prompt_excerpt": "Scene: Medium-wide documentary style shot of a cluttered, lived-in freelance workspace with a slightly tired entrepreneur at a desk. A laptop shows a natural, subtle ALPA dashboard on screen with lead lists, cold coffee",
+        "image_path": "outputs/2026-05-13_15-38-20/linkedin/generated-image-2026-05-13T08-39-39-864Z.png",
+        "parent_caption_version_id": "caption_001",
+        "regeneration_index": 0,
+        "source_visual_prompt_version_id": "visual_prompt_001"
+      }
+    ]
+  },
+  "facebook": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-13T08:40:24.441Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T08:40:24.442Z",
+        "text": "Running a service business means you already have enough on your plate.\n\nWhy waste time on manual lead research?\n\nALPA does the heavy lifting, delivering accurate, contact-ready leads so you can step away for a bit.\n\nWork moves while you’re out—no extra hours hunting emails or digging for phone numbers.\n\nLess time searching.\n\nMore freedom.\n\nTry ALPA free and get 25 leads to test it yourself.\n\nSpend more time talking to prospects, less time searching for them. https://alpa.mindrasolutions.com",
+        "caption_excerpt": "Running a service business means you already have enough on your plate. Why waste time on manual lead research? ALPA does the heavy lifting, delivering accurate, contact-ready leads so you can step away for a bit. Work m",
+        "regeneration_index": 0
+      }
+    ],
+    "visual_prompt_versions": [
+      {
+        "id": "visual_prompt_001",
+        "created_at": "2026-05-13T08:40:52.576Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Calm medium shot of a freelancer’s desk showing a cleaner, more organized setup after a practical breakthrough moment. A laptop is closed beside a smartphone displaying ALPA’s mobile lead list UI subtly visible on screen, with soft natural light filtering through a window. The operator’s hands rest relaxed nearby, suggesting operational freedom and ease. Format: 4:5 or square. Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png, assets/logos/alpa-logo-main.png. Asset usage instructions: Subtly composite the ALPA mobile lead list screenshot into the phone screen, maintain proportions and natural hand interaction. Use logo subtly only if natural to the environment. Realism rules: Relatable realism, practical workspace, believable relaxed posture, minimal clutter. Avoid: Overly staged poses, obvious marketing setups, fake productivity imagery.",
+        "prompt_excerpt": "Scene: Calm medium shot of a freelancer’s desk showing a cleaner, more organized setup after a practical breakthrough moment. A laptop is closed beside a smartphone displaying ALPA’s mobile lead list UI subtly visible on"
+      },
+      {
+        "id": "visual_prompt_002",
+        "created_at": "2026-05-13T08:44:03.652Z",
+        "generation_type": "reimagine",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Medium close-up of a service business operator at a cluttered desk late in the day, visible fatigue and tension in their expression and posture. Around them are scattered handwritten notes, open notebooks filled with scribbles, multiple browser tabs visible on a laptop screen showing chaotic manual research. On the edge of the desk, a small, turned-off phone with no apps open suggests a pause in the search. The background softens into calm shadow, subtly hinting the operator is stepping away from busywork toward mental clarity. Format: 4:5 or square. Reference assets to attach: assets/logos/alpa-logo-main.png. Asset usage instructions: Integrate ALPA logo subtly as a small framed print or sticker on a desk item or wall, natural and unobtrusive. Realism rules: Editorial-style grounded realism; authentic workspace stress; imperfect lighting reflecting late hours; natural human tension; believable working environment. Avoid: Any UI or screen overlays; overt branding; staged smiles; overly clean or sterile setups; futuristic or promotional SaaS visuals; contrived productivity poses.",
+        "prompt_excerpt": "Scene: Medium close-up of a service business operator at a cluttered desk late in the day, visible fatigue and tension in their expression and posture. Around them are scattered handwritten notes, open notebooks filled w"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-13T08:40:52.582Z",
+        "generation_type": "initial",
+        "status": "rejected",
+        "notes": "too plain, no emotion, weird use of logo",
+        "updated_at": "2026-05-13T08:43:52.745Z",
+        "archetype": "Quiet Success",
+        "concept_angle": "Operational Freedom",
+        "prompt_excerpt": "Scene: Calm medium shot of a freelancer’s desk showing a cleaner, more organized setup after a practical breakthrough moment. A laptop is closed beside a smartphone displaying ALPA’s mobile lead list UI subtly visible on",
+        "image_path": "outputs/2026-05-13_15-38-20/facebook/generated-image-2026-05-13T08-40-52-564Z.png",
+        "parent_caption_version_id": "caption_001",
+        "regeneration_index": 0,
+        "source_visual_prompt_version_id": "visual_prompt_001"
+      },
+      {
+        "id": "image_002",
+        "created_at": "2026-05-13T08:44:22.456Z",
+        "generation_type": "reimagine",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T08:45:41.134Z",
+        "archetype": "Emotional Friction",
+        "concept_angle": "Escaping Busywork",
+        "prompt_excerpt": "Scene: Medium close-up of a service business operator at a cluttered desk late in the day, visible fatigue and tension in their expression and posture. Around them are scattered handwritten notes, open notebooks filled w",
+        "image_path": "outputs/2026-05-13_15-38-20/facebook/generated-image-2026-05-13T08-44-22-444Z.png",
+        "parent_caption_version_id": "caption_001",
+        "regeneration_index": 1,
+        "source_visual_prompt_version_id": "visual_prompt_002"
+      }
+    ]
+  },
+  "instagram": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-13T08:46:18.682Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T08:46:18.685Z",
+        "text": "Hours lost building lead lists before the real work even starts.\n\nThat’s ordinary. And it’s avoidable.\n\nALPA shrinks that time down to seconds.\n\nContact-ready info, zero fluff.\n\nBecause your next client is probably sitting behind 3 hours of manual research.\n\nLess searching.\n\nMore conversations.\n\nStart with 25 free leads.\n\nhttps://alpa.mindrasolutions.com",
+        "caption_excerpt": "Hours lost building lead lists before the real work even starts. That’s ordinary. And it’s avoidable. ALPA shrinks that time down to seconds. Contact-ready info, zero fluff. Because your next client is probably sitting b",
+        "regeneration_index": 0
+      }
+    ],
+    "visual_prompt_versions": [],
+    "image_versions": []
+  },
+  "tiktok": {
+    "caption_versions": [],
+    "visual_prompt_versions": [],
+    "image_versions": []
+  }
+}

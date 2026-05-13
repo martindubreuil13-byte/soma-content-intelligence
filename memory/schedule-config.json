@@ -1,0 +1,12 @@
+{
+  "isEnabled": true,
+  "runTime": "17:44",
+  "timezone": "Europe/Paris",
+  "channels": [
+    "linkedin",
+    "facebook",
+    "instagram"
+  ],
+  "ideaSource": "manual",
+  "lastRunAt": "2026-05-13T10:42:39.971Z"
+}

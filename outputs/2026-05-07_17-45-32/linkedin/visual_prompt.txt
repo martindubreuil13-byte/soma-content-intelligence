@@ -1,0 +1,6 @@
+Scene: A focused freelancer at a neatly cluttered desk with a laptop showing the ALPA desktop dashboard. The environment feels like a real home office with natural light filtering in. The worker's posture is engaged but not staged.
+Format: 4:5 vertical
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png
+Asset usage instructions: Naturally composite the ALPA dashboard screenshot into the laptop screen, preserving proportions. Use the logo subtly if it appears naturally on screen but avoid oversized branding.
+Realism rules: Documentary-style realism with authentic lighting and human posture. The scene should feel like a genuine workspace, not a product ad.
+Avoid: Overly polished UI overlays, fake productivity glamor, and corporate stock photo aesthetics.

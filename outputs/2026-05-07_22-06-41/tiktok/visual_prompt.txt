@@ -1,0 +1,6 @@
+Scene: Handheld phone POV, quick scroll through ALPA mobile leads UI showing verified contacts; slight motion blur from natural movement; cluttered work desk background with notes and coffee cup.
+Format: 9:16 vertical
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
+Asset usage instructions: Use mobile leads screen naturally within phone held by user; frame dynamic and informal; casual creator vibe, no perfect framing.
+Realism rules: Creator-native handheld realism, natural light, slightly imperfect angle, real-world textures.
+Avoid: Overly polished, posed shots, artificial glow or filters.

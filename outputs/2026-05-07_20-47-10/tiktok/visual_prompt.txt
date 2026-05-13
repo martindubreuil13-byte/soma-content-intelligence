@@ -1,0 +1,6 @@
+Scene: Quick cuts showing a freelancer on their phone, scrolling through ALPA’s mobile search interface, nodding with a slight smirk of relief.
+Format: 9:16 vertical.
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-search.png
+Asset usage instructions: Place the ALPA mobile search UI naturally in the phone screen. The setting is casual, home or cafe, with natural light. Use dynamic but authentic framing.
+Realism rules: Creator-native, real human expressions, realistic posture. No over-polished or staged vibes.
+Avoid: Overdone cinematic effects, glowing UI elements, exaggerated reactions, corporate stock footage feel.

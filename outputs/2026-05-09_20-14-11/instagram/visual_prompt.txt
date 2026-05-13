@@ -1,0 +1,6 @@
+Scene: Medium shot at a busy coffee shop table. Natural daylight spills across a worn wooden surface. A laptop and smartphone show subtle glimpses of the ALPA mobile leads interface. Nearby, a cold coffee, scattered papers with crossed-out research tabs, an operator in casual posture focused on the screen.
+Format: 4:5 portrait.
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
+Asset usage instructions: Subtly composite the ALPA mobile leads UI on the phone screen, preserve realistic scale and perspective. No forced branding; logo only if natural on a notebook or cup nearby.
+Realism rules: Editorial realism, ambient daylight, practical and human, slight imperfections in posture and environment.
+Avoid: Overly aesthetic or polished visuals, staged poses.

@@ -1,0 +1,6 @@
+Scene: Documentary workspace showing a medium-wide shot of a lived-in desk by a window with warm evening light. A laptop closed or almost closed, a notebook with scribbles, and a gym bag tucked nearby. A family meal or child’s drawing faintly visible at the edge, implying work-life balance.
+Format: 4:5 vertical or square
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png, assets/logos/alpa-logo-main.png
+Asset usage instructions: Use the desktop leads interface subtly visible on an open laptop screen, blending naturally into the scene. Include the ALPA logo subtly on a coffee mug or notebook cover.
+Realism rules: Natural window light, imperfect surfaces, real posture, observational documentary realism.
+Avoid: Over-staged setups, studio lighting, corporate neatness.

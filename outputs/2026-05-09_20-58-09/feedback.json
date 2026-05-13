@@ -1,0 +1,81 @@
+{
+  "linkedin": {
+    "caption_versions": [],
+    "visual_prompt_versions": [
+      {
+        "id": "visual_prompt_001",
+        "created_at": "2026-05-09T14:01:22.178Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: A focused, slightly tense moment in a modern office meeting room just before a call or presentation. The image shows a well-dressed professional sitting at a clean desk with a smartphone in hand displaying an incoming lead contact list or message app (screen intentionally blurred to imply immediacy without UI details). Nearby, a closed sleek laptop and a minimal notepad with one handwritten note show readiness and speed. Natural daylight filters softly, casting calm shadows. The composition centers on the hand holding the phone, conveying alertness and fast response. The ALPA logo appears subtly on a coffee cup or notebook spine, integrating brand presence indirectly without UI screens. Format: 4:5 vertical or landscape Reference assets to attach: alpa-logo-main.png Asset usage instructions: Place ALPA logo subtly, small on a coffee cup or notebook spine within the frame, appearing natural and integral to the scene without dominating. Realism rules: Photographic editorial realism with natural light, muted tones, real human textures like skin and fabric, shallow depth of field focused on the phone and hand. No artificial polish or forced staging. Avoid: No visible software UI or dashboards, no overt branding, no staged poses or flashy lighting, no clutter, no futuristic elements or overlays.",
+        "prompt_excerpt": "Scene: A focused, slightly tense moment in a modern office meeting room just before a call or presentation. The image shows a well-dressed professional sitting at a clean desk with a smartphone in hand displaying an inco"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-09T14:01:22.188Z",
+        "generation_type": "reimagine",
+        "status": "approved",
+        "notes": "visualy boring and lacking creativity",
+        "updated_at": "2026-05-09T14:01:36.527Z",
+        "archetype": "Editorial Minimalism",
+        "concept_angle": "Speed Advantage",
+        "prompt_excerpt": "Scene: A focused, slightly tense moment in a modern office meeting room just before a call or presentation. The image shows a well-dressed professional sitting at a clean desk with a smartphone in hand displaying an inco",
+        "image_path": "outputs/2026-05-09_20-58-09/linkedin/generated-image-2026-05-09T14-01-22-173Z.png",
+        "source_visual_prompt_version_id": "visual_prompt_001"
+      }
+    ]
+  },
+  "facebook": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-09T14:00:56.629Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-09T14:00:56.629Z"
+      }
+    ],
+    "visual_prompt_versions": [
+      {
+        "id": "visual_prompt_001",
+        "created_at": "2026-05-09T14:02:20.832Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Medium shot of a freelancer’s workspace in a cozy coffee shop. A laptop sits on a wooden table alongside a ceramic coffee cup with slight steam rising. On the laptop screen, subtly visible, is the ALPA dashboard showing lead results. Natural light filters in, softly illuminating a notebook and a phone nearby. Background includes blurred cafe patrons.\nFormat: 4:5 vertical or square\nReference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png\nAsset usage instructions: Blend the dashboard lightly onto the laptop screen so it looks genuine but not dominant. Use the ALPA logo subtly if it fits the scene naturally.\nRealism rules: Relatable environment with ambient daylight, imperfect table texture, candid setup, and everyday operator feel.\nAvoid: Overly staged or pristine setups, fake productivity aesthetics, or large logos.",
+        "prompt_excerpt": "Scene: Medium shot of a freelancer’s workspace in a cozy coffee shop. A laptop sits on a wooden table alongside a ceramic coffee cup with slight steam rising. On the laptop screen, subtly visible, is the ALPA dashboard s"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-09T14:02:20.836Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-09T14:03:59.764Z",
+        "archetype": "Coffee Shop Workflow",
+        "concept_angle": "Work-Life Contrast",
+        "prompt_excerpt": "Scene: Medium shot of a freelancer’s workspace in a cozy coffee shop. A laptop sits on a wooden table alongside a ceramic coffee cup with slight steam rising. On the laptop screen, subtly visible, is the ALPA dashboard s",
+        "image_path": "outputs/2026-05-09_20-58-09/facebook/generated-image-2026-05-09T14-02-20-831Z.png",
+        "source_visual_prompt_version_id": "visual_prompt_001"
+      }
+    ]
+  },
+  "instagram": {
+    "caption_versions": [],
+    "visual_prompt_versions": [],
+    "image_versions": []
+  },
+  "tiktok": {
+    "caption_versions": [],
+    "visual_prompt_versions": [],
+    "image_versions": []
+  }
+}

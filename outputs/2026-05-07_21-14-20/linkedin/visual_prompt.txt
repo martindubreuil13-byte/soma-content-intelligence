@@ -1,0 +1,6 @@
+Scene: An entrepreneur in a minimalist office setting, focused on a large desktop monitor displaying ALPA's main dashboard with active lead generation workflow.
+Format: 4:5 vertical or 16:9 landscape.
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png, assets/logos/alpa-logo-main.png
+Asset usage instructions: Naturally composite the ALPA dashboard screenshot into the desktop screen, preserving proportions. Use the ALPA logo subtly in the background or desk accessory, avoiding oversized branding.
+Realism rules: Documentary-style realism with natural lighting, a candid founder at work, slight imperfect environment details like coffee cup or notes visible.
+Avoid: Fake futuristic UI, exaggerated cinematic lighting, floating text, overly polished studio look.

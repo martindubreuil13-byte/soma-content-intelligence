@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-05-07T13:53:44.973Z",
+  "model": "gpt-image-1.5",
+  "quality": "medium",
+  "size": "1024x1536",
+  "endpoint": "https://api.openai.com/v1/images/edits",
+  "attached_assets": [
+    "assets/mobile-ui/alpa-dashboard-mobile-search.png"
+  ],
+  "source_prompt": "visual_prompt.txt",
+  "image_file": "generated-image.png"
+}

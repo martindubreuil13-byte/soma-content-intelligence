@@ -1,0 +1,30 @@
+{
+  "linkedin": {
+    "caption_versions": [],
+    "image_versions": []
+  },
+  "facebook": {
+    "caption_versions": [],
+    "image_versions": []
+  },
+  "instagram": {
+    "caption_versions": [],
+    "image_versions": []
+  },
+  "tiktok": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-09T13:05:22.794Z",
+        "generation_type": "initial",
+        "status": "neutral",
+        "notes": "",
+        "updated_at": "",
+        "caption_excerpt": "Stop spending hours hunting leads on a laptop. Get clean, verified contacts on your phone. Immediate access. Real outreach starts when the research stops. Try ALPA free and get 25 leads at https://alpa.mindrasolutions.co"
+      }
+    ],
+    "image_versions": []
+  }
+}
+}
+}

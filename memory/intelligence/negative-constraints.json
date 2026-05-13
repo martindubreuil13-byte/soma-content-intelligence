@@ -1,0 +1,28 @@
+[
+  {
+    "id": "neg_1778595951033_n70dk",
+    "category": "language",
+    "label": "Corporate jargon",
+    "description": "Formal enterprise language that distances rather than connects.",
+    "examples": [
+      "synergy",
+      "bandwidth",
+      "paradigm shift",
+      "stakeholders",
+      "circle back"
+    ],
+    "isActive": true,
+    "createdAt": "2026-05-12T14:25:51.033Z"
+  },
+  {
+    "id": "neg_1778663942457_uev2i",
+    "category": "tone",
+    "label": "pushy",
+    "description": "need to be a soft CTA",
+    "examples": [
+      "Try noW"
+    ],
+    "isActive": true,
+    "createdAt": "2026-05-13T09:19:02.457Z"
+  }
+]

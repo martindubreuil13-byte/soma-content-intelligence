@@ -1,0 +1,6 @@
+Scene: Casual home office or small workspace with a relaxed person looking at a laptop showing ALPA’s verified leads interface.
+Format: 4:5 vertical or square.
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png
+Asset usage instructions: Integrate the ALPA dashboard realistically onto the laptop screen; softly lit environment with a lived-in workspace; human presence should feel natural, comfortable.
+Realism rules: Soft natural lighting, low-key confidence vibe, believable desktop clutter, calm medium shot.
+Avoid: Over-polished corporate setups, staged smiles, bright flashy colors, excessive branding.

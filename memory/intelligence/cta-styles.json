@@ -1,0 +1,22 @@
+[
+  {
+    "id": "cta_1778663874496_lykmn",
+    "label": "Try it for free",
+    "description": "Get 25 leads for free",
+    "example": "Experience how it feels when lead hunting takes seconds",
+    "performanceScore": 0,
+    "usageCount": 0,
+    "isActive": true,
+    "createdAt": "2026-05-13T09:17:54.496Z"
+  },
+  {
+    "id": "cta_1778668156614_xbjsi",
+    "label": "experience the new era of lead generation",
+    "description": "",
+    "example": "",
+    "performanceScore": 0,
+    "usageCount": 0,
+    "isActive": true,
+    "createdAt": "2026-05-13T10:29:16.614Z"
+  }
+]

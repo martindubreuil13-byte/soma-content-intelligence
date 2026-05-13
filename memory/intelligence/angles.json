@@ -1,0 +1,48 @@
+[
+  {
+    "id": "angle_1778663426950_fyj63",
+    "label": "Anti-Generic Marketing",
+    "description": "Frustration with AI slop, generic content, and commoditized agencies.",
+    "tags": [
+      "differentiation",
+      "quality",
+      "positioning"
+    ],
+    "platformAffinity": [
+      "linkedin",
+      "instagram"
+    ],
+    "approvalRate": 0,
+    "usageCount": 0,
+    "performanceScore": 0,
+    "isActive": true,
+    "createdAt": "2026-05-13T09:10:26.950Z"
+  },
+  {
+    "id": "angle_1778663672322_gcan8",
+    "label": "Time wasted",
+    "description": "Freelancers and agencies spend hours just searching for leads, contact information, etc.",
+    "tags": [
+      "lack of clients",
+      "time wated hunting leads"
+    ],
+    "platformAffinity": [],
+    "approvalRate": 0,
+    "usageCount": 0,
+    "performanceScore": 0,
+    "isActive": true,
+    "createdAt": "2026-05-13T09:14:32.322Z"
+  },
+  {
+    "id": "angle_1778668075747_26bjp",
+    "label": "Focus on closing deals",
+    "description": "",
+    "tags": [],
+    "platformAffinity": [],
+    "approvalRate": 0,
+    "usageCount": 0,
+    "performanceScore": 0,
+    "isActive": true,
+    "createdAt": "2026-05-13T10:27:55.747Z"
+  }
+]

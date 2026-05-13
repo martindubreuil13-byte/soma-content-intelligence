@@ -1,0 +1,6 @@
+Scene: Close-up of a smartphone on a wooden desk, screen showing ALPA mobile leads interface, with user's hand scrolling.
+Format: 4:5 portrait.
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
+Asset usage instructions: Seamlessly insert ALPA mobile leads UI into the phone screen. The desk has minimal but real textures—wood, a notebook.
+Realism rules: Editorial realism with soft natural light. Emotionally strong but believable atmosphere, focused and real.
+Avoid: Excessive branding, flashy graphics, glossy over-processing, generic influencer-style shots.

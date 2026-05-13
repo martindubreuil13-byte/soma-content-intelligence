@@ -1,0 +1,6 @@
+Scene: Vertical close-up on a person using a phone while walking through an airport terminal. Phone screen shows ALPA mobile search UI with leads loading. Background is slightly blurred with natural movement.
+Format: 9:16 vertical.
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-search.png
+Asset usage instructions: Composite ALPA mobile search UI onto phone screen naturally, keep hands and device as focus, background implies transit.
+Realism rules: Documentary realism, slight motion blur, real-world lighting from airport, imperfect framing.
+Avoid: Over-edited effects, digital glitches, futuristic overlays.

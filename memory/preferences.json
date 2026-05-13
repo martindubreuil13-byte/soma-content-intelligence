@@ -1,0 +1,41 @@
+{
+  "preferred_visual_styles": [
+    "documentary realism"
+  ],
+  "avoid_visual_patterns": [
+    "documentary realism",
+    "too generic"
+  ],
+  "preferred_caption_tones": [],
+  "avoid_caption_patterns": [],
+  "preferred_emotional_themes": [],
+  "operator_notes": [
+    "good",
+    "too generic"
+  ],
+  "last_updated": "2026-05-13T13:20:37.211Z",
+  "top_approved_tags": [
+    "good_visual",
+    "platform_fit",
+    "brand_aligned"
+  ],
+  "top_rejected_tags": [
+    "repetitive",
+    "generic",
+    "poor_image"
+  ],
+  "channel_approved_tags": {
+    "linkedin": [
+      "good_visual",
+      "platform_fit",
+      "brand_aligned"
+    ]
+  },
+  "channel_rejected_tags": {
+    "linkedin": [
+      "repetitive",
+      "generic",
+      "poor_image"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+Scene: Mobile-first setting at a cafe table. Hand holds a smartphone showing ALPA’s lead list UI, thumb poised to scroll. The environment is casual with warm natural light from a nearby window, street scene visible in background.
+Format: 4:5 vertical.
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
+Asset usage instructions: Display the ALPA mobile leads interface clearly on the phone screen, natural hand position, subtle screen glare.
+Realism rules: Real-world productivity vibe, imperfect framing, natural light, genuine interaction.
+Avoid: Polished ad-style images, floating UI elements, unrealistic phone poses.

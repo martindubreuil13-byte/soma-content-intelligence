@@ -1,0 +1,119 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { clsx } from "clsx";
+import {
+  Brain,
+  CalendarDays,
+  CheckSquare,
+  Clock,
+  LayoutDashboard,
+  Share2,
+  Users,
+  Zap
+} from "lucide-react";
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  badge?: string;
+};
+
+const navItems: NavItem[] = [
+  { href: "/", label: "Today", icon: LayoutDashboard },
+  { href: "/queue", label: "Queue", icon: CheckSquare },
+  { href: "/training", label: "Training", icon: Zap },
+  { href: "/intelligence", label: "Intelligence", icon: Brain },
+  { href: "/groups", label: "Groups", icon: Users },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/channels", label: "Channels", icon: Share2, badge: "soon" },
+  { href: "/schedule", label: "Schedule", icon: Clock }
+];
+
+// Mobile bottom bar shows only the 5 most important items
+const mobileItems = navItems.slice(0, 5);
+
+function DesktopNavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
+  return (
+    <Link
+      href={item.href}
+      className={clsx(
+        "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition duration-200",
+        isActive
+          ? "bg-white/[0.1] text-white"
+          : "text-white/50 hover:bg-white/[0.06] hover:text-white/85"
+      )}
+    >
+      <item.icon
+        size={17}
+        className={clsx("shrink-0", isActive ? "text-peach" : "text-white/38")}
+      />
+      <span className="flex-1">{item.label}</span>
+      {item.badge ? (
+        <span className="rounded-full border border-white/10 bg-white/[0.05] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/30">
+          {item.badge}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
+
+function MobileNavLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
+  return (
+    <Link
+      href={item.href}
+      className={clsx(
+        "flex flex-1 flex-col items-center gap-1 px-1 py-2.5 text-[10px] font-semibold transition duration-200",
+        isActive ? "text-white" : "text-white/40 hover:text-white/70"
+      )}
+    >
+      <item.icon
+        size={20}
+        className={clsx("shrink-0", isActive ? "text-peach" : "text-white/38")}
+      />
+      <span className="leading-tight">{item.label}</span>
+    </Link>
+  );
+}
+
+export function AppNav() {
+  const pathname = usePathname();
+
+  function isActive(href: string) {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  }
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-white/[0.07] bg-charcoal/95 backdrop-blur-xl lg:flex">
+        <div className="flex h-14 items-center gap-2.5 border-b border-white/[0.07] px-4">
+          <span className="font-display text-xl text-white">ALPA</span>
+          <span className="rounded-full border border-plasma/30 bg-plasma/[0.08] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-peach">
+            Autopilot
+          </span>
+        </div>
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <div className="grid gap-0.5">
+            {navItems.map((item) => (
+              <DesktopNavLink key={item.href} item={item} isActive={isActive(item.href)} />
+            ))}
+          </div>
+        </nav>
+        <div className="border-t border-white/[0.07] px-4 py-3">
+          <p className="text-[10px] text-white/22">Content Autopilot · Local dev</p>
+        </div>
+      </aside>
+
+      {/* Mobile bottom navigation */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-white/[0.07] bg-charcoal/95 backdrop-blur-xl lg:hidden">
+        {mobileItems.map((item) => (
+          <MobileNavLink key={item.href} item={item} isActive={isActive(item.href)} />
+        ))}
+      </nav>
+    </>
+  );
+}

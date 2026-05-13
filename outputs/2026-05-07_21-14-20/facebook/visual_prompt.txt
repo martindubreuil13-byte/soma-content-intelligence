@@ -1,0 +1,6 @@
+Scene: A small, comfortable home office with a freelancer at a laptop, casually working with a focused expression. The laptop screen features ALPA's desktop lead results interface.
+Format: 4:5 portrait or square.
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png
+Asset usage instructions: Place the leads/results screenshot naturally on the laptop screen. Preserve realistic proportions. No large logos, keep branding subtle.
+Realism rules: Relatable, believable environment lighting, natural posture, subtle work fatigue details.
+Avoid: Corporate stock photo feel, staged smiles, overly bright or fake backgrounds.

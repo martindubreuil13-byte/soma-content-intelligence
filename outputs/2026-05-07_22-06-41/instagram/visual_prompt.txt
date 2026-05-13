@@ -1,0 +1,6 @@
+Scene: Calm tidy workspace with a laptop open showing an ALPA desktop dashboard screen confirming lead pull success; natural daylight filtering in; subtle human presence—not staged, hands resting nearby.
+Format: 4:5 portrait
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png
+Asset usage instructions: Display ALPA desktop main dashboard realistically on the laptop screen; maintain subtle branding; environment feels lived-in but minimalistic.
+Realism rules: Editorial style, restrained and clean composition, soft shadows, genuine lighting.
+Avoid: Overcrowded desk, artificial colors, forced human poses.

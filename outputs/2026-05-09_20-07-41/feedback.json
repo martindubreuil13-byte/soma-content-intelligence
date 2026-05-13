@@ -1,0 +1,64 @@
+{
+  "linkedin": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-09T13:08:14.211Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-09T13:08:14.212Z",
+        "caption_excerpt": "You can spend hours digging through contact lists, double-checking emails, and verifying leads. Or you can compress that time into a few minutes and actually start selling. ALPA isn’t about adding more leads to your pile"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-09T13:08:48.648Z",
+        "generation_type": "initial",
+        "status": "rejected",
+        "notes": "too similar to other images, no creativity",
+        "updated_at": "2026-05-09T13:10:03.776Z",
+        "archetype": "Documentary Workspace",
+        "concept_angle": "Time Compression",
+        "prompt_excerpt": "Scene: Lived-in founder workspace with a laptop open showing ALPA desktop dashboard featuring verified leads. On the desk, a cold coffee beside a stack of printed old lead research notes and multiple browser tabs open on",
+        "image_path": "outputs/2026-05-09_20-07-41/linkedin/generated-image.png"
+      }
+    ]
+  },
+  "facebook": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-09T13:09:19.344Z",
+        "generation_type": "initial",
+        "status": "rejected",
+        "notes": "not related to the concept idea of getting faster than your competitor",
+        "updated_at": "2026-05-09T13:09:19.345Z",
+        "caption_excerpt": "If you’re still sorting through endless tabs or messy notes trying to find the right leads, you’re doing it wrong. It’s not about chasing more leads. It’s about getting contact-ready leads fast, so you can step out of th"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-09T13:09:48.135Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-09T13:10:24.344Z",
+        "archetype": "Editorial Minimalism + Quiet Success",
+        "concept_angle": "Escaping Busywork",
+        "prompt_excerpt": "Scene: Minimalistic, calm home office with a operator pushing aside messy paper notes and a laptop showing a quiet ALPA lead list screen. The environment is clean with soft natural light and relaxed presence, implying re",
+        "image_path": "outputs/2026-05-09_20-07-41/facebook/generated-image.png"
+      }
+    ]
+  },
+  "instagram": {
+    "caption_versions": [],
+    "image_versions": []
+  },
+  "tiktok": {
+    "caption_versions": [],
+    "image_versions": []
+  }
+}

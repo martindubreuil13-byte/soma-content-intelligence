@@ -1,0 +1,32 @@
+[
+  {
+    "id": "hook_1778595951078_ky889",
+    "label": "Emotional Insight",
+    "description": "Acknowledge a feeling the audience experiences but rarely names.",
+    "example": "You didn't start your agency to spend Sunday writing captions.",
+    "performanceScore": 0,
+    "usageCount": 0,
+    "isActive": true,
+    "createdAt": "2026-05-12T14:25:51.078Z"
+  },
+  {
+    "id": "hook_1778663814496_v244b",
+    "label": "Stop wasting your time",
+    "description": "Collapse hours of leads hunting in seconds",
+    "example": "I use to spend hours searching for leads, now I get them in seconds",
+    "performanceScore": 0,
+    "usageCount": 0,
+    "isActive": true,
+    "createdAt": "2026-05-13T09:16:54.498Z"
+  },
+  {
+    "id": "hook_1778668090713_kfdt4",
+    "label": "find leads in seconds",
+    "description": "",
+    "example": "",
+    "performanceScore": 0,
+    "usageCount": 0,
+    "isActive": true,
+    "createdAt": "2026-05-13T10:28:10.713Z"
+  }
+]

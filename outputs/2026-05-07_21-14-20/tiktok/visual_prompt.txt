@@ -1,0 +1,6 @@
+Scene: Vertical video-style image showing a person quickly swiping through ALPA's mobile search and workflow interface on a smartphone.
+Format: 9:16 vertical.
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-search.png
+Asset usage instructions: Integrate the mobile search UI naturally on the smartphone screen. Use dynamic but authentic framing, showing fingers in motion.
+Realism rules: Creator-native realism, natural indoor lighting, casual posture, unpolished but focused.
+Avoid: Overly glossy or staged aesthetics, fake hands, overdone holographic effects.

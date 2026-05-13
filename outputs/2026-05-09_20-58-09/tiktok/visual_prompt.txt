@@ -1,0 +1,6 @@
+Scene: Vertical close-up of a hand holding a smartphone over a busy cafe table. The phone screen shows the ALPA mobile leads interface with fresh contacts displayed. Ambient street light glints off the screen. The hand swipes decisively.
+Format: 9:16 vertical
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
+Asset usage instructions: Composite the ALPA mobile leads screen naturally onto the phone. Keep reflections and hand position authentic.
+Realism rules: Mobile-first, real-world hustle feel with dynamic, imperfect framing. Natural light and environment cues like cafe table texture and subtle wrist movement.
+Avoid: Polished staged shots, floating UI, unrealistic screen effects.

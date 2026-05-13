@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-09_21-19-12",
+  "original_idea": "while you still hunting for lead to contact, your competitor is already talking to your next client.  Speed is everything.  ALPA find you leads in seconds, ready to contact",
+  "model": "gpt-4.1-mini",
+  "generated_channels": [
+    "linkedin",
+    "facebook",
+    "instagram",
+    "tiktok"
+  ],
+  "visual_archetypes": {
+    "linkedin": "Quiet Success",
+    "facebook": "Coffee Shop Workflow",
+    "instagram": "Coffee Shop Workflow",
+    "tiktok": "Creator POV + Mobile Hustle"
+  },
+  "concept_angles": {
+    "linkedin": "Speed Advantage",
+    "facebook": "Escaping Busywork",
+    "instagram": "Quiet Efficiency",
+    "tiktok": "Momentum + Speed Advantage"
+  }
+}

@@ -1,0 +1,71 @@
+[
+  {
+    "type": "caption_reference",
+    "label": "Caption idea",
+    "notes": "I like this type of caption - founder driven, and focus on Why ALPA",
+    "sourceText": "When I started my consulting business, one thing frustrated me more than I expected.\n\nNot the work itself.\n\nThe amount of time spent before a real conversation could even begin.\n\nSearching online.\nOpening websites.\nChecking if businesses were relevant.\nTrying to find emails and phone numbers.\nBuilding contact lists manually.\n\nHours disappearing into research instead of actual business development.\n\nThat frustration is one of the reasons I built ALPA.\n\nA tool designed to help professional service businesses find filtered business leads in seconds, with website, email, and phone included.\n\nThe idea is simple:\n\nSpend less time searching and more time having conversations that move your business forward.\n\nIf this sounds familiar, you can try it here:\n\nhttps://alpa.mindrasolutions.com",
+    "sourceType": "text",
+    "extractedTags": [
+      "founder-driven voice",
+      "problem-solution format",
+      "personal frustration hook",
+      "conversational rhythm",
+      "clear benefit framing",
+      "direct call to action"
+    ],
+    "extractedPreferences": [
+      "open with tension",
+      "use simple vocabulary",
+      "maintain casual tone",
+      "end with clear CTA"
+    ],
+    "extractedConstraints": [
+      "no jargon",
+      "avoid abstract language",
+      "no long paragraphs",
+      "no exaggerated claims"
+    ],
+    "extractedVisualTags": [],
+    "extractedToneTags": [
+      "empathetic",
+      "authentic",
+      "motivational",
+      "pragmatic"
+    ],
+    "extractedCompositionTags": [],
+    "extractedAudienceSignals": [
+      "professional service businesses",
+      "time-conscious entrepreneurs",
+      "B2B lead seekers"
+    ],
+    "extractedStrategicSignals": [
+      "highlight founder backstory",
+      "focus on pain points",
+      "showcase time-saving benefit",
+      "invite trial/use"
+    ],
+    "appliesTo": "all",
+    "active": true,
+    "id": "inj_6b160c816d06",
+    "createdAt": "2026-05-13T13:42:11.900Z"
+  },
+  {
+    "id": "inj_2de9fe2ba034",
+    "type": "caption_reference",
+    "label": "Lifestyle cafe",
+    "notes": "I love this image as it id photorealistic and representative of our target audience and the settings.  Bright, vibrant, positive and aspirational",
+    "sourceText": "",
+    "sourceType": "image",
+    "extractedTags": [],
+    "extractedPreferences": [],
+    "extractedConstraints": [],
+    "extractedVisualTags": [],
+    "extractedToneTags": [],
+    "extractedCompositionTags": [],
+    "extractedAudienceSignals": [],
+    "extractedStrategicSignals": [],
+    "appliesTo": "all",
+    "createdAt": "2026-05-13T13:04:27.621Z",
+    "active": true
+  }
+]

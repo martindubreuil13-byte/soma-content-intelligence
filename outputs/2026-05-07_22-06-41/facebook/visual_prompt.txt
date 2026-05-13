@@ -1,0 +1,6 @@
+Scene: Vertical phone in hand, thumb scrolling a realistic ALPA mobile leads interface in a cozy cafe setting; natural reflections on screen; ambient warm light, blurred background with a coffee cup and notebook.
+Format: 4:5 vertical
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
+Asset usage instructions: Place ALPA mobile leads UI on phone screen naturally; keep phone in center with slight hand interaction; no artificial overlays.
+Realism rules: Mobile-first realistic environment, casual user setting, natural light sources, slight fingerprints on screen.
+Avoid: Overly polished or artificial environment, exaggerated glow or shine.

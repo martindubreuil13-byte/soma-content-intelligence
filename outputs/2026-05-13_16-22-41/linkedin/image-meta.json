@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-05-13T09:26:16.612Z",
+  "model": "gpt-image-1.5",
+  "quality": "medium",
+  "size": "1536x1024",
+  "endpoint": "https://api.openai.com/v1/images/edits",
+  "attached_assets": [
+    "assets/desktop-ui/alpa-dashboard-desktop-main.png"
+  ],
+  "source_prompt": "visual_prompt.txt",
+  "image_file": "generated-image.png",
+  "parent_caption_version_id": "caption_002"
+}

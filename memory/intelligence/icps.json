@@ -1,0 +1,79 @@
+[
+  {
+    "id": "icp_1778663581989_3jx6h",
+    "label": "Freelancer",
+    "description": "Service provider for other businesses",
+    "painPoints": [
+      "Find clients"
+    ],
+    "frustrations": [
+      "Lead hunting takes too much time"
+    ],
+    "aspirations": [
+      "Pipeline of potential client"
+    ],
+    "desiredOutcomes": [],
+    "emotionalTriggers": [
+      "Lead hunting is exausting",
+      "I want to be able to contact real businesses now"
+    ],
+    "platforms": [
+      "linkedin",
+      "facebook"
+    ],
+    "isActive": true,
+    "createdAt": "2026-05-13T09:13:01.989Z"
+  },
+  {
+    "id": "icp_1778667996964_i9h45",
+    "label": "Marketing Agency",
+    "description": "",
+    "painPoints": [],
+    "frustrations": [],
+    "aspirations": [],
+    "desiredOutcomes": [],
+    "emotionalTriggers": [],
+    "platforms": [],
+    "isActive": true,
+    "createdAt": "2026-05-13T10:26:36.965Z"
+  },
+  {
+    "id": "icp_1778668010282_gt2tb",
+    "label": "Business Consultant",
+    "description": "",
+    "painPoints": [],
+    "frustrations": [],
+    "aspirations": [],
+    "desiredOutcomes": [],
+    "emotionalTriggers": [],
+    "platforms": [],
+    "isActive": true,
+    "createdAt": "2026-05-13T10:26:50.282Z"
+  },
+  {
+    "id": "icp_1778668022942_gwzbh",
+    "label": "Bookkeeping",
+    "description": "",
+    "painPoints": [],
+    "frustrations": [],
+    "aspirations": [],
+    "desiredOutcomes": [],
+    "emotionalTriggers": [],
+    "platforms": [],
+    "isActive": true,
+    "createdAt": "2026-05-13T10:27:02.942Z"
+  },
+  {
+    "id": "icp_1778668047559_dpmnf",
+    "label": "IT Services",
+    "description": "",
+    "painPoints": [],
+    "frustrations": [],
+    "aspirations": [],
+    "desiredOutcomes": [],
+    "emotionalTriggers": [],
+    "platforms": [],
+    "isActive": true,
+    "createdAt": "2026-05-13T10:27:27.559Z"
+  }
+]

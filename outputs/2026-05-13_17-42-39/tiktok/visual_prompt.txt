@@ -1,0 +1,6 @@
+Scene: Coffee shop workflow with a casual operator sitting at a small cafe table. Phone in hand showing ALPA’s lead-search interface. Around, a ceramic coffee cup, sunlight falling naturally, a few everyday objects (keys, notebook).
+Format: 9:16 vertical
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-search.png, assets/logos/alpa-logo-main.png
+Asset usage instructions: Integrate the ALPA mobile search UI on the phone screen realistically. The ALPA logo placed subtly on a coffee cup or coffee sleeve.
+Realism rules: Ambient daylight, candid posture, casual but focused energy, authentic environment.
+Avoid: Over-polished looks, staged expressions, excessive branding.

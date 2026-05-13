@@ -1,0 +1,225 @@
+{
+  "linkedin": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-13T09:24:11.032Z",
+        "generation_type": "initial",
+        "status": "rejected",
+        "notes": "CTA should be to try at alpa.mindrasolutions.com",
+        "updated_at": "2026-05-13T09:24:11.033Z",
+        "text": "You didn’t start your agency to spend hours digging for leads.\n\nManual research isn’t a sign of hustle — it’s wasted time.\n\nImagine collapsing all that slow, scattered work into one clear moment.\n\nALPA surfaces verified contacts while you breathe, refocus, and plan your next move.\n\nCold coffee beside fresh leads. Tabs closed early. Time that’s actually yours.\n\nSee what it looks like when AI actually knows your brand → alpa.agency",
+        "caption_excerpt": "You didn’t start your agency to spend hours digging for leads. Manual research isn’t a sign of hustle — it’s wasted time. Imagine collapsing all that slow, scattered work into one clear moment. ALPA surfaces verified con",
+        "regeneration_index": 0
+      },
+      {
+        "id": "caption_002",
+        "created_at": "2026-05-13T09:25:15.444Z",
+        "generation_type": "regenerate",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T09:25:41.056Z",
+        "text": "Lead hunting isn’t a badge of honor.\n\nHours lost digging through contacts isn’t hustle—it’s a broken system.\n\nWhat if the research stopped the second you hit start?\n\nALPA pulls real, verified leads without the noise.\n\nCold coffee stays cold. Tabs stay closed. You get time back.\n\nExperience how it feels when lead hunting takes seconds → alpa.mindrasolutions.com",
+        "caption_excerpt": "Lead hunting isn’t a badge of honor. Hours lost digging through contacts isn’t hustle—it’s a broken system. What if the research stopped the second you hit start? ALPA pulls real, verified leads without the noise. Cold c",
+        "regeneration_index": 1
+      }
+    ],
+    "visual_prompt_versions": [
+      {
+        "id": "visual_prompt_001",
+        "created_at": "2026-05-13T09:26:16.614Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Mid-morning at a tidy home office. A medium shot showing a relaxed operator with a clear desk. Next to a cold cup of coffee, there's a laptop screen subtly displaying the ALPA desktop dashboard main interface. Some old research tabs minimized on screen, a clock showing early hours passed. Soft, natural daylight streams through a window.\nFormat: 4:5 vertical\nReference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png\nAsset usage instructions: Naturally composite the ALPA desktop dashboard screenshot into the laptop screen, keep proportions accurate, use the logo subtly on a desk item like a notebook or mug, avoid oversized branding.\nRealism rules: Documentary-style realism, authentic workspace with believable operator fatigue easing, soft natural light, minimal staging.\nAvoid: Fake polish, futuristic UI effects, posed expressions, exaggerated lighting.",
+        "prompt_excerpt": "Scene: Mid-morning at a tidy home office. A medium shot showing a relaxed operator with a clear desk. Next to a cold cup of coffee, there's a laptop screen subtly displaying the ALPA desktop dashboard main interface. Som"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-13T09:26:16.621Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T09:26:42.732Z",
+        "tags": [
+          "good_visual",
+          "platform_fit",
+          "brand_aligned"
+        ],
+        "archetype": "Quiet Success",
+        "concept_angle": "Time Compression",
+        "prompt_excerpt": "Scene: Mid-morning at a tidy home office. A medium shot showing a relaxed operator with a clear desk. Next to a cold cup of coffee, there's a laptop screen subtly displaying the ALPA desktop dashboard main interface. Som",
+        "image_path": "outputs/2026-05-13_16-22-41/linkedin/generated-image-2026-05-13T09-26-16-612Z.png",
+        "parent_caption_version_id": "caption_002",
+        "regeneration_index": 0,
+        "source_visual_prompt_version_id": "visual_prompt_001"
+      }
+    ]
+  },
+  "facebook": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-13T09:26:57.203Z",
+        "generation_type": "regenerate",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T09:29:10.205Z",
+        "text": "I used to lose hours digging through messes of lead lists, chasing contacts that never panned out.\n\nIt drags your head down—blurry eyes, scattered notes, and deadlines breathing down your neck.\n\nALPA cuts through that noise, handing you leads fast so you can turn focus back to running your business.\n\nDinner waits. Your screen doesn’t have to be the longest commitment today.\n\nExperience how it feels when lead hunting takes seconds → alpa.mindrasolutions.com",
+        "caption_excerpt": "I used to lose hours digging through messes of lead lists, chasing contacts that never panned out. It drags your head down—blurry eyes, scattered notes, and deadlines breathing down your neck. ALPA cuts through that nois",
+        "regeneration_index": 0
+      }
+    ],
+    "visual_prompt_versions": [
+      {
+        "id": "visual_prompt_001",
+        "created_at": "2026-05-13T09:29:40.028Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Evening at a kitchen table turned makeshift workspace. A freelancer sits leaning forward, tired but focused, surrounded by scattered papers, coffee cup, and a half-closed notebook. Laptop screen showing ALPA desktop dashboard leads interface emits a calm glow. Warm, imperfect lighting from a nearby lamp.\nFormat: 4:5 vertical\nReference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png\nAsset usage instructions: Integrate the ALPA leads interface screenshot onto the laptop screen naturally. Show human tension and real workspace mess. Use subtle ALPA logo placement if appropriate on a notebook or a mug.\nRealism rules: Grounded editorial realism, visible fatigue, slightly cluttered but believable working environment.\nAvoid: Clean, corporate desk setups, over-staged scenes, artificial cheerfulness.",
+        "prompt_excerpt": "Scene: Evening at a kitchen table turned makeshift workspace. A freelancer sits leaning forward, tired but focused, surrounded by scattered papers, coffee cup, and a half-closed notebook. Laptop screen showing ALPA deskt"
+      },
+      {
+        "id": "visual_prompt_002",
+        "created_at": "2026-05-13T09:32:05.125Z",
+        "generation_type": "reimagine",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Early evening living room scene where a person confidently closes their laptop with a slight smile, hands resting on a well-worn family dining table. Nearby, an open notebook with neat handwritten plans, a gym bag leaning against a chair leg, and a steaming ceramic mug with a subtle ALPA logo embossed on it. Soft daylight filters through curtains, highlighting a cozy, lived-in space showing the transition from work to personal time. Casual home details hint at relief from stress — a clock showing early evening, a small plant, and a pair of keys next to the mug. No screens visible except the closed laptop, implying work is done quickly and efficiently. Format: 4:5 vertical Reference assets to attach: assets/logos/alpa-logo-main.png Asset usage instructions: Integrate the ALPA logo discreetly embossed on the ceramic mug. Realism rules: Cinematic editorial realism, natural posture, believable everyday household environment, warm ambient daylight, visible transition from work to personal time. Avoid: Visible screens or UI interfaces, artificial staging, overly clean or corporate interiors, generic stock-photo expressions.",
+        "prompt_excerpt": "Scene: Early evening living room scene where a person confidently closes their laptop with a slight smile, hands resting on a well-worn family dining table. Nearby, an open notebook with neat handwritten plans, a gym bag"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-13T09:29:40.037Z",
+        "generation_type": "initial",
+        "status": "rejected",
+        "notes": "showing ALPA screen should resonate with positivism.  Now you show a despair emotion in front of ALPA.  Cognitive dissonance",
+        "updated_at": "2026-05-13T09:31:54.379Z",
+        "tags": [
+          "generic",
+          "repetitive",
+          "unclear_message",
+          "off_brand"
+        ],
+        "archetype": "Emotional Friction",
+        "concept_angle": "Work-Life Contrast",
+        "prompt_excerpt": "Scene: Evening at a kitchen table turned makeshift workspace. A freelancer sits leaning forward, tired but focused, surrounded by scattered papers, coffee cup, and a half-closed notebook. Laptop screen showing ALPA deskt",
+        "image_path": "outputs/2026-05-13_16-22-41/facebook/generated-image-2026-05-13T09-29-40-022Z.png",
+        "parent_caption_version_id": "caption_001",
+        "regeneration_index": 0,
+        "source_visual_prompt_version_id": "visual_prompt_001"
+      },
+      {
+        "id": "image_002",
+        "created_at": "2026-05-13T09:32:22.045Z",
+        "generation_type": "reimagine",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T09:32:43.536Z",
+        "archetype": "Coffee Shop Workflow",
+        "concept_angle": "Reclaiming Time",
+        "prompt_excerpt": "Scene: Early evening living room scene where a person confidently closes their laptop with a slight smile, hands resting on a well-worn family dining table. Nearby, an open notebook with neat handwritten plans, a gym bag",
+        "image_path": "outputs/2026-05-13_16-22-41/facebook/generated-image-2026-05-13T09-32-22-034Z.png",
+        "parent_caption_version_id": "caption_001",
+        "regeneration_index": 1,
+        "source_visual_prompt_version_id": "visual_prompt_002"
+      }
+    ]
+  },
+  "instagram": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-13T09:33:29.323Z",
+        "generation_type": "regenerate",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T09:33:52.833Z",
+        "text": "Spent nearly half your day digging for leads that don’t answer? That was me—until I realized the problem wasn’t the leads. It was how long it took to find them.\n\nLead lists are worthless if you can’t move fast. \n\nGet back those hours.\n\nSee what it looks like when AI actually knows your brand → alpa.mindrasolutions.com",
+        "caption_excerpt": "Spent nearly half your day digging for leads that don’t answer? That was me—until I realized the problem wasn’t the leads. It was how long it took to find them. Lead lists are worthless if you can’t move fast. Get back t",
+        "regeneration_index": 0
+      }
+    ],
+    "visual_prompt_versions": [
+      {
+        "id": "visual_prompt_001",
+        "created_at": "2026-05-13T09:34:29.329Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Late night at a dimly lit desk. Close-up of a laptop keyboard and screen edge showing ALPA dashboard leads on display. Coffee cup with cold rings nearby, soft shadows cast from a desk lamp. Tired posture visible from a blurred operator hand or shoulder in frame.\nFormat: 4:5 portrait\nReference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png\nAsset usage instructions: Subtly place the real ALPA leads screenshot on the laptop display. Focus on intimacy and quiet fatigue, avoid bright or colorful distractions.\nRealism rules: Editorial documentary realism, daily operator mood, realistic laptop glow, subtle background blur.\nAvoid: Overly stylized or glamorized lighting, perfect posture, saturated color grading.",
+        "prompt_excerpt": "Scene: Late night at a dimly lit desk. Close-up of a laptop keyboard and screen edge showing ALPA dashboard leads on display. Coffee cup with cold rings nearby, soft shadows cast from a desk lamp. Tired posture visible f"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-13T09:34:29.339Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T09:34:35.078Z",
+        "archetype": "Late Night Operator",
+        "concept_angle": "Time Compression",
+        "prompt_excerpt": "Scene: Late night at a dimly lit desk. Close-up of a laptop keyboard and screen edge showing ALPA dashboard leads on display. Coffee cup with cold rings nearby, soft shadows cast from a desk lamp. Tired posture visible f",
+        "image_path": "outputs/2026-05-13_16-22-41/instagram/generated-image-2026-05-13T09-34-29-327Z.png",
+        "parent_caption_version_id": "caption_001",
+        "regeneration_index": 0,
+        "source_visual_prompt_version_id": "visual_prompt_001"
+      }
+    ]
+  },
+  "tiktok": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-13T09:33:32.982Z",
+        "generation_type": "regenerate",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T09:34:11.513Z",
+        "text": "I wasted hours digging up leads when I should’ve been closing deals.\n\nNow, I pull ready-to-contact prospects in the time it takes to grab coffee.\n\nLess grinding. More doing.\n\nExperience how it feels when lead hunting takes seconds → alpa.mindrasolutions.com",
+        "caption_excerpt": "I wasted hours digging up leads when I should’ve been closing deals. Now, I pull ready-to-contact prospects in the time it takes to grab coffee. Less grinding. More doing. Experience how it feels when lead hunting takes",
+        "regeneration_index": 0
+      }
+    ],
+    "visual_prompt_versions": [
+      {
+        "id": "visual_prompt_001",
+        "created_at": "2026-05-13T09:35:44.084Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Vertical phone POV shot. Hands holding phone with ALPA mobile leads interface visible, the user scrolling quickly. Background shows a cafe table with a coffee cup, touchscreen smudges, and notebook. Natural street light filtering through nearby window.\nFormat: 9:16 vertical\nReference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png\nAsset usage instructions: Composite the ALPA mobile leads screenshot onto the phone screen naturally. Keep a handheld, candid feel with slight motion blur.\nRealism rules: Creator-native, first-person realism; mobile-led real environment; dynamic but practical framing.\nAvoid: Polished ad vibes, rigid framing, artificial lighting.",
+        "prompt_excerpt": "Scene: Vertical phone POV shot. Hands holding phone with ALPA mobile leads interface visible, the user scrolling quickly. Background shows a cafe table with a coffee cup, touchscreen smudges, and notebook. Natural street"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-13T09:35:44.091Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-13T09:36:49.817Z",
+        "archetype": "Creator POV + Mobile Hustle",
+        "concept_angle": "Async Productivity",
+        "prompt_excerpt": "Scene: Vertical phone POV shot. Hands holding phone with ALPA mobile leads interface visible, the user scrolling quickly. Background shows a cafe table with a coffee cup, touchscreen smudges, and notebook. Natural street",
+        "image_path": "outputs/2026-05-13_16-22-41/tiktok/generated-image-2026-05-13T09-35-44-082Z.png",
+        "parent_caption_version_id": "caption_001",
+        "regeneration_index": 0,
+        "source_visual_prompt_version_id": "visual_prompt_001"
+      }
+    ]
+  }
+}

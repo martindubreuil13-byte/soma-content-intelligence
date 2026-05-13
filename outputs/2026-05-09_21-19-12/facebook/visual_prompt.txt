@@ -1,0 +1,6 @@
+Scene: Casual cafe table with laptop and coffee cup, operator pushing aside messy handwritten notes, relaxed but focused posture.
+Format: 4:5 vertical.
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png, assets/logos/alpa-logo-main.png
+Asset usage instructions: Show ALPA leads screen on laptop naturally; coffee cup and notes in frame as visual contrast; subtle logo on laptop lid or sleeve.
+Realism rules: Relatable real-world, ambient daylight, practical momentum, candid operator energy.
+Avoid: Over-polished, fake enthusiasm, excessive branding.

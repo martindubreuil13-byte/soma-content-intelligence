@@ -1,0 +1,6 @@
+Scene: A documentary-style workspace with a natural desk environment, medium-wide framing over-the-shoulder looking at a laptop showing ALPA’s desktop dashboard. The operator is relaxed but alert, mid-task, with scattered worknotes and a half-drunk coffee beside the laptop.
+Format: 4:5
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png, assets/logos/alpa-logo-main.png
+Asset usage instructions: Naturally composite the ALPA desktop dashboard into the laptop screen, preserving proportions. Use the ALPA logo subtly on a notebook cover or a desk sticker if it fits without looking staged.
+Realism rules: Observational documentary realism, imperfect surfaces, realistic posture, natural window light.
+Avoid: Over-polished environments, fake enthusiasm, staged poses.

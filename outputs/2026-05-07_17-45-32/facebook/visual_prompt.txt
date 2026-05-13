@@ -1,0 +1,6 @@
+Scene: Casual freelancer working comfortably on a laptop at a cozy cafe or home desk. A mobile phone is nearby showing ALPA mobile lead discovery screen. The vibe is warm and practical.
+Format: 4:5 vertical or square
+Reference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png
+Asset usage instructions: Integrate the mobile ALPA lead screen naturally on the phone held or resting nearby. The laptop screen might be neutral or out of focus.
+Realism rules: Relatable realism with believable lighting. The environment shows genuine focus without looking staged.
+Avoid: Over-designed UI, corporate office feel, or forced enthusiasm.

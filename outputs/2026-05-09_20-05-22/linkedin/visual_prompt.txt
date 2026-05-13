@@ -1,0 +1,6 @@
+Scene: Late night operator working at a cluttered desk with low ambient light, a dim desk lamp casting soft shadows, a tired but focused posture. Laptop screen shows ALPA desktop dashboard with verified leads list clearly but subtly integrated. Coffee cup with cold coffee nearby.
+Format: 4:5 vertical or landscape.
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png
+Asset usage instructions: Naturally composite ALPA leads list screenshot into the laptop screen, preserving proportions, avoid fake UI elements, keep branding subtle without oversized logos.
+Realism rules: Documentary-style realism, authentic fatigue and quiet focus, natural desk clutter including papers and coffee stains, realistic monitor glow.
+Avoid: Sci-fi or holographic screen effects, staged corporate smiles, oversaturation, exaggerated lighting or colors.

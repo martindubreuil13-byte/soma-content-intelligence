@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-05-09_14-04-13",
+  "original_idea": "If you don’t need clients, ignore this.\n\nBut if you’re a freelancer, consultant, or small agency and you need more businesses to contact, ALPA may save you hours.\n\nChoose a business type.\nChoose a location.\nGet real business leads in seconds.\n\nWebsite. Email. Phone.\n\nNo signup.\nNo credit card.\n25 free leads.\n\nRun one search and see if the leads are useful:\n\nhttps://alpa.mindrasolutions.com",
+  "model": "gpt-4.1-mini",
+  "generated_channels": [
+    "linkedin",
+    "facebook",
+    "instagram",
+    "tiktok"
+  ],
+  "visual_archetypes": {
+    "linkedin": "Editorial Minimalism",
+    "facebook": "Coffee Shop Workflow",
+    "instagram": "Late Night Operator",
+    "tiktok": "Transit / On-The-Go Work"
+  },
+  "concept_angles": {
+    "linkedin": "Quiet Efficiency",
+    "facebook": "Workflow Relief",
+    "instagram": "Silent Momentum",
+    "tiktok": "Speed Advantage"
+  }
+}

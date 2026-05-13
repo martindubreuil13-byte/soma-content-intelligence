@@ -1,0 +1,6 @@
+Scene: Clean, minimalist desktop workspace with a focused entrepreneur reviewing a laptop screen showing an ALPA dashboard screenshot.
+Format: 4:5 vertical or landscape.
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png
+Asset usage instructions: Subtly composite ALPA’s real dashboard onto the laptop screen; maintain proportions and screen clarity; keep the brand logo minimal or omitted for a professional, non-promotional feel.
+Realism rules: Documentary-style realism with natural light, minimal props, authentic posture, muted color palette.
+Avoid: Overly glossy effects, flashy typography, oversized logos, fake interfaces, staged posing.

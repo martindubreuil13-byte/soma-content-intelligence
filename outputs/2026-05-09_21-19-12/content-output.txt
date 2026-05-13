@@ -1,0 +1,18 @@
+{
+  "linkedin": {
+    "caption": "You’re still digging through spreadsheets and tabs while someone else is already talking to your next client.\n\nSpeed isn’t just convenience. It’s an edge that keeps you ahead.\n\nALPA gives you contact-ready leads in seconds.\n\nLess time wasted. More time selling.\n\nSee what happens when lead generation takes seconds instead of hours. https://alpa.mindrasolutions.com/",
+    "visual_prompt": "Scene: Calm workspace with a laptop showing ALPA desktop dashboard, operator focused, natural light filtering in, minimal clutter.\nFormat: 4:5 vertical.\nReference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png, assets/logos/alpa-logo-main.png\nAsset usage instructions: Integrate ALPA dashboard naturally on laptop screen; subtle logo on background or desk item; preserve proportions and realistic lighting.\nRealism rules: Documentary realism, believable founder/operator, low-key confidence, soft daylight.\nAvoid: Over-branding, futuristic UI, staged poses."
+  },
+  "facebook": {
+    "caption": "While you’re still digging through lists, your competitor’s already pitching your next client.\n\nLead research shouldn’t steal half your day.\n\nALPA finds leads in seconds—contact-ready and no fluff.\n\nThe real advantage is speed.\n\nGet 25 free leads and see what happens when lead generation takes seconds instead of hours. https://alpa.mindrasolutions.com/",
+    "visual_prompt": "Scene: Casual cafe table with laptop and coffee cup, operator pushing aside messy handwritten notes, relaxed but focused posture.\nFormat: 4:5 vertical.\nReference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png, assets/logos/alpa-logo-main.png\nAsset usage instructions: Show ALPA leads screen on laptop naturally; coffee cup and notes in frame as visual contrast; subtle logo on laptop lid or sleeve.\nRealism rules: Relatable real-world, ambient daylight, practical momentum, candid operator energy.\nAvoid: Over-polished, fake enthusiasm, excessive branding."
+  },
+  "instagram": {
+    "caption": "Leads ready to contact.\n\nNo busywork.\n\nThat’s operational leverage.\n\nStop wasting hours.\n\nStart with 25 free leads. https://alpa.mindrasolutions.com/",
+    "visual_prompt": "Scene: Close-up of phone on cafe table, natural light, hand resting near device, ALPA mobile leads screen visible, ceramic coffee cup nearby.\nFormat: 4:5 portrait.\nReference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png\nAsset usage instructions: Naturally place ALPA mobile leads on phone screen; keep scene simple and focused; no obvious branding besides subtle device logos.\nRealism rules: Editorial realism, calm competence, authentic environment textures, relaxed posture.\nAvoid: Overly staged, excessive filters, fake productivity imagery."
+  },
+  "tiktok": {
+    "caption": "Still hunting for leads?\n\nYour competitor’s already talking to your next client.\n\nSpeed is everything.\n\nTry ALPA free and get lead-ready faster.\n\nhttps://alpa.mindrasolutions.com/",
+    "visual_prompt": "Scene: POV shot of hands holding phone showing ALPA mobile leads app, quick scrolling, natural cafe or street background, slight motion blur.\nFormat: 9:16 vertical.\nReference assets to attach: assets/mobile-ui/alpa-dashboard-mobile-leads.png\nAsset usage instructions: Show ALPA mobile leads screen clearly in hand; natural phone grip, slight movement for realism; lived-in environment around.\nRealism rules: Creator-native, mobile-first, fast workflow vibe, imperfect framing, candid energy.\nAvoid: Polished studio lighting, floating UI overlays."
+  }
+}

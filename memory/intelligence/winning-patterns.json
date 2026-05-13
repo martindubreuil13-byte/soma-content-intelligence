@@ -1,0 +1,44 @@
+[
+  {
+    "id": "pattern_1778664251037_5kolm",
+    "platform": "linkedin",
+    "icpId": "icp_1778661467721_7ebuw",
+    "angleId": "angle_1778663426950_fyj63",
+    "hookStyleId": "hook_1778595951078_ky889",
+    "ctaStyleId": "cta_1778595951086_7mrp2",
+    "approvalCount": 3,
+    "rejectionCount": 1,
+    "firstPassApprovalRate": 0.5,
+    "confidenceScore": 75,
+    "lastUsedAt": "2026-05-13T09:26:42.736Z",
+    "createdAt": "2026-05-13T09:24:11.037Z"
+  },
+  {
+    "id": "pattern_1778664550210_eoc64",
+    "platform": "facebook",
+    "icpId": "icp_1778661467721_7ebuw",
+    "angleId": "angle_1778663672322_gcan8",
+    "hookStyleId": "hook_1778595951078_ky889",
+    "ctaStyleId": "cta_1778595951086_7mrp2",
+    "approvalCount": 2,
+    "rejectionCount": 2,
+    "firstPassApprovalRate": 1,
+    "confidenceScore": 50,
+    "lastUsedAt": "2026-05-13T09:32:43.543Z",
+    "createdAt": "2026-05-13T09:29:10.210Z"
+  },
+  {
+    "id": "pattern_1778669172657_quib4",
+    "platform": "linkedin",
+    "icpId": "icp_1778663581989_3jx6h",
+    "angleId": "angle_1778663426950_fyj63",
+    "hookStyleId": "hook_1778595951078_ky889",
+    "ctaStyleId": "cta_1778663874496_lykmn",
+    "approvalCount": 5,
+    "rejectionCount": 6,
+    "firstPassApprovalRate": 1,
+    "confidenceScore": 45,
+    "lastUsedAt": "2026-05-13T13:20:37.204Z",
+    "createdAt": "2026-05-13T10:46:12.657Z"
+  }
+]

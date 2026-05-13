@@ -1,0 +1,6 @@
+Scene: Documentary-style workspace, medium-wide framing showing a freelancer at a kitchen table with natural window light. Laptop open with ALPA desktop dashboard lightly visible. Nearby a child’s drawing and a coffee mug. Evening work-life balance vibe.
+Format: 4:5 vertical or square.
+Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png
+Asset usage instructions: Integrate ALPA dashboard screenshot naturally on the laptop screen, keep UI subtle, real environment with some mess/clutter.
+Realism rules: Observational realism, natural light, relaxed but focused expression, practical clutter like notebooks and coffee stains.
+Avoid: Overly staged setups, corporate sterile office, fake smiles, bright studio lighting.

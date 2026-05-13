@@ -1,0 +1,135 @@
+{
+  "linkedin": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-09T14:19:54.395Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-09T14:19:54.397Z",
+        "text": "You’re still digging through spreadsheets and tabs while someone else is already talking to your next client.\n\nSpeed isn’t just convenience. It’s an edge that keeps you ahead.\n\nALPA gives you contact-ready leads in seconds.\n\nLess time wasted. More time selling.\n\nSee what happens when lead generation takes seconds instead of hours. https://alpa.mindrasolutions.com/",
+        "caption_excerpt": "You’re still digging through spreadsheets and tabs while someone else is already talking to your next client. Speed isn’t just convenience. It’s an edge that keeps you ahead. ALPA gives you contact-ready leads in seconds",
+        "regeneration_index": 0
+      }
+    ],
+    "visual_prompt_versions": [
+      {
+        "id": "visual_prompt_001",
+        "created_at": "2026-05-09T14:20:31.547Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Calm workspace with a laptop showing ALPA desktop dashboard, operator focused, natural light filtering in, minimal clutter.\nFormat: 4:5 vertical.\nReference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-main.png, assets/logos/alpa-logo-main.png\nAsset usage instructions: Integrate ALPA dashboard naturally on laptop screen; subtle logo on background or desk item; preserve proportions and realistic lighting.\nRealism rules: Documentary realism, believable founder/operator, low-key confidence, soft daylight.\nAvoid: Over-branding, futuristic UI, staged poses.",
+        "prompt_excerpt": "Scene: Calm workspace with a laptop showing ALPA desktop dashboard, operator focused, natural light filtering in, minimal clutter. Format: 4:5 vertical. Reference assets to attach: assets/desktop-ui/alpa-dashboard-deskto"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-09T14:20:31.553Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "archetype": "Quiet Success",
+        "concept_angle": "Speed Advantage",
+        "prompt_excerpt": "Scene: Calm workspace with a laptop showing ALPA desktop dashboard, operator focused, natural light filtering in, minimal clutter. Format: 4:5 vertical. Reference assets to attach: assets/desktop-ui/alpa-dashboard-deskto",
+        "image_path": "outputs/2026-05-09_21-19-12/linkedin/generated-image-2026-05-09T14-20-31-546Z.png",
+        "parent_caption_version_id": "caption_001",
+        "regeneration_index": 0,
+        "source_visual_prompt_version_id": "visual_prompt_001"
+      }
+    ]
+  },
+  "facebook": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-09T14:20:31.263Z",
+        "generation_type": "initial",
+        "status": "rejected",
+        "notes": "too Saas salesy",
+        "updated_at": "2026-05-09T14:20:31.264Z",
+        "text": "Manual lead research is a grind nobody signed up for.\n\nYour time’s better spent building relationships, not hunting data.\n\nALPA cuts through the noise and gets you leads ready to contact faster.\n\nLess searching, more talking.\n\nGet 25 free leads and see how much time you can save. https://alpa.mindrasolutions.com/",
+        "caption_excerpt": "Manual lead research is a grind nobody signed up for. Your time’s better spent building relationships, not hunting data. ALPA cuts through the noise and gets you leads ready to contact faster. Less searching, more talkin",
+        "regeneration_index": 0
+      },
+      {
+        "id": "caption_002",
+        "created_at": "2026-05-09T14:20:41.815Z",
+        "generation_type": "regenerate",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-09T14:20:56.679Z",
+        "text": "While you’re still digging through lists, your competitor’s already pitching your next client.\n\nLead research shouldn’t steal half your day.\n\nALPA finds leads in seconds—contact-ready and no fluff.\n\nThe real advantage is speed.\n\nGet 25 free leads and see what happens when lead generation takes seconds instead of hours. https://alpa.mindrasolutions.com/",
+        "caption_excerpt": "While you’re still digging through lists, your competitor’s already pitching your next client. Lead research shouldn’t steal half your day. ALPA finds leads in seconds—contact-ready and no fluff. The real advantage is sp",
+        "regeneration_index": 1
+      }
+    ],
+    "visual_prompt_versions": [
+      {
+        "id": "visual_prompt_001",
+        "created_at": "2026-05-09T14:21:30.439Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "text": "Scene: Casual cafe table with laptop and coffee cup, operator pushing aside messy handwritten notes, relaxed but focused posture.\nFormat: 4:5 vertical.\nReference assets to attach: assets/desktop-ui/alpa-dashboard-desktop-leads.png, assets/logos/alpa-logo-main.png\nAsset usage instructions: Show ALPA leads screen on laptop naturally; coffee cup and notes in frame as visual contrast; subtle logo on laptop lid or sleeve.\nRealism rules: Relatable real-world, ambient daylight, practical momentum, candid operator energy.\nAvoid: Over-polished, fake enthusiasm, excessive branding.",
+        "prompt_excerpt": "Scene: Casual cafe table with laptop and coffee cup, operator pushing aside messy handwritten notes, relaxed but focused posture. Format: 4:5 vertical. Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop"
+      }
+    ],
+    "image_versions": [
+      {
+        "id": "image_001",
+        "created_at": "2026-05-09T14:21:30.450Z",
+        "generation_type": "initial",
+        "status": "pending",
+        "notes": "",
+        "updated_at": "",
+        "archetype": "Coffee Shop Workflow",
+        "concept_angle": "Escaping Busywork",
+        "prompt_excerpt": "Scene: Casual cafe table with laptop and coffee cup, operator pushing aside messy handwritten notes, relaxed but focused posture. Format: 4:5 vertical. Reference assets to attach: assets/desktop-ui/alpa-dashboard-desktop",
+        "image_path": "outputs/2026-05-09_21-19-12/facebook/generated-image-2026-05-09T14-21-30-437Z.png",
+        "parent_caption_version_id": "caption_002",
+        "regeneration_index": 0,
+        "source_visual_prompt_version_id": "visual_prompt_001"
+      }
+    ]
+  },
+  "instagram": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-09T14:21:11.594Z",
+        "generation_type": "initial",
+        "status": "rejected",
+        "notes": "too simple",
+        "updated_at": "2026-05-09T14:21:17.187Z",
+        "text": "Leads ready to contact.\n\nNo busywork.\n\nThat’s operational leverage.\n\nStop wasting hours.\n\nStart with 25 free leads. https://alpa.mindrasolutions.com/",
+        "caption_excerpt": "Leads ready to contact. No busywork. That’s operational leverage. Stop wasting hours. Start with 25 free leads. https://alpa.mindrasolutions.com/",
+        "regeneration_index": 0
+      }
+    ],
+    "visual_prompt_versions": [],
+    "image_versions": []
+  },
+  "tiktok": {
+    "caption_versions": [
+      {
+        "id": "caption_001",
+        "created_at": "2026-05-09T14:21:43.660Z",
+        "generation_type": "initial",
+        "status": "approved",
+        "notes": "",
+        "updated_at": "2026-05-09T14:21:43.661Z",
+        "text": "Still hunting for leads?\n\nYour competitor’s already talking to your next client.\n\nSpeed is everything.\n\nTry ALPA free and get lead-ready faster.\n\nhttps://alpa.mindrasolutions.com/",
+        "caption_excerpt": "Still hunting for leads? Your competitor’s already talking to your next client. Speed is everything. Try ALPA free and get lead-ready faster. https://alpa.mindrasolutions.com/",
+        "regeneration_index": 0
+      }
+    ],
+    "visual_prompt_versions": [],
+    "image_versions": []
+  }
+}
