@@ -107,7 +107,7 @@ export function AppNav() {
             width={1536}
             height={1024}
             priority
-            className="h-10 w-auto transition-opacity duration-300 hover:opacity-90"
+            className="w-[120px] h-auto flex-shrink-0 transition-opacity duration-300 hover:opacity-90"
           />
           <span className="rounded-full border border-plasma/30 bg-plasma/[0.08] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-peach">
             Autopilot
@@ -140,7 +140,7 @@ export function AppNav() {
           width={1536}
           height={1024}
           priority
-          className="h-8 w-auto transition-opacity duration-300 hover:opacity-90"
+          className="w-[90px] h-auto flex-shrink-0 transition-opacity duration-300 hover:opacity-90"
         />
         <span className="rounded-full border border-plasma/30 bg-plasma/[0.08] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-peach">
           Autopilot

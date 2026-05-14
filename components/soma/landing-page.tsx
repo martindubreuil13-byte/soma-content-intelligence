@@ -124,7 +124,7 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
               alt="SOMA by MINDRA"
               width={1536}
               height={1024}
-              style={{ height: 48, width: "auto" }}
+              style={{ width: 160, height: "auto" }}
             />
           </div>
           <h2 style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 28, color: "#EEE8E4", margin: 0 }}>
@@ -265,8 +265,8 @@ function SomaNav({ onLogin }: { onLogin: () => void }) {
           alt="SOMA by MINDRA"
           width={1536}
           height={1024}
-          className="transition-opacity duration-300 hover:opacity-90"
-          style={{ height: 42, width: "auto" }}
+          className="flex-shrink-0 transition-opacity duration-300 hover:opacity-90"
+          style={{ width: 140, height: "auto" }}
         />
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -687,7 +687,7 @@ function SomaFooter() {
           alt="SOMA by MINDRA"
           width={1536}
           height={1024}
-          style={{ height: 28, width: "auto", opacity: 0.35 }}
+          style={{ width: 110, height: "auto", opacity: 0.35 }}
         />
         <p style={{ fontSize: 11, color: "#5A5060", margin: 0 }}>© 2026 MINDRA — Adaptive Creative Intelligence</p>
       </div>
