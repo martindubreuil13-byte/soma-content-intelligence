@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import "./soma.css";
 
 // ── Scroll-reveal hook ───────────────────────────────────────────────────────
@@ -30,6 +31,8 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !loading) onClose(); };
@@ -38,8 +41,20 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
   }, [onClose, loading]);
 
   async function handleAuth() {
+    if (!email || !password) return;
     setLoading(true);
-    await new Promise<void>((r) => setTimeout(r, 800));
+    setErrorMsg("");
+
+    const supabase = createClient();
+    const { error } = mode === "signin"
+      ? await supabase.auth.signInWithPassword({ email, password })
+      : await supabase.auth.signUp({ email, password });
+
+    if (error) {
+      setErrorMsg(error.message);
+      setLoading(false);
+      return;
+    }
     onAuth();
   }
 
@@ -128,7 +143,7 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
             />
           </div>
           <h2 style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 28, color: "#EEE8E4", margin: 0 }}>
-            Sign in
+            {mode === "signin" ? "Sign in" : "Create account"}
           </h2>
         </div>
 
@@ -201,15 +216,22 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
                   animation: "soma-spin 0.65s linear infinite",
                   flexShrink: 0,
                 }} />
-                Entering…
+                {mode === "signin" ? "Entering…" : "Creating…"}
               </>
-            ) : "Enter SOMA"}
+            ) : (mode === "signin" ? "Enter SOMA" : "Create account")}
           </button>
 
+          {errorMsg && (
+            <p style={{ fontSize: 12, color: "rgba(248,113,113,0.85)", textAlign: "center", margin: 0 }}>
+              {errorMsg}
+            </p>
+          )}
+
           <p style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.28)", marginTop: 6 }}>
-            No access yet?{" "}
+            {mode === "signin" ? "No access yet?" : "Already have access?"}{" "}
             <button
               disabled={loading}
+              onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setErrorMsg(""); }}
               style={{
                 background: "none",
                 border: "none",
@@ -223,7 +245,7 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
               onMouseEnter={(e) => { if (!loading) e.currentTarget.style.opacity = "0.65"; }}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
             >
-              Request access
+              {mode === "signin" ? "Request access" : "Sign in instead"}
             </button>
           </p>
         </div>
@@ -706,7 +728,6 @@ export function SomaLandingPage() {
   function closeLogin() { setModalOpen(false); }
 
   function handleAuth() {
-    localStorage.setItem("soma-auth", "true");
     setModalOpen(false);
     router.push("/app");
   }
