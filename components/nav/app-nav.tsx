@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import {
   Brain,
@@ -9,6 +10,7 @@ import {
   CheckSquare,
   Clock,
   LayoutDashboard,
+  LogOut,
   Share2,
   Users,
   Zap
@@ -22,7 +24,7 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { href: "/", label: "Today", icon: LayoutDashboard },
+  { href: "/app", label: "Today", icon: LayoutDashboard },
   { href: "/queue", label: "Queue", icon: CheckSquare },
   { href: "/training", label: "Training", icon: Zap },
   { href: "/intelligence", label: "Intelligence", icon: Brain },
@@ -80,18 +82,33 @@ function MobileNavLink({ item, isActive }: { item: NavItem; isActive: boolean })
 
 export function AppNav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  if (pathname === "/") return null;
 
   function isActive(href: string) {
-    if (href === "/") return pathname === "/";
+    if (href === "/app") return pathname === "/app";
     return pathname.startsWith(href);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("soma-auth");
+    router.push("/");
   }
 
   return (
     <>
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-white/[0.07] bg-charcoal/95 backdrop-blur-xl lg:flex">
-        <div className="flex h-14 items-center gap-2.5 border-b border-white/[0.07] px-4">
-          <span className="font-display text-xl text-white">SOMA</span>
+        <div className="flex h-14 items-center justify-between border-b border-white/[0.07] px-4">
+          <Image
+            src="/logos/soma-logo-white.png"
+            alt="SOMA by MINDRA"
+            width={1536}
+            height={1024}
+            priority
+            className="h-7 w-auto transition-opacity duration-300 hover:opacity-90"
+          />
           <span className="rounded-full border border-plasma/30 bg-plasma/[0.08] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-peach">
             Autopilot
           </span>
@@ -103,16 +120,45 @@ export function AppNav() {
             ))}
           </div>
         </nav>
-        <div className="border-t border-white/[0.07] px-4 py-3">
-          <p className="text-[10px] text-white/22">Content Autopilot · Local dev</p>
+        <div className="flex items-center justify-between border-t border-white/[0.07] px-4 py-3">
+          <p className="text-[10px] text-white/22">Content Autopilot</p>
+          <button
+            onClick={handleLogout}
+            title="Sign out"
+            className="flex items-center justify-center rounded-xl p-1.5 text-white/25 transition hover:bg-white/[0.06] hover:text-white/60"
+          >
+            <LogOut size={14} />
+          </button>
         </div>
       </aside>
+
+      {/* Mobile top header */}
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-white/[0.07] bg-charcoal/95 px-4 backdrop-blur-xl lg:hidden">
+        <Image
+          src="/logos/soma-logo-white.png"
+          alt="SOMA by MINDRA"
+          width={1536}
+          height={1024}
+          priority
+          className="h-6 w-auto transition-opacity duration-300 hover:opacity-90"
+        />
+        <span className="rounded-full border border-plasma/30 bg-plasma/[0.08] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-peach">
+          Autopilot
+        </span>
+      </header>
 
       {/* Mobile bottom navigation */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-white/[0.07] bg-charcoal/95 backdrop-blur-xl lg:hidden">
         {mobileItems.map((item) => (
           <MobileNavLink key={item.href} item={item} isActive={isActive(item.href)} />
         ))}
+        <button
+          onClick={handleLogout}
+          className="flex flex-1 flex-col items-center gap-1 px-1 py-2.5 text-[10px] font-semibold text-white/30 transition hover:text-white/60"
+        >
+          <LogOut size={20} className="shrink-0 text-white/25" />
+          <span className="leading-tight">Sign out</span>
+        </button>
       </nav>
     </>
   );

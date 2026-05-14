@@ -27,8 +27,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${body.variable} ${display.variable}`}>
         <AppNav />
-        {/* desktop: offset for sidebar; mobile: offset for bottom nav */}
-        <div className="min-h-screen pb-20 lg:pb-0 lg:pl-56">
+        {/* desktop: offset for sidebar; mobile: offset for top header + bottom nav */}
+        <div className="min-h-screen pb-20 pt-14 lg:pb-0 lg:pl-56 lg:pt-0">
           {children}
         </div>
       </body>
