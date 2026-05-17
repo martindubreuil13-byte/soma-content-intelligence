@@ -1,10 +1,48 @@
 "use client";
 
+import type { AuthChangeEvent, Session, Subscription } from "@supabase/supabase-js";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import "./soma.css";
+
+type BrowserSupabaseClient = ReturnType<typeof createClient>;
+
+function waitForBrowserSession(supabase: BrowserSupabaseClient, timeoutMs = 5000) {
+  return new Promise<boolean>((resolve) => {
+    let settled = false;
+    let subscription: Subscription | undefined;
+    let timeoutId: number | undefined;
+
+    const finish = (hasSession: boolean) => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId) window.clearTimeout(timeoutId);
+      subscription?.unsubscribe();
+      resolve(hasSession);
+    };
+
+    const { data } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+      if (session) {
+        finish(true);
+        return;
+      }
+
+      if (event === "SIGNED_OUT") {
+        finish(false);
+      }
+    });
+    subscription = data.subscription;
+
+    void supabase.auth.getSession().then(({ data: sessionData }: { data: { session: Session | null } }) => {
+      const { session } = sessionData;
+      finish(Boolean(session));
+    });
+
+    timeoutId = window.setTimeout(() => finish(false), timeoutMs);
+  });
+}
 
 // ── Scroll-reveal hook ───────────────────────────────────────────────────────
 
@@ -46,7 +84,7 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
     setErrorMsg("");
 
     const supabase = createClient();
-    const { error } = mode === "signin"
+    const { data, error } = mode === "signin"
       ? await supabase.auth.signInWithPassword({ email, password })
       : await supabase.auth.signUp({ email, password });
 
@@ -55,6 +93,20 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
       setLoading(false);
       return;
     }
+
+    if (!data.session) {
+      setErrorMsg("Check your email to confirm your account before signing in.");
+      setLoading(false);
+      return;
+    }
+
+    const hasSession = await waitForBrowserSession(supabase);
+    if (!hasSession) {
+      setErrorMsg("Signed in, but the browser session was not ready. Please try again.");
+      setLoading(false);
+      return;
+    }
+
     onAuth();
   }
 

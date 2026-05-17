@@ -15,6 +15,7 @@ import {
   Users,
   Zap
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 type NavItem = {
   href: string;
@@ -91,9 +92,11 @@ export function AppNav() {
     return pathname.startsWith(href);
   }
 
-  function handleLogout() {
-    localStorage.removeItem("soma-auth");
-    router.push("/");
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.replace("/");
+    router.refresh();
   }
 
   return (
@@ -123,7 +126,7 @@ export function AppNav() {
         <div className="flex items-center justify-between border-t border-white/[0.07] px-4 py-3">
           <p className="text-[10px] text-white/22">Content Autopilot</p>
           <button
-            onClick={handleLogout}
+            onClick={() => { void handleLogout(); }}
             title="Sign out"
             className="flex items-center justify-center rounded-xl p-1.5 text-white/25 transition hover:bg-white/[0.06] hover:text-white/60"
           >
@@ -153,7 +156,7 @@ export function AppNav() {
           <MobileNavLink key={item.href} item={item} isActive={isActive(item.href)} />
         ))}
         <button
-          onClick={handleLogout}
+          onClick={() => { void handleLogout(); }}
           className="flex flex-1 flex-col items-center gap-1 px-1 py-2.5 text-[10px] font-semibold text-white/30 transition hover:text-white/60"
         >
           <LogOut size={20} className="shrink-0 text-white/25" />
