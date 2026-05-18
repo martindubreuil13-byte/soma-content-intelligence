@@ -2,9 +2,6 @@ import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/session";
 
 export async function proxy(request: NextRequest) {
-  console.log("PROXY UPDATE SESSION", {
-    pathname: request.nextUrl.pathname,
-  });
   return await updateSession(request);
 }
 

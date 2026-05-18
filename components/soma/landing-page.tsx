@@ -24,13 +24,6 @@ function waitForBrowserSession(supabase: BrowserSupabaseClient, timeoutMs = 5000
     };
 
     const { data } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
-      console.log("BROWSER AUTH STATE", {
-        event,
-        hasSession: Boolean(session),
-        userId: session?.user.id ?? null,
-        userEmail: session?.user.email ?? null,
-      });
-
       if (session) {
         finish(true);
         return;
@@ -44,11 +37,6 @@ function waitForBrowserSession(supabase: BrowserSupabaseClient, timeoutMs = 5000
 
     void supabase.auth.getSession().then(({ data: sessionData }: { data: { session: Session | null } }) => {
       const { session } = sessionData;
-      console.log("BROWSER AUTH SESSION", {
-        hasSession: Boolean(session),
-        userId: session?.user.id ?? null,
-        userEmail: session?.user.email ?? null,
-      });
       finish(Boolean(session));
     });
 
@@ -100,14 +88,6 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
       ? await supabase.auth.signInWithPassword({ email, password })
       : await supabase.auth.signUp({ email, password });
 
-    console.log("BROWSER AUTH RESULT", {
-      mode,
-      hasSession: Boolean(data.session),
-      userId: data.user?.id ?? null,
-      userEmail: data.user?.email ?? null,
-      hasError: Boolean(error),
-    });
-
     if (error) {
       console.error("BROWSER AUTH ERROR", error);
       setErrorMsg(error.message);
@@ -122,7 +102,6 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
     }
 
     const hasSession = await waitForBrowserSession(supabase);
-    console.log("BROWSER AUTH SESSION READY", { hasSession });
     if (!hasSession) {
       setErrorMsg("Signed in, but the browser session was not ready. Please try again.");
       setLoading(false);
@@ -803,7 +782,6 @@ export function SomaLandingPage() {
 
   function handleAuth() {
     setModalOpen(false);
-    console.log("BROWSER AUTH NAVIGATE", { destination: "/app" });
     router.push("/app");
     router.refresh();
   }

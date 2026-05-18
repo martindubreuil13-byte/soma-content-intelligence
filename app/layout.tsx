@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Fraunces } from "next/font/google";
-import { AppNav } from "@/components/nav/app-nav";
 import "./globals.css";
 
 const body = Space_Grotesk({
@@ -26,11 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${body.variable} ${display.variable}`}>
-        <AppNav />
-        {/* desktop: offset for sidebar; mobile: offset for top header + bottom nav */}
-        <div className="min-h-screen pb-20 pt-14 lg:pb-0 lg:pl-56 lg:pt-0">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );

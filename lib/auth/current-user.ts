@@ -21,7 +21,7 @@ export async function requireCurrentUser() {
   const user = await getCurrentUser();
 
   if (!user) {
-    console.warn("CURRENT USER REDIRECT");
+    console.warn("CURRENT USER REDIRECT", { destination: "/login" });
     redirect("/login");
   }
 

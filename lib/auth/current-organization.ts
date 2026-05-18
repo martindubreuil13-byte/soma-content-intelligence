@@ -22,10 +22,9 @@ type OrganizationRow = {
   slug: string;
 };
 
-async function getOrganizationForUserId(
+export async function getCurrentOrganizationForUserId(
   userId: string
 ): Promise<CurrentOrganization | null> {
-
   const supabase = await createServerSupabase();
   const { data: membership, error: membershipError } = await supabase
     .from("organization_members")
@@ -42,7 +41,6 @@ async function getOrganizationForUserId(
   }
 
   if (!membership) {
-    console.log("ORG MEMBERSHIP MISSING", { userId });
     return null;
   }
 
@@ -59,22 +57,15 @@ async function getOrganizationForUserId(
   }
 
   if (!organization) {
-    console.log("ORG FETCH MISSING", {
-      organizationId: membership.organization_id,
-      userId,
-    });
     return null;
   }
 
-  const currentOrganization = {
+  return {
     id: organization.id,
     name: organization.name,
     slug: organization.slug,
     role: membership.role,
   };
-
-
-  return currentOrganization;
 }
 
 export async function getCurrentOrganization(): Promise<CurrentOrganization | null> {
@@ -84,24 +75,24 @@ export async function getCurrentOrganization(): Promise<CurrentOrganization | nu
     return null;
   }
 
-  return getOrganizationForUserId(user.id);
+  return getCurrentOrganizationForUserId(user.id);
 }
 
 export async function requireCurrentOrganization() {
   const user = await getCurrentUser();
 
   if (!user) {
-    console.log("ORG REDIRECT CONDITION", {
+    console.warn("ORG REDIRECT CONDITION", {
       destination: "/login",
       reason: "missing user",
     });
     redirect("/login");
   }
 
-  const organization = await getOrganizationForUserId(user.id);
+  const organization = await getCurrentOrganizationForUserId(user.id);
 
   if (!organization) {
-    console.log("ORG REDIRECT CONDITION", {
+    console.warn("ORG REDIRECT CONDITION", {
       destination: "/onboarding",
       reason: "missing organization",
       userId: user.id,
