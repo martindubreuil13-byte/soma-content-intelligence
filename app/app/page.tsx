@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { getAgentTrainingSummary } from "@/lib/agent-training";
 import { getContentRuns } from "@/lib/output-runs";
 import { readPublishingQueue } from "@/lib/publishing-queue";
 import type { ContentChannel, ContentRun } from "@/lib/content-types";
 import { channelLabels } from "@/lib/content-types";
-import { AppGuard } from "@/components/auth/app-guard";
+import { requireCurrentOrganization } from "@/lib/auth/current-organization";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -141,6 +141,8 @@ function EmptyState() {
 }
 
 export default async function AppPage() {
+  await requireCurrentOrganization();
+
   const [runs, queue] = await Promise.all([getContentRuns(), readPublishingQueue()]);
   const trainingSummary = await getAgentTrainingSummary(runs);
   const today = new Date();
@@ -148,11 +150,10 @@ export default async function AppPage() {
   const queueCount = queue.filter((q) => q.status === "approved").length;
 
   return (
-    <AppGuard>
-      <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:44px_44px] opacity-30" />
+    <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:44px_44px] opacity-30" />
 
-        <div className="relative mx-auto max-w-3xl">
+      <div className="relative mx-auto max-w-3xl">
           {/* Header */}
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
@@ -234,8 +235,7 @@ export default async function AppPage() {
               ))}
             </div>
           )}
-        </div>
       </div>
-    </AppGuard>
+    </div>
   );
 }
