@@ -1,6 +1,7 @@
-import { mkdir, readdir, readFile, writeFile } from "fs/promises";
+import { readdir, readFile } from "fs/promises";
 import path from "path";
 import { readPersistentLearningSignals } from "@/lib/agent-training";
+import { savePreferenceMemory } from "@/lib/db/intelligence-db";
 import type { ContentChannel, FeedbackStatus, FeedbackTarget } from "@/lib/content-types";
 import { channels } from "@/lib/channel-image-generation";
 import { normalizeChannelLineage } from "@/lib/feedback-lineage";
@@ -412,10 +413,7 @@ export async function rebuildPreferenceMemory() {
 
   memory.last_updated = new Date().toISOString();
 
-  const memoryPath = path.join(process.cwd(), "memory");
-
-  await mkdir(memoryPath, { recursive: true });
-  await writeFile(path.join(memoryPath, "preferences.json"), `${JSON.stringify(memory, null, 2)}\n`);
+  await savePreferenceMemory(memory);
 
   return memory;
 }

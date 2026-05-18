@@ -5,7 +5,12 @@ import { promisify } from "util";
 import { NextResponse } from "next/server";
 import { channels, getChannelPath, readTextFile } from "@/lib/channel-image-generation";
 import { ensureCaptionVersion, ensureVisualPromptVersion } from "@/lib/feedback-lineage";
-import { createGenerationRun } from "@/lib/db/generation-runs-db";
+import {
+  createGenerationArtifact,
+  createGenerationRun,
+  upsertGenerationChannel,
+} from "@/lib/db/generation-runs-db";
+import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 
 const execFileAsync = promisify(execFile);
 
@@ -57,12 +62,13 @@ export async function POST(request: Request) {
     const runId = extractRunId(stdout);
 
     if (runId) {
-      await createGenerationRun({
+      const persistedRun = await createGenerationRun({
         legacyRunId: runId,
         title: idea.slice(0, 120),
         rawIdea: idea,
-        status: "generated",
+        status: "completed",
         source: "api_generate",
+        completedAt: new Date().toISOString(),
         metadata: {
           stdout_excerpt: stdout.slice(0, 2000),
           stderr_excerpt: stderr?.slice(0, 2000) ?? "",
@@ -72,22 +78,183 @@ export async function POST(request: Request) {
           runId,
           message: error instanceof Error ? error.message : "Unknown error",
         });
+        return null;
       });
 
       await Promise.all(
         channels.map(async (channel) => {
           const caption = await readTextFile(path.join(getChannelPath(runId, channel), "caption.txt"));
           const visualPrompt = await readTextFile(path.join(getChannelPath(runId, channel), "visual_prompt.txt"));
+          const channelRow = persistedRun
+            ? await upsertGenerationChannel({
+                runId: persistedRun.id,
+                channel,
+                status: "completed",
+                caption: caption || null,
+                visualPrompt: visualPrompt || null,
+                metadata: { legacy_run_id: runId, generation_type: "initial" },
+              }).catch((error) => {
+                console.error("[generate] Channel persistence failed", {
+                  runId,
+                  channel,
+                  message: error instanceof Error ? error.message : "Unknown error",
+                });
+                return null;
+              })
+            : null;
 
           if (caption) {
-            await ensureCaptionVersion(runId, channel, caption);
+            const version = await ensureCaptionVersion(runId, channel, caption);
+
+            if (persistedRun && channelRow) {
+              const artifact = await createGenerationArtifact({
+                runId: persistedRun.id,
+                channelId: channelRow.id,
+                artifactType: "caption",
+                version: 1,
+                content: caption,
+                metadata: {
+                  legacy_run_id: runId,
+                  channel,
+                  caption_version_id: version?.id ?? null,
+                  generation_type: "initial",
+                },
+              }).catch((error) => {
+                console.error("[generate] Caption artifact persistence failed", {
+                  runId,
+                  channel,
+                  message: error instanceof Error ? error.message : "Unknown error",
+                });
+                return null;
+              });
+
+              await uploadArtifactText({
+                generationRunId: persistedRun.id,
+                generationChannelId: channelRow.id,
+                channel,
+                filename: "caption.txt",
+                content: caption,
+                artifactId: artifact?.id ?? null,
+                assetType: "caption_text",
+                metadata: {
+                  legacy_run_id: runId,
+                  caption_version_id: version?.id ?? null,
+                  generation_type: "initial",
+                },
+              }).catch((error) => {
+                console.error("[generate] Caption storage persistence failed", {
+                  runId,
+                  channel,
+                  message: error instanceof Error ? error.message : "Unknown error",
+                });
+              });
+
+              await uploadJsonSnapshot({
+                generationRunId: persistedRun.id,
+                generationChannelId: channelRow.id,
+                channel,
+                snapshotType: "caption",
+                filename: "caption.json",
+                content: {
+                  caption,
+                  caption_version_id: version?.id ?? null,
+                  generation_type: "initial",
+                },
+              }).catch((error) => {
+                console.error("[generate] Caption snapshot persistence failed", {
+                  runId,
+                  channel,
+                  message: error instanceof Error ? error.message : "Unknown error",
+                });
+              });
+            }
           }
 
           if (visualPrompt) {
-            await ensureVisualPromptVersion(runId, channel, visualPrompt);
+            const version = await ensureVisualPromptVersion(runId, channel, visualPrompt);
+
+            if (persistedRun && channelRow) {
+              const artifact = await createGenerationArtifact({
+                runId: persistedRun.id,
+                channelId: channelRow.id,
+                artifactType: "visual_prompt",
+                version: 1,
+                content: visualPrompt,
+                metadata: {
+                  legacy_run_id: runId,
+                  channel,
+                  visual_prompt_version_id: version?.id ?? null,
+                  generation_type: "initial",
+                },
+              }).catch((error) => {
+                console.error("[generate] Visual prompt artifact persistence failed", {
+                  runId,
+                  channel,
+                  message: error instanceof Error ? error.message : "Unknown error",
+                });
+                return null;
+              });
+
+              await uploadArtifactText({
+                generationRunId: persistedRun.id,
+                generationChannelId: channelRow.id,
+                channel,
+                filename: "visual_prompt.txt",
+                content: visualPrompt,
+                artifactId: artifact?.id ?? null,
+                assetType: "visual_prompt_text",
+                metadata: {
+                  legacy_run_id: runId,
+                  visual_prompt_version_id: version?.id ?? null,
+                  generation_type: "initial",
+                },
+              }).catch((error) => {
+                console.error("[generate] Visual prompt storage persistence failed", {
+                  runId,
+                  channel,
+                  message: error instanceof Error ? error.message : "Unknown error",
+                });
+              });
+
+              await uploadJsonSnapshot({
+                generationRunId: persistedRun.id,
+                generationChannelId: channelRow.id,
+                channel,
+                snapshotType: "visual_prompt",
+                filename: "visual_prompt.json",
+                content: {
+                  visual_prompt: visualPrompt,
+                  visual_prompt_version_id: version?.id ?? null,
+                  generation_type: "initial",
+                },
+              }).catch((error) => {
+                console.error("[generate] Visual prompt snapshot persistence failed", {
+                  runId,
+                  channel,
+                  message: error instanceof Error ? error.message : "Unknown error",
+                });
+              });
+            }
           }
         })
       );
+
+      const rawMeta = await readTextFile(path.join(process.cwd(), "outputs", runId, "meta.json"));
+      if (rawMeta) {
+        try {
+          await uploadJsonSnapshot({
+            legacyRunId: runId,
+            snapshotType: "meta",
+            filename: "meta.json",
+            content: JSON.parse(rawMeta) as Record<string, unknown>,
+          });
+        } catch (error) {
+          console.error("[generate] Meta snapshot persistence failed", {
+            runId,
+            message: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+      }
     }
 
     return NextResponse.json({

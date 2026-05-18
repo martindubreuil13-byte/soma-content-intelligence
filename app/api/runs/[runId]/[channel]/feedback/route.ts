@@ -8,6 +8,7 @@ import {
   ensureCaptionVersion,
   ensureVisualPromptVersion,
   isFeedbackStatus,
+  readFeedbackFile,
   updateVersionFeedback
 } from "@/lib/feedback-lineage";
 import { rebuildPreferenceMemory } from "@/lib/preference-memory";
@@ -17,6 +18,7 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 
 type RouteContext = {
   params: Promise<{
@@ -96,8 +98,9 @@ export async function POST(request: Request, context: RouteContext) {
 
     await createGenerationRun({
       legacyRunId: runId,
-      status: "feedback_received",
+      status: "completed",
       source: "feedback",
+      completedAt: new Date().toISOString(),
     })
       .then(async (run) => {
         const channelRow = await upsertGenerationChannel({
@@ -123,6 +126,16 @@ export async function POST(request: Request, context: RouteContext) {
             version_id: version.id,
             requested_version_id: versionId ?? null,
           },
+        });
+
+        const { feedback } = await readFeedbackFile(runId);
+        await uploadJsonSnapshot({
+          generationRunId: run.id,
+          generationChannelId: channelRow.id,
+          channel,
+          snapshotType: "feedback",
+          filename: "feedback.json",
+          content: feedback as Record<string, unknown>,
         });
       })
       .catch((error) => {

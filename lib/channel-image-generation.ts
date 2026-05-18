@@ -2,6 +2,7 @@ import { mkdir, readFile, stat, writeFile } from "fs/promises";
 import path from "path";
 import { appendPersistentLearningSignal, createLearningEvent } from "@/lib/agent-training";
 import { appendImageVersion, ensureVisualPromptVersion, excerpt } from "@/lib/feedback-lineage";
+import { uploadGeneratedImage, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 import type { ContentChannel, FeedbackGenerationType } from "@/lib/content-types";
 
 export const imageFileName = "generated-image.png";
@@ -79,6 +80,18 @@ export async function writeRunMetadata(runId: string, metadata: RunMetadata) {
     path.join(process.cwd(), "outputs", runId, "meta.json"),
     JSON.stringify(metadata, null, 2)
   );
+
+  await uploadJsonSnapshot({
+    legacyRunId: runId,
+    snapshotType: "meta",
+    filename: "meta.json",
+    content: metadata,
+  }).catch((error) => {
+    console.error("[metadata] Storage snapshot persistence failed", {
+      runId,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  });
 }
 
 function getChannelImageSize(channel: ContentChannel) {
@@ -277,25 +290,22 @@ export async function generateImageFromPrompt({
   await ensureVisualPromptVersion(runId, channel, visualPrompt);
   await writeFile(archivedImagePath, generated.imageBuffer);
   await writeFile(imagePath, generated.imageBuffer);
+  const imageMetadata = {
+    generated_at: generatedAt,
+    model: generated.model,
+    quality: generated.quality,
+    size: generated.size,
+    endpoint: generated.endpoint,
+    attached_assets: generated.attachedAssets,
+    source_prompt: "visual_prompt.txt",
+    image_file: imageFileName,
+    parent_caption_version_id: parentCaptionVersionId ?? "",
+    ...(normalizedVisualTweak ? { visual_tweak: normalizedVisualTweak } : {}),
+    ...imageMetaExtra
+  };
   await writeFile(
     imageMetaPath,
-    JSON.stringify(
-      {
-        generated_at: generatedAt,
-        model: generated.model,
-        quality: generated.quality,
-        size: generated.size,
-        endpoint: generated.endpoint,
-        attached_assets: generated.attachedAssets,
-        source_prompt: "visual_prompt.txt",
-        image_file: imageFileName,
-        parent_caption_version_id: parentCaptionVersionId ?? "",
-        ...(normalizedVisualTweak ? { visual_tweak: normalizedVisualTweak } : {}),
-        ...imageMetaExtra
-      },
-      null,
-      2
-    )
+    JSON.stringify(imageMetadata, null, 2)
   );
   const relativeImagePath = path.relative(process.cwd(), archivedImagePath);
   const imageVersion = await appendImageVersion(runId, channel, {
@@ -311,11 +321,65 @@ export async function generateImageFromPrompt({
     await appendPersistentLearningSignal(createLearningEvent({ action: "regenerated", artifactType: "image", channel, runId, version: imageVersion }));
   }
 
+  const storageUpload = await uploadGeneratedImage({
+    legacyRunId: runId,
+    channel,
+    filename: archivedImageFileName,
+    bytes: generated.imageBuffer,
+    metadata: {
+      image_version_id: imageVersion.id,
+      current_image_file: imageFileName,
+      local_image_file: relativeImagePath,
+      ...imageMetadata,
+    },
+  }).catch((error) => {
+    console.error("[image] Storage asset persistence failed", {
+      runId,
+      channel,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+    return null;
+  });
+  await uploadGeneratedImage({
+    legacyRunId: runId,
+    channel,
+    filename: imageFileName,
+    bytes: generated.imageBuffer,
+    metadata: {
+      image_version_id: imageVersion.id,
+      archived_image_file: archivedImageFileName,
+      local_image_file: path.relative(process.cwd(), imagePath),
+      current: true,
+      ...imageMetadata,
+    },
+  }).catch((error) => {
+    console.error("[image] Current image storage persistence failed", {
+      runId,
+      channel,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  });
+
+  await uploadJsonSnapshot({
+    legacyRunId: runId,
+    channel,
+    snapshotType: "image_meta",
+    filename: "image-meta.json",
+    content: imageMetadata,
+  }).catch((error) => {
+    console.error("[image] Image metadata snapshot persistence failed", {
+      runId,
+      channel,
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  });
+
   return {
     imageUrl: `/api/runs/${encodeURIComponent(runId)}/${channel}/image?t=${Date.now()}`,
     imageFile: relativeImagePath,
     imageVersionId: imageVersion.id,
     metaFile: path.relative(process.cwd(), imageMetaPath),
+    imageStoragePath: storageUpload?.path ?? null,
     attachedAssets: generated.attachedAssets,
     model: generated.model,
     size: generated.size,

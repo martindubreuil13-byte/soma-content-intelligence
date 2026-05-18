@@ -1990,7 +1990,7 @@ export default function IntelligencePage() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/28">How it works</p>
           <p className="mt-2 text-xs leading-5 text-white/32">
             Chips map to structured intelligence records in{" "}
-            <code className="text-peach/50">memory/intelligence/</code>. Every approved or rejected
+            <code className="text-peach/50">Supabase intelligence tables</code>. Every approved or rejected
             generation updates the performance scores — higher-scoring combinations surface more often
             over time.
           </p>

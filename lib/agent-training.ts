@@ -1,6 +1,8 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
-import path from "path";
 import type { ContentChannel, ContentRun, FeedbackStatus, FeedbackTarget, FeedbackVersion } from "@/lib/content-types";
+import {
+  createLearningEvent as createLearningEventDb,
+  listLearningEvents,
+} from "@/lib/db/intelligence-db";
 
 export type TrainingStage =
   | "Observer"
@@ -59,10 +61,6 @@ const stageThresholds: Array<{ max: number; stage: TrainingStage; description: s
   { max: 98, stage: "Autonomous Operator", description: "High alignment, still kept under human review." },
   { max: 100, stage: "Strategic Partner", description: "Deep training history with stable creative judgment." }
 ];
-
-function memoryPath(fileName: string) {
-  return path.join(process.cwd(), "memory", fileName);
-}
 
 function versionNumber(versionId: string) {
   const match = versionId.match(/_(\d+)$/);
@@ -223,27 +221,11 @@ export function calculateRegenerationPenalty(events: LearningEvent[]) {
 }
 
 export async function readPersistentLearningSignals() {
-  try {
-    const parsed = JSON.parse(await readFile(memoryPath("learning-events.json"), "utf8")) as unknown;
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed.map(normalizeLearningEvent).filter(Boolean) as LearningEvent[];
-  } catch {
-    return [];
-  }
+  return listLearningEvents();
 }
 
 export async function appendPersistentLearningSignal(event: LearningEvent) {
-  const currentEvents = await readPersistentLearningSignals();
-  const nextEvents = [...currentEvents.filter((currentEvent) => eventKey(currentEvent) !== eventKey(event)), event];
-
-  await mkdir(memoryPath("."), { recursive: true });
-  await writeFile(memoryPath("learning-events.json"), `${JSON.stringify(nextEvents, null, 2)}\n`);
-
-  return event;
+  return createLearningEventDb(event);
 }
 
 function versionToEvents({

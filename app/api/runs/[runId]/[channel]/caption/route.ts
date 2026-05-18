@@ -12,6 +12,7 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 import type { ContentChannel } from "@/lib/content-types";
 import type { ICP, Angle, HookStyle, CTAStyle, NegativeConstraint } from "@/lib/brand-intelligence";
 
@@ -350,8 +351,9 @@ export async function POST(_request: Request, context: RouteContext) {
     await createGenerationRun({
       legacyRunId: runId,
       rawIdea: typeof metadata.original_idea === "string" ? metadata.original_idea : null,
-      status: "generated",
+      status: "completed",
       source: "caption_regeneration",
+      completedAt: new Date().toISOString(),
       metadata: {
         generation_context: metadata.generation_context ?? null,
       },
@@ -370,7 +372,7 @@ export async function POST(_request: Request, context: RouteContext) {
           },
         });
 
-        await createGenerationArtifact({
+        const artifact = await createGenerationArtifact({
           runId: run.id,
           channelId: channelRow.id,
           artifactType: "caption",
@@ -380,6 +382,35 @@ export async function POST(_request: Request, context: RouteContext) {
             legacy_run_id: runId,
             channel,
             caption_version_id: version.id,
+            generation_type: "regenerate",
+          },
+        });
+
+        await uploadArtifactText({
+          generationRunId: run.id,
+          generationChannelId: channelRow.id,
+          channel,
+          filename: "caption.txt",
+          content: caption,
+          artifactId: artifact.id,
+          assetType: "caption_text",
+          metadata: {
+            legacy_run_id: runId,
+            caption_version_id: version.id,
+            generation_type: "regenerate",
+          },
+        });
+
+        await uploadJsonSnapshot({
+          generationRunId: run.id,
+          generationChannelId: channelRow.id,
+          channel,
+          snapshotType: "caption",
+          filename: "caption.json",
+          content: {
+            caption,
+            caption_version_id: version.id,
+            attempt,
             generation_type: "regenerate",
           },
         });

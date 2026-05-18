@@ -13,6 +13,9 @@ export type GenerationRun = {
   status: string;
   source: string | null;
   metadata: JsonObject;
+  queuedAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -73,6 +76,9 @@ type GenerationRunRow = {
   status: string;
   source: string | null;
   metadata: JsonObject | null;
+  queued_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -130,6 +136,9 @@ export type CreateGenerationRunInput = {
   status?: string;
   source?: string | null;
   metadata?: JsonObject;
+  queuedAt?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
 };
 
 export type UpsertGenerationChannelInput = {
@@ -172,7 +181,7 @@ export type CreateFeedbackEventInput = {
 };
 
 const runSelect =
-  "id, organization_id, created_by, legacy_run_id, title, raw_idea, status, source, metadata, created_at, updated_at";
+  "id, organization_id, created_by, legacy_run_id, title, raw_idea, status, source, metadata, queued_at, started_at, completed_at, created_at, updated_at";
 const channelSelect =
   "id, organization_id, run_id, channel, status, caption, visual_prompt, image_url, image_storage_path, metadata, created_at, updated_at";
 const artifactSelect =
@@ -191,6 +200,9 @@ function toRun(row: GenerationRunRow): GenerationRun {
     status: row.status,
     source: row.source,
     metadata: row.metadata ?? {},
+    queuedAt: row.queued_at,
+    startedAt: row.started_at,
+    completedAt: row.completed_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -292,6 +304,9 @@ export async function createGenerationRun(input: CreateGenerationRunInput): Prom
     status: input.status ?? "draft",
     source: input.source ?? null,
     metadata: input.metadata ?? {},
+    ...(input.queuedAt !== undefined ? { queued_at: input.queuedAt } : {}),
+    ...(input.startedAt !== undefined ? { started_at: input.startedAt } : {}),
+    ...(input.completedAt !== undefined ? { completed_at: input.completedAt } : {}),
   };
   const query = input.legacyRunId
     ? supabase.from("generation_runs").upsert(payload, { onConflict: "legacy_run_id" })
@@ -363,9 +378,15 @@ export async function listGenerationRuns(): Promise<GenerationRun[]> {
 export async function updateGenerationRunStatus(id: string, status: string): Promise<GenerationRun> {
   const context = await requireWorkspaceContext();
   const supabase = await createServerSupabase();
+  const timestampUpdates =
+    status === "generating"
+      ? { started_at: new Date().toISOString() }
+      : status === "completed"
+        ? { completed_at: new Date().toISOString() }
+        : {};
   const { data, error } = await supabase
     .from("generation_runs")
-    .update({ status })
+    .update({ status, ...timestampUpdates })
     .eq("organization_id", context.organization.id)
     .eq("id", id)
     .select(runSelect)

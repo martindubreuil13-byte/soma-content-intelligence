@@ -12,6 +12,7 @@ import {
   validateRunChannel
 } from "@/lib/channel-image-generation";
 import { getApprovedCaptionVersion } from "@/lib/feedback-lineage";
+import { getSignedImageUrl } from "@/lib/storage/generation-storage";
 
 type RouteContext = {
   params: Promise<{
@@ -37,6 +38,26 @@ export async function GET(request: Request, context: RouteContext) {
   const safeFile = /^generated-image(?:-[\dTZ-]+)?\.png$/.test(requestedFile) ? requestedFile : imageFileName;
   const imagePath = path.join(getChannelPath(runId, channel), safeFile);
   const download = searchParams.get("download") === "1";
+
+  if (!download) {
+    const signedUrl = await getSignedImageUrl({
+      legacyRunId: runId,
+      channel,
+      filename: safeFile,
+    }).catch((error) => {
+      console.error("[image] Signed storage URL lookup failed", {
+        runId,
+        channel,
+        file: safeFile,
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+      return null;
+    });
+
+    if (signedUrl) {
+      return NextResponse.redirect(signedUrl);
+    }
+  }
 
   try {
     const image = await readFile(imagePath);

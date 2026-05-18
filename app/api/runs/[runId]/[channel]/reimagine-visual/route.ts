@@ -18,6 +18,7 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 
 type RouteContext = {
   params: Promise<{
@@ -250,8 +251,9 @@ export async function POST(request: Request, context: RouteContext) {
     await createGenerationRun({
       legacyRunId: runId,
       rawIdea: typeof metadata.original_idea === "string" ? metadata.original_idea : null,
-      status: "generated",
+      status: "completed",
       source: "visual_reimagine",
+      completedAt: new Date().toISOString(),
       metadata: {
         visual_archetypes: metadata.visual_archetypes ?? null,
         concept_angles: metadata.concept_angles ?? null,
@@ -273,7 +275,7 @@ export async function POST(request: Request, context: RouteContext) {
           },
         });
 
-        await createGenerationArtifact({
+        const artifact = await createGenerationArtifact({
           runId: run.id,
           channelId: channelRow.id,
           artifactType: "visual_prompt",
@@ -282,6 +284,36 @@ export async function POST(request: Request, context: RouteContext) {
           metadata: {
             legacy_run_id: runId,
             channel,
+            visual_prompt_version_id: visualPromptVersion.id,
+            generation_type: "reimagine",
+            visual_archetype: selection.visualArchetype,
+            concept_angle: selection.conceptAngle,
+          },
+        });
+
+        await uploadArtifactText({
+          generationRunId: run.id,
+          generationChannelId: channelRow.id,
+          channel,
+          filename: "visual_prompt.txt",
+          content: promptResult.visualPrompt,
+          artifactId: artifact.id,
+          assetType: "visual_prompt_text",
+          metadata: {
+            legacy_run_id: runId,
+            visual_prompt_version_id: visualPromptVersion.id,
+            generation_type: "reimagine",
+          },
+        });
+
+        await uploadJsonSnapshot({
+          generationRunId: run.id,
+          generationChannelId: channelRow.id,
+          channel,
+          snapshotType: "visual_prompt",
+          filename: "visual_prompt.json",
+          content: {
+            visual_prompt: promptResult.visualPrompt,
             visual_prompt_version_id: visualPromptVersion.id,
             generation_type: "reimagine",
             visual_archetype: selection.visualArchetype,
