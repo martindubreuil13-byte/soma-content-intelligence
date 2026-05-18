@@ -1,5 +1,3 @@
-import { readFile, unlink, writeFile } from "fs/promises";
-import path from "path";
 import { NextResponse } from "next/server";
 import { readScheduleConfig, updateScheduleConfig } from "@/lib/schedule-config";
 import { runGeneration } from "@/lib/generation-runner";
@@ -103,7 +101,6 @@ function isDue(config: ScheduleConfig): { due: boolean; reason: string } {
 
 async function runSchedulerTick(force: boolean): Promise<TickResult> {
   const log: string[] = [];
-  const lockPath = path.join(process.cwd(), "memory", "scheduler.lock");
 
   log.push(`[scheduler] tick at ${new Date().toISOString()}`);
 
@@ -122,62 +119,36 @@ async function runSchedulerTick(force: boolean): Promise<TickResult> {
     log.push("[scheduler] force=true — bypassing time check");
   }
 
-  // ── Lock check ──
-  try {
-    const lockContent = await readFile(lockPath, "utf8");
-    const lockTime = new Date(lockContent.trim());
-    const ageMs = Date.now() - lockTime.getTime();
-    const ageMin = Math.round(ageMs / 60000);
-    if (ageMs < 15 * 60 * 1000) {
-      log.push(
-        `[scheduler] locked (${ageMin}m old) — skipping to prevent duplicate run`
-      );
-      return { skipped: true, reason: "locked", log };
+  log.push("[scheduler] starting generation");
+
+  const idea = `Scheduled generation — ${new Date().toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  })}`;
+
+  const result = await runGeneration(idea);
+
+  if (result.ok && result.runId) {
+    log.push(`[scheduler] generation succeeded — runId: ${result.runId}`);
+  } else {
+    log.push(`[scheduler] generation failed — ${result.error ?? "unknown error"}`);
+    if (result.stderr) {
+      log.push(`[scheduler] stderr: ${result.stderr.slice(0, 400)}`);
     }
-    log.push(`[scheduler] stale lock (${ageMin}m old) — clearing and proceeding`);
-  } catch {
-    // No lock file — proceed normally
   }
 
-  // ── Acquire lock ──
-  await writeFile(lockPath, new Date().toISOString());
-  log.push("[scheduler] lock acquired");
+  // Update lastRunAt regardless of success/failure.
+  // This prevents repeated auto-retries on the same day; use the manual trigger to retry.
+  await updateScheduleConfig({ lastRunAt: new Date().toISOString() });
+  log.push("[scheduler] lastRunAt updated");
 
-  try {
-    log.push("[scheduler] starting generation");
-
-    const idea = `Scheduled generation — ${new Date().toLocaleDateString("en-GB", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    })}`;
-
-    const result = await runGeneration(idea);
-
-    if (result.ok && result.runId) {
-      log.push(`[scheduler] generation succeeded — runId: ${result.runId}`);
-    } else {
-      log.push(`[scheduler] generation failed — ${result.error ?? "unknown error"}`);
-      if (result.stderr) {
-        log.push(`[scheduler] stderr: ${result.stderr.slice(0, 400)}`);
-      }
-    }
-
-    // Update lastRunAt regardless of success/failure.
-    // This prevents repeated auto-retries on the same day; use the manual trigger to retry.
-    await updateScheduleConfig({ lastRunAt: new Date().toISOString() });
-    log.push("[scheduler] lastRunAt updated");
-
-    return {
-      ok: result.ok,
-      runId: result.runId,
-      ...(result.error ? { error: result.error } : {}),
-      log,
-    };
-  } finally {
-    await unlink(lockPath).catch(() => {});
-    log.push("[scheduler] lock released");
-  }
+  return {
+    ok: result.ok,
+    runId: result.runId,
+    ...(result.error ? { error: result.error } : {}),
+    log,
+  };
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────

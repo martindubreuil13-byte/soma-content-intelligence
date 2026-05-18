@@ -5,6 +5,7 @@ import { promisify } from "util";
 import { NextResponse } from "next/server";
 import { channels, getChannelPath, readTextFile } from "@/lib/channel-image-generation";
 import { ensureCaptionVersion, ensureVisualPromptVersion } from "@/lib/feedback-lineage";
+import { createGenerationRun } from "@/lib/db/generation-runs-db";
 
 const execFileAsync = promisify(execFile);
 
@@ -56,6 +57,23 @@ export async function POST(request: Request) {
     const runId = extractRunId(stdout);
 
     if (runId) {
+      await createGenerationRun({
+        legacyRunId: runId,
+        title: idea.slice(0, 120),
+        rawIdea: idea,
+        status: "generated",
+        source: "api_generate",
+        metadata: {
+          stdout_excerpt: stdout.slice(0, 2000),
+          stderr_excerpt: stderr?.slice(0, 2000) ?? "",
+        },
+      }).catch((error) => {
+        console.error("[generate] DB run persistence failed", {
+          runId,
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      });
+
       await Promise.all(
         channels.map(async (channel) => {
           const caption = await readTextFile(path.join(getChannelPath(runId, channel), "caption.txt"));

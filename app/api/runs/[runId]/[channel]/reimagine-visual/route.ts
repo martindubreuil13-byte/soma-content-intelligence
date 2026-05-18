@@ -13,6 +13,11 @@ import {
 } from "@/lib/channel-image-generation";
 import { appendVisualPromptVersion, getApprovedCaptionVersion } from "@/lib/feedback-lineage";
 import { chooseVisualSelection } from "@/lib/visual-generation";
+import {
+  createGenerationArtifact,
+  createGenerationRun,
+  upsertGenerationChannel,
+} from "@/lib/db/generation-runs-db";
 
 type RouteContext = {
   params: Promise<{
@@ -206,7 +211,7 @@ export async function POST(request: Request, context: RouteContext) {
       visualTweak
     });
 
-    await appendVisualPromptVersion(runId, channel, {
+    const visualPromptVersion = await appendVisualPromptVersion(runId, channel, {
       generationType: "reimagine",
       visualPrompt: promptResult.visualPrompt
     });
@@ -241,6 +246,56 @@ export async function POST(request: Request, context: RouteContext) {
         [channel]: selection.conceptAngle
       }
     });
+
+    await createGenerationRun({
+      legacyRunId: runId,
+      rawIdea: typeof metadata.original_idea === "string" ? metadata.original_idea : null,
+      status: "generated",
+      source: "visual_reimagine",
+      metadata: {
+        visual_archetypes: metadata.visual_archetypes ?? null,
+        concept_angles: metadata.concept_angles ?? null,
+      },
+    })
+      .then(async (run) => {
+        const channelRow = await upsertGenerationChannel({
+          runId: run.id,
+          channel,
+          status: "generated",
+          visualPrompt: promptResult.visualPrompt,
+          imageUrl: generated.imageUrl,
+          metadata: {
+            legacy_run_id: runId,
+            visual_prompt_version_id: visualPromptVersion.id,
+            generation_type: "reimagine",
+            visual_archetype: selection.visualArchetype,
+            concept_angle: selection.conceptAngle,
+          },
+        });
+
+        await createGenerationArtifact({
+          runId: run.id,
+          channelId: channelRow.id,
+          artifactType: "visual_prompt",
+          version: 1,
+          content: promptResult.visualPrompt,
+          metadata: {
+            legacy_run_id: runId,
+            channel,
+            visual_prompt_version_id: visualPromptVersion.id,
+            generation_type: "reimagine",
+            visual_archetype: selection.visualArchetype,
+            concept_angle: selection.conceptAngle,
+          },
+        });
+      })
+      .catch((error) => {
+        console.error("[reimagine-visual] DB persistence failed", {
+          runId,
+          channel,
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      });
 
     return NextResponse.json({
       ok: true,

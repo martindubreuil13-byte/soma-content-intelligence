@@ -12,6 +12,11 @@ import {
 } from "@/lib/feedback-lineage";
 import { rebuildPreferenceMemory } from "@/lib/preference-memory";
 import { upsertWinningPattern, appendEditDelta } from "@/lib/brand-intelligence";
+import {
+  createFeedbackEvent,
+  createGenerationRun,
+  upsertGenerationChannel,
+} from "@/lib/db/generation-runs-db";
 
 type RouteContext = {
   params: Promise<{
@@ -88,6 +93,45 @@ export async function POST(request: Request, context: RouteContext) {
       target,
       versionId
     });
+
+    await createGenerationRun({
+      legacyRunId: runId,
+      status: "feedback_received",
+      source: "feedback",
+    })
+      .then(async (run) => {
+        const channelRow = await upsertGenerationChannel({
+          runId: run.id,
+          channel,
+          status: "feedback_received",
+          metadata: {
+            legacy_run_id: runId,
+          },
+        });
+
+        await createFeedbackEvent({
+          runId: run.id,
+          channelId: channelRow.id,
+          targetType: target,
+          feedbackType: "operator_feedback",
+          status: version.status,
+          notes,
+          tags,
+          metadata: {
+            legacy_run_id: runId,
+            channel,
+            version_id: version.id,
+            requested_version_id: versionId ?? null,
+          },
+        });
+      })
+      .catch((error) => {
+        console.error("[feedback] DB persistence failed", {
+          runId,
+          channel,
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      });
 
     if ((target === "caption" || target === "image") && (version.status === "approved" || version.status === "rejected")) {
       await appendPersistentLearningSignal(createLearningEvent({ action: version.status, artifactType: target, channel, runId, version }));

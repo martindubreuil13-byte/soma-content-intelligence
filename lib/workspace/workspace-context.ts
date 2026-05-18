@@ -1,4 +1,6 @@
 import type { User } from "@supabase/supabase-js";
+import { getCurrentOrganizationForUserId } from "@/lib/auth/current-organization";
+import { getCurrentUser } from "@/lib/auth/current-user";
 import type {
   CurrentOrganization,
   OrganizationRole,
@@ -27,4 +29,30 @@ export function createWorkspaceContext(
     organization,
     role: organization.role,
   };
+}
+
+export async function getCurrentWorkspaceContext(): Promise<AppWorkspaceContext | null> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const organization = await getCurrentOrganizationForUserId(user.id);
+
+  if (!organization) {
+    return null;
+  }
+
+  return createWorkspaceContext(user, organization);
+}
+
+export async function requireWorkspaceContext(): Promise<AppWorkspaceContext> {
+  const context = await getCurrentWorkspaceContext();
+
+  if (!context) {
+    throw new Error("Authenticated workspace context is required.");
+  }
+
+  return context;
 }

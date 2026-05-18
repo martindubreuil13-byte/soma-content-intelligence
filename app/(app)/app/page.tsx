@@ -5,7 +5,6 @@ import { getContentRuns } from "@/lib/output-runs";
 import { readPublishingQueue } from "@/lib/publishing-queue";
 import type { ContentChannel, ContentRun } from "@/lib/content-types";
 import { channelLabels } from "@/lib/content-types";
-import { requireCurrentOrganization } from "@/lib/auth/current-organization";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -141,8 +140,6 @@ function EmptyState() {
 }
 
 export default async function AppPage() {
-  await requireCurrentOrganization();
-
   const [runs, queue] = await Promise.all([getContentRuns(), readPublishingQueue()]);
   const trainingSummary = await getAgentTrainingSummary(runs);
   const today = new Date();

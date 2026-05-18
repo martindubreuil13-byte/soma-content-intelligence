@@ -7,6 +7,11 @@ import { appendCaptionVersion, readFeedbackFile, normalizeChannelLineage } from 
 import { rebuildPreferenceMemory } from "@/lib/preference-memory";
 import { readFullIntelligence } from "@/lib/brand-intelligence";
 import { getActiveInjections } from "@/lib/training-injections";
+import {
+  createGenerationArtifact,
+  createGenerationRun,
+  upsertGenerationChannel,
+} from "@/lib/db/generation-runs-db";
 import type { ContentChannel } from "@/lib/content-types";
 import type { ICP, Angle, HookStyle, CTAStyle, NegativeConstraint } from "@/lib/brand-intelligence";
 
@@ -341,6 +346,51 @@ export async function POST(_request: Request, context: RouteContext) {
 
     // Log generation context to meta.json for downstream WinningPattern tracking
     await writeGenerationContext(runId, channel, intelligenceCtx, attempt);
+
+    await createGenerationRun({
+      legacyRunId: runId,
+      rawIdea: typeof metadata.original_idea === "string" ? metadata.original_idea : null,
+      status: "generated",
+      source: "caption_regeneration",
+      metadata: {
+        generation_context: metadata.generation_context ?? null,
+      },
+    })
+      .then(async (run) => {
+        const channelRow = await upsertGenerationChannel({
+          runId: run.id,
+          channel,
+          status: "generated",
+          caption,
+          metadata: {
+            legacy_run_id: runId,
+            caption_version_id: version.id,
+            attempt,
+            generation_type: "regenerate",
+          },
+        });
+
+        await createGenerationArtifact({
+          runId: run.id,
+          channelId: channelRow.id,
+          artifactType: "caption",
+          version: attempt,
+          content: caption,
+          metadata: {
+            legacy_run_id: runId,
+            channel,
+            caption_version_id: version.id,
+            generation_type: "regenerate",
+          },
+        });
+      })
+      .catch((error) => {
+        console.error("[caption] DB persistence failed", {
+          runId,
+          channel,
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      });
 
     await appendPersistentLearningSignal(createLearningEvent({ action: "regenerated", artifactType: "caption", channel, runId, version }));
 

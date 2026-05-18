@@ -34,7 +34,6 @@ export async function getCurrentOrganizationForUserId(
     .limit(1)
     .maybeSingle<OrganizationMemberRow>();
 
-
   if (membershipError) {
     console.error("ORG MEMBERSHIP ERROR", membershipError);
     return null;
@@ -49,7 +48,6 @@ export async function getCurrentOrganizationForUserId(
     .select("id, name, slug")
     .eq("id", membership.organization_id)
     .maybeSingle<OrganizationRow>();
-
 
   if (organizationError) {
     console.error("ORG FETCH ERROR", organizationError);
