@@ -10,7 +10,7 @@ export async function getCurrentUser() {
   } = await supabase.auth.getUser();
 
   if (error) {
-    console.error("CURRENT USER ERROR", error);
+    console.error("[auth] user lookup failed", error.message);
     return null;
   }
 
@@ -21,7 +21,7 @@ export async function requireCurrentUser() {
   const user = await getCurrentUser();
 
   if (!user) {
-    console.warn("CURRENT USER REDIRECT", { destination: "/login" });
+    console.warn("[auth] redirecting unauthenticated request to /login");
     redirect("/login");
   }
 

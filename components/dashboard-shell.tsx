@@ -7,6 +7,7 @@ import { ContentViewer } from "@/components/content-viewer";
 import { IdeaInputPanel } from "@/components/idea-input-panel";
 import { RunSidebar } from "@/components/run-sidebar";
 import { TopBar } from "@/components/top-bar";
+import { safeJsonFetch } from "@/lib/client/fetch-safe";
 import { cleanChannelContent } from "@/lib/content-formatting";
 import type { TrainingSummary } from "@/lib/agent-training";
 import type {
@@ -99,24 +100,23 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setStatusMessage("Writing raw idea and waking the Python engine...");
 
     try {
-      const response = await fetch("/api/generate", {
+      const request = await safeJsonFetch<{ runId?: string | null }>("/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ idea: trimmedIdea })
       });
-      const result = (await response.json()) as { ok?: boolean; runId?: string | null; error?: string };
 
-      if (!response.ok || !result.ok) {
-        throw new Error(result.error ?? "Generation failed.");
+      if (!request.ok) {
+        throw new Error(request.error.message);
       }
 
       setStatusMessage("Generated. Refreshing the local archive...");
 
-      if (result.runId) {
-        setPendingRunId(result.runId);
-        setSelectedRunId(result.runId);
+      if (request.data.runId) {
+        setPendingRunId(request.data.runId);
+        setSelectedRunId(request.data.runId);
       }
 
       router.refresh();
@@ -159,7 +159,7 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setStatusMessage(`Generating ${activeChannel} image from the internal visual brief...`);
 
     try {
-      const response = await fetch(
+      const request = await safeJsonFetch<{ imageUrl?: string }>(
         `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/image`,
         {
           method: "POST",
@@ -169,17 +169,12 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
           body: JSON.stringify({ visualTweak: visualTweaks[imageKey] ?? "" })
         }
       );
-      const result = (await response.json()) as {
-        ok?: boolean;
-        imageUrl?: string;
-        error?: string;
-      };
 
-      if (!response.ok || !result.ok || !result.imageUrl) {
-        throw new Error(result.error ?? "Image generation failed.");
+      if (!request.ok || !request.data.imageUrl) {
+        throw new Error(request.ok ? "Image generation failed." : request.error.message);
       }
 
-      const imageUrl = result.imageUrl;
+      const imageUrl = request.data.imageUrl;
 
       setGeneratedImageUrls((currentUrls) => ({
         ...currentUrls,
@@ -216,22 +211,17 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setStatusMessage(`Regenerating ${activeChannel} caption from your feedback...`);
 
     try {
-      const response = await fetch(`/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/caption`, {
+      const request = await safeJsonFetch<{ caption?: string }>(`/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/caption`, {
         method: "POST"
       });
-      const result = (await response.json()) as {
-        ok?: boolean;
-        caption?: string;
-        error?: string;
-      };
 
-      if (!response.ok || !result.ok || !result.caption) {
-        throw new Error(result.error ?? "Caption regeneration failed.");
+      if (!request.ok || !request.data.caption) {
+        throw new Error(request.ok ? "Caption regeneration failed." : request.error.message);
       }
 
       setGeneratedCaptions((currentCaptions) => ({
         ...currentCaptions,
-        [channelKey]: result.caption ?? ""
+        [channelKey]: request.data.caption ?? ""
       }));
       setGeneratedImageExists((currentExists) => {
         const nextExists = { ...currentExists };
@@ -284,7 +274,7 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setStatusMessage(`Reimagining ${activeChannel} visual concept...`);
 
     try {
-      const response = await fetch(
+      const request = await safeJsonFetch<{ imageUrl?: string; visualPrompt?: string }>(
         `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/reimagine-visual`,
         {
           method: "POST",
@@ -294,20 +284,14 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
           body: JSON.stringify({ visualTweak: visualTweaks[imageKey] ?? "" })
         }
       );
-      const result = (await response.json()) as {
-        ok?: boolean;
-        imageUrl?: string;
-        visualPrompt?: string;
-        error?: string;
-      };
 
-      if (!response.ok || !result.ok || !result.imageUrl || !result.visualPrompt) {
-        throw new Error(result.error ?? "Reimagine visual failed.");
+      if (!request.ok || !request.data.imageUrl || !request.data.visualPrompt) {
+        throw new Error(request.ok ? "Reimagine visual failed." : request.error.message);
       }
 
       setGeneratedImageUrls((currentUrls) => ({
         ...currentUrls,
-        [imageKey]: result.imageUrl ?? ""
+        [imageKey]: request.data.imageUrl ?? ""
       }));
       setGeneratedImageExists((currentExists) => ({
         ...currentExists,
@@ -315,7 +299,7 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
       }));
       setGeneratedVisualPrompts((currentPrompts) => ({
         ...currentPrompts,
-        [imageKey]: result.visualPrompt ?? ""
+        [imageKey]: request.data.visualPrompt ?? ""
       }));
       setStatusMessage("Image direction reworked and saved locally.");
       router.refresh();
@@ -425,7 +409,7 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setErrorMessage("");
 
     try {
-      const response = await fetch(
+      const request = await safeJsonFetch<{ feedback?: ChannelFeedback }>(
         `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/feedback`,
         {
           method: "POST",
@@ -435,14 +419,9 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
           body: JSON.stringify({ target, status, notes, versionId })
         }
       );
-      const result = (await response.json()) as {
-        ok?: boolean;
-        feedback?: ChannelFeedback;
-        error?: string;
-      };
 
-      if (!response.ok || !result.ok || !result.feedback) {
-        throw new Error(result.error ?? "Feedback save failed.");
+      if (!request.ok || !request.data.feedback) {
+        throw new Error(request.ok ? "Feedback save failed." : request.error.message);
       }
 
       const currentVersionId =
@@ -457,13 +436,13 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
           ...currentFeedback,
           [feedbackKey]: {
             ...getActiveFeedback(),
-            [target]: result.feedback ?? { status, notes }
+            [target]: request.data.feedback ?? { status, notes }
           }
         }));
       }
       setFeedbackDrafts((currentDrafts) => ({
         ...currentDrafts,
-        [targetFeedbackKey]: result.feedback?.notes ?? notes
+        [targetFeedbackKey]: request.data.feedback?.notes ?? notes
       }));
       setSavedFeedbackKey(targetFeedbackKey);
       setStatusMessage("Feedback saved locally.");
@@ -498,13 +477,12 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setStatusMessage("Deleting local run...");
 
     try {
-      const response = await fetch(`/api/runs/${encodeURIComponent(deletedRunId)}`, {
+      const request = await safeJsonFetch(`/api/runs/${encodeURIComponent(deletedRunId)}`, {
         method: "DELETE"
       });
-      const result = (await response.json()) as { ok?: boolean; error?: string };
 
-      if (!response.ok || !result.ok) {
-        throw new Error(result.error ?? "Delete failed.");
+      if (!request.ok) {
+        throw new Error(request.error.message);
       }
 
       setSelectedRunId(nextRun?.id ?? "");

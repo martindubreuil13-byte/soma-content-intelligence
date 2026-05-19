@@ -6,6 +6,7 @@ import { AlertCircle, Clock, Loader2, Play, Terminal } from "lucide-react";
 import type { ScheduleConfig } from "@/lib/autopilot-types";
 import type { ContentChannel } from "@/lib/content-types";
 import { channelLabels } from "@/lib/content-types";
+import { safeJsonFetch } from "@/lib/client/fetch-safe";
 
 const allChannels: ContentChannel[] = ["linkedin", "facebook", "instagram", "tiktok"];
 
@@ -21,9 +22,11 @@ export default function SchedulePage() {
   const [tickLog, setTickLog] = useState<string[] | null>(null);
 
   useEffect(() => {
-    fetch("/api/schedule")
-      .then((r) => r.json())
-      .then((data: { config?: ScheduleConfig }) => setConfig(data.config ?? null))
+    safeJsonFetch<{ config: ScheduleConfig }>("/api/schedule")
+      .then((result) => {
+        if (result.ok) setConfig(result.data.config);
+        else setStatusMessage(result.error.message);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -31,14 +34,16 @@ export default function SchedulePage() {
     if (!config) return;
     setSaving(true);
     try {
-      const response = await fetch("/api/schedule", {
+      const result = await safeJsonFetch<{ config: ScheduleConfig }>("/api/schedule", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config)
       });
-      const result = (await response.json()) as { ok?: boolean; config?: ScheduleConfig };
-      if (result.ok && result.config) setConfig(result.config);
+      if (!result.ok) throw new Error(result.error.message);
+      setConfig(result.data.config);
       setStatusMessage("Schedule config saved.");
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : "Could not save schedule.");
     } finally {
       setSaving(false);
     }
@@ -51,21 +56,17 @@ export default function SchedulePage() {
     setLastRunId(null);
 
     try {
-      const response = await fetch("/api/schedule/run", {
+      const result = await safeJsonFetch<{ runId?: string | null }>("/api/schedule/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idea: runIdea.trim() || undefined })
       });
-      const result = (await response.json()) as { ok?: boolean; runId?: string | null; error?: string };
+      if (!result.ok) throw new Error(result.error.message);
 
-      if (!response.ok || !result.ok) {
-        throw new Error(result.error ?? "Generation failed.");
-      }
-
-      setLastRunId(result.runId ?? null);
+      setLastRunId(result.data.runId ?? null);
       setStatusMessage(
-        result.runId
-          ? `Generation complete. Run ID: ${result.runId}`
+        result.data.runId
+          ? `Generation complete. Run ID: ${result.data.runId}`
           : "Generation complete. Refresh the Today screen to see the new run."
       );
     } catch (err) {
@@ -80,14 +81,13 @@ export default function SchedulePage() {
     setTicking(true);
     setTickLog(null);
     try {
-      const res = await fetch("/api/cron/scheduler?dev=1");
-      const json = (await res.json()) as { log?: string[]; skipped?: boolean; reason?: string; runId?: string | null; ok?: boolean; error?: string };
-      setTickLog(json.log ?? [JSON.stringify(json)]);
-      if (json.runId) setLastRunId(json.runId);
+      const tick = await safeJsonFetch<{ log?: string[]; skipped?: boolean; reason?: string; runId?: string | null }>("/api/cron/scheduler?dev=1");
+      if (!tick.ok) throw new Error(tick.error.message);
+      setTickLog(tick.data.log ?? [JSON.stringify(tick.data)]);
+      if (tick.data.runId) setLastRunId(tick.data.runId);
       // Refresh config to show updated lastRunAt
-      const confRes = await fetch("/api/schedule");
-      const confJson = (await confRes.json()) as { config?: ScheduleConfig };
-      if (confJson.config) setConfig(confJson.config);
+      const conf = await safeJsonFetch<{ config: ScheduleConfig }>("/api/schedule");
+      if (conf.ok) setConfig(conf.data.config);
     } catch (err) {
       setTickLog([`Error: ${err instanceof Error ? err.message : String(err)}`]);
     } finally {

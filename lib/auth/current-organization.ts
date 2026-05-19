@@ -35,7 +35,7 @@ export async function getCurrentOrganizationForUserId(
     .maybeSingle<OrganizationMemberRow>();
 
   if (membershipError) {
-    console.error("ORG MEMBERSHIP ERROR", membershipError);
+    console.error("[workspace] membership lookup failed", membershipError.message);
     return null;
   }
 
@@ -50,7 +50,7 @@ export async function getCurrentOrganizationForUserId(
     .maybeSingle<OrganizationRow>();
 
   if (organizationError) {
-    console.error("ORG FETCH ERROR", organizationError);
+    console.error("[workspace] organization lookup failed", organizationError.message);
     return null;
   }
 
@@ -80,21 +80,14 @@ export async function requireCurrentOrganization() {
   const user = await getCurrentUser();
 
   if (!user) {
-    console.warn("ORG REDIRECT CONDITION", {
-      destination: "/login",
-      reason: "missing user",
-    });
+    console.warn("[workspace] redirecting unauthenticated request to /login");
     redirect("/login");
   }
 
   const organization = await getCurrentOrganizationForUserId(user.id);
 
   if (!organization) {
-    console.warn("ORG REDIRECT CONDITION", {
-      destination: "/onboarding",
-      reason: "missing organization",
-      userId: user.id,
-    });
+    console.warn("[workspace] redirecting user without organization to /onboarding");
     redirect("/onboarding");
   }
 

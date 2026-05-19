@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
 import {
   isOrganizationAssetType,
   listOrganizationAssets,
   type OrganizationAsset,
 } from "@/lib/db/organization-assets-db";
+import { errorResponse, internalServerError, successResponse, validationError } from "@/lib/http/api-response";
 import {
   getOrganizationAssetSignedUrl,
   uploadOrganizationAsset,
@@ -52,13 +52,9 @@ export async function GET(request: Request) {
     });
     const assetsWithUrls = await Promise.all(assets.map(withSignedUrl));
 
-    return NextResponse.json({ ok: true, assets: assetsWithUrls });
+    return successResponse({ assets: assetsWithUrls });
   } catch (error) {
-    console.error("[assets] List failed", error);
-    return NextResponse.json(
-      { ok: false, error: "Could not load assets. Check your session and storage permissions." },
-      { status: 500 }
-    );
+    return internalServerError(error);
   }
 }
 
@@ -66,7 +62,7 @@ export async function POST(request: Request) {
   try {
     const storageStatus = await validateOrganizationAssetStorage();
     if (!storageStatus.ok) {
-      return NextResponse.json({ ok: false, error: storageStatus.message, reason: storageStatus.reason }, { status: 503 });
+      return errorResponse(storageStatus.message, { status: 503, code: storageStatus.reason });
     }
 
     const formData = await request.formData();
@@ -76,15 +72,15 @@ export async function POST(request: Request) {
     const description = formData.get("description");
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ ok: false, error: "Choose a file to upload." }, { status: 400 });
+      return validationError("Choose a file to upload.");
     }
 
     if (!isOrganizationAssetType(assetType)) {
-      return NextResponse.json({ ok: false, error: "Choose a valid asset type." }, { status: 400 });
+      return validationError("Choose a valid asset type.");
     }
 
     if (typeof name !== "string" || !name.trim()) {
-      return NextResponse.json({ ok: false, error: "Asset name is required." }, { status: 400 });
+      return validationError("Asset name is required.");
     }
 
     const asset = await uploadOrganizationAsset(file, {
@@ -100,10 +96,10 @@ export async function POST(request: Request) {
       ? await getOrganizationAssetSignedUrl(asset).catch(() => null)
       : null;
 
-    return NextResponse.json({ ok: true, asset: { ...asset, signedUrl } }, { status: 201 });
+    return successResponse({ asset: { ...asset, signedUrl } }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Upload failed.";
     console.error("[assets] Upload failed", { message });
-    return NextResponse.json({ ok: false, error: message }, { status: 400 });
+    return errorResponse(message, { status: 400, code: "asset_upload_failed" });
   }
 }

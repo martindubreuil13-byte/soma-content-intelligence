@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Archive, FileText, ImageIcon, Loader2, Pencil, Plus, RefreshCw, RotateCcw, Trash2, Upload } from "lucide-react";
+import { safeJsonFetch } from "@/lib/client/fetch-safe";
 
 type Asset = {
   id: string;
@@ -65,9 +66,13 @@ export default function AssetsClient() {
     setMessage(null);
     try {
       const response = await fetch("/api/assets?is_active=all", { cache: "no-store" });
-      const data = (await response.json()) as { ok?: boolean; assets?: Asset[]; error?: string };
-      if (!response.ok || !data.ok) throw new Error(data.error ?? "Could not load assets.");
-      setAssets(data.assets ?? []);
+      const text = await response.text();
+      const parsed = text ? JSON.parse(text) as { ok?: boolean; data?: { assets?: Asset[] }; assets?: Asset[]; error?: string | { message?: string } } : {};
+      if (!response.ok || parsed.ok === false) {
+        const message = typeof parsed.error === "object" ? parsed.error.message : parsed.error;
+        throw new Error(message ?? "Could not load assets.");
+      }
+      setAssets(parsed.data?.assets ?? parsed.assets ?? []);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not load assets.");
     } finally {
@@ -97,11 +102,11 @@ export default function AssetsClient() {
       formData.append("description", description.trim());
       formData.append("tags", tags);
 
-      const response = await fetch("/api/assets", { method: "POST", body: formData });
-      const data = (await response.json()) as { ok?: boolean; asset?: Asset; error?: string };
-      if (!response.ok || !data.ok || !data.asset) throw new Error(data.error ?? "Upload failed.");
+      const upload = await safeJsonFetch<{ asset: Asset }>("/api/assets", { method: "POST", body: formData });
+      if (!upload.ok) throw new Error(upload.error.message);
+      const data = upload.data;
 
-      setAssets((current) => [data.asset as Asset, ...current]);
+      setAssets((current) => [data.asset, ...current]);
       setName("");
       setDescription("");
       setTags("");
@@ -125,7 +130,7 @@ export default function AssetsClient() {
   async function saveMetadata(assetId: string) {
     setMessage(null);
     try {
-      const response = await fetch(`/api/assets/${assetId}`, {
+      const update = await safeJsonFetch<{ asset: Asset }>(`/api/assets/${assetId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -134,9 +139,8 @@ export default function AssetsClient() {
           tags: editTags.split(",").map((tag) => tag.trim()).filter(Boolean),
         }),
       });
-      const data = (await response.json()) as { ok?: boolean; asset?: Asset; error?: string };
-      if (!response.ok || !data.ok || !data.asset) throw new Error(data.error ?? "Could not update asset.");
-      setAssets((current) => current.map((asset) => (asset.id === assetId ? data.asset as Asset : asset)));
+      if (!update.ok) throw new Error(update.error.message);
+      setAssets((current) => current.map((asset) => (asset.id === assetId ? update.data.asset : asset)));
       setEditingId(null);
       setMessage("Asset updated.");
     } catch (error) {
@@ -147,14 +151,13 @@ export default function AssetsClient() {
   async function setAssetActive(assetId: string, isActive: boolean) {
     setMessage(null);
     try {
-      const response = await fetch(`/api/assets/${assetId}`, {
+      const update = await safeJsonFetch<{ asset: Asset }>(`/api/assets/${assetId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_active: isActive }),
       });
-      const data = (await response.json()) as { ok?: boolean; asset?: Asset; error?: string };
-      if (!response.ok || !data.ok || !data.asset) throw new Error(data.error ?? "Could not update asset.");
-      setAssets((current) => current.map((asset) => (asset.id === assetId ? data.asset as Asset : asset)));
+      if (!update.ok) throw new Error(update.error.message);
+      setAssets((current) => current.map((asset) => (asset.id === assetId ? update.data.asset : asset)));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not update asset.");
     }
@@ -170,14 +173,14 @@ export default function AssetsClient() {
       formData.append("name", asset.name);
       formData.append("description", asset.description ?? "");
       formData.append("tags", asset.tags.join(", "));
-      const response = await fetch(`/api/assets/${asset.id}`, { method: "POST", body: formData });
-      const data = (await response.json()) as { ok?: boolean; asset?: Asset; replacedAssetId?: string; error?: string };
-      if (!response.ok || !data.ok || !data.asset) throw new Error(data.error ?? "Could not replace asset.");
+      const replacement = await safeJsonFetch<{ asset: Asset; replacedAssetId?: string }>(`/api/assets/${asset.id}`, { method: "POST", body: formData });
+      if (!replacement.ok) throw new Error(replacement.error.message);
+      const data = replacement.data;
       setAssets((current) => [
         data.asset as Asset,
         ...current.map((item) =>
           item.id === asset.id
-            ? { ...item, isActive: false, archivedAt: new Date().toISOString(), replacedByAssetId: data.asset?.id ?? null }
+            ? { ...item, isActive: false, archivedAt: new Date().toISOString(), replacedByAssetId: data.asset.id }
             : item
         ),
       ]);
@@ -190,9 +193,8 @@ export default function AssetsClient() {
   async function deleteAsset(assetId: string) {
     setMessage(null);
     try {
-      const response = await fetch(`/api/assets/${assetId}`, { method: "DELETE" });
-      const data = (await response.json()) as { ok?: boolean; deleted?: boolean; error?: string };
-      if (!response.ok || !data.ok) throw new Error(data.error ?? "Could not remove asset.");
+      const deleted = await safeJsonFetch<{ deleted: boolean }>(`/api/assets/${assetId}`, { method: "DELETE" });
+      if (!deleted.ok) throw new Error(deleted.error.message);
       setAssets((current) => current.map((asset) => (asset.id === assetId ? { ...asset, isActive: false, deletedAt: new Date().toISOString() } : asset)));
       setMessage("Asset archived.");
     } catch (error) {

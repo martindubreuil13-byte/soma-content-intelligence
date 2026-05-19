@@ -1,11 +1,15 @@
-import { NextResponse } from "next/server";
 import { readScheduleConfig, updateScheduleConfig } from "@/lib/schedule-config";
+import { internalServerError, successResponse } from "@/lib/http/api-response";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const config = await readScheduleConfig();
-  return NextResponse.json({ ok: true, config });
+  try {
+    const config = await readScheduleConfig();
+    return successResponse({ config });
+  } catch (error) {
+    return internalServerError(error);
+  }
 }
 
 export async function PUT(request: Request) {
@@ -20,8 +24,8 @@ export async function PUT(request: Request) {
     if (body.ideaSource === "manual" || body.ideaSource === "auto") updates.ideaSource = body.ideaSource;
 
     const config = await updateScheduleConfig(updates);
-    return NextResponse.json({ ok: true, config });
+    return successResponse({ config });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed." }, { status: 500 });
+    return internalServerError(error);
   }
 }

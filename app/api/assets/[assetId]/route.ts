@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import {
   deleteOrganizationAsset,
   getOrganizationAsset,
@@ -11,6 +10,7 @@ import {
   replaceOrganizationAssetFile,
   validateOrganizationAssetStorage,
 } from "@/lib/storage/organization-assets-storage";
+import { errorResponse, internalServerError, notFoundError, successResponse, validationError } from "@/lib/http/api-response";
 
 export const runtime = "nodejs";
 
@@ -49,13 +49,12 @@ export async function GET(_request: Request, context: RouteContext) {
     const asset = await getOrganizationAsset(assetId);
 
     if (!asset) {
-      return NextResponse.json({ ok: false, error: "Asset not found." }, { status: 404 });
+      return notFoundError("Asset not found.");
     }
 
-    return NextResponse.json({ ok: true, asset: await serializeAsset(asset) });
+    return successResponse({ asset: await serializeAsset(asset) });
   } catch (error) {
-    console.error("[asset] Get failed", error);
-    return NextResponse.json({ ok: false, error: "Could not load this asset." }, { status: 500 });
+    return internalServerError(error);
   }
 }
 
@@ -77,14 +76,14 @@ export async function PATCH(request: Request, context: RouteContext) {
     const asset = await updateOrganizationAsset(assetId, patch);
 
     if (!asset) {
-      return NextResponse.json({ ok: false, error: "Asset not found." }, { status: 404 });
+      return notFoundError("Asset not found.");
     }
 
-    return NextResponse.json({ ok: true, asset: await serializeAsset(asset) });
+    return successResponse({ asset: await serializeAsset(asset) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Update failed.";
     console.error("[asset] Update failed", { assetId, message });
-    return NextResponse.json({ ok: false, error: "Could not update this asset." }, { status: 400 });
+    return errorResponse("Could not update this asset.", { status: 400, code: "asset_update_failed" });
   }
 }
 
@@ -94,12 +93,12 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const storageStatus = await validateOrganizationAssetStorage();
     if (!storageStatus.ok) {
-      return NextResponse.json({ ok: false, error: storageStatus.message, reason: storageStatus.reason }, { status: 503 });
+      return errorResponse(storageStatus.message, { status: 503, code: storageStatus.reason });
     }
 
     const currentAsset = await getOrganizationAsset(assetId);
     if (!currentAsset || currentAsset.deletedAt) {
-      return NextResponse.json({ ok: false, error: "Asset not found." }, { status: 404 });
+      return notFoundError("Asset not found.");
     }
 
     const formData = await request.formData();
@@ -110,7 +109,7 @@ export async function POST(request: Request, context: RouteContext) {
     const parsedTags = parseFormTags(formData.get("tags"));
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ ok: false, error: "Choose a replacement file." }, { status: 400 });
+      return validationError("Choose a replacement file.");
     }
 
     const replacement = await replaceOrganizationAssetFile(currentAsset, file, {
@@ -126,14 +125,11 @@ export async function POST(request: Request, context: RouteContext) {
       },
     });
 
-    return NextResponse.json(
-      { ok: true, asset: await serializeAsset(replacement), replacedAssetId: currentAsset.id },
-      { status: 201 }
-    );
+    return successResponse({ asset: await serializeAsset(replacement), replacedAssetId: currentAsset.id }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Replacement failed.";
     console.error("[asset] Replacement failed", { assetId, message });
-    return NextResponse.json({ ok: false, error: message }, { status: 400 });
+    return errorResponse(message, { status: 400, code: "asset_replacement_failed" });
   }
 }
 
@@ -144,14 +140,14 @@ export async function DELETE(_request: Request, context: RouteContext) {
     const asset = await getOrganizationAsset(assetId);
 
     if (!asset) {
-      return NextResponse.json({ ok: false, error: "Asset not found." }, { status: 404 });
+      return notFoundError("Asset not found.");
     }
 
     await deleteOrganizationAsset(assetId);
-    return NextResponse.json({ ok: true, deleted: true });
+    return successResponse({ deleted: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Delete failed.";
     console.error("[asset] Delete failed", { assetId, message });
-    return NextResponse.json({ ok: false, error: "Could not remove this asset." }, { status: 400 });
+    return errorResponse("Could not remove this asset.", { status: 400, code: "asset_delete_failed" });
   }
 }

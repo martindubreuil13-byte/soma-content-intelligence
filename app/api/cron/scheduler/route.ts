@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { readScheduleConfig, updateScheduleConfig } from "@/lib/schedule-config";
 import { runGeneration } from "@/lib/generation-runner";
 import {
@@ -8,6 +7,7 @@ import {
   updateSchedulerHeartbeat,
 } from "@/lib/db/scheduler-runtime-db";
 import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
+import { errorResponse, successResponse, unauthorizedError } from "@/lib/http/api-response";
 import type { ScheduleConfig } from "@/lib/autopilot-types";
 
 export const dynamic = "force-dynamic";
@@ -191,7 +191,7 @@ export async function GET(request: Request) {
     if (cronSecret) {
       const auth = request.headers.get("authorization");
       if (auth !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return unauthorizedError();
       }
     }
   }
@@ -212,7 +212,10 @@ export async function GET(request: Request) {
       log: ["[scheduler] execution job failed"],
     }));
 
-  console.log("[cron/scheduler]", result.log.join(" | "));
+  if (result.ok === false) {
+    console.warn("[cron/scheduler] failed", result.error);
+    return errorResponse(result.error ?? "Scheduler tick failed.", { status: 500, code: "scheduler_failed", details: { log: result.log } });
+  }
 
-  return NextResponse.json(result, { status: result.ok === false ? 500 : 200 });
+  return successResponse(result);
 }

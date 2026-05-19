@@ -18,6 +18,7 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import { cleanChannelContent } from "@/lib/content-formatting";
+import { safeJsonFetch } from "@/lib/client/fetch-safe";
 import type { TrainingSummary } from "@/lib/agent-training";
 import type {
   ChannelFeedback,
@@ -290,7 +291,7 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
     setSavedKey(null);
 
     try {
-      const response = await fetch(
+      const request = await safeJsonFetch<{ feedback?: ChannelFeedback }>(
         `/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/feedback`,
         {
           method: "POST",
@@ -298,10 +299,9 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
           body: JSON.stringify({ target, status, notes, versionId: resolvedVersionId, tags })
         }
       );
-      const result = (await response.json()) as { ok?: boolean; feedback?: ChannelFeedback; error?: string };
 
-      if (!response.ok || !result.ok || !result.feedback) {
-        throw new Error(result.error ?? "Feedback save failed.");
+      if (!request.ok || !request.data.feedback) {
+        throw new Error(request.ok ? "Feedback save failed." : request.error.message);
       }
 
       const currentVersionId =
@@ -316,7 +316,7 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
           ...prev,
           [channelKey]: {
             ...(prev[channelKey] ?? feedback),
-            [target]: result.feedback!
+            [target]: request.data.feedback
           }
         }));
       }
@@ -335,11 +335,10 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
     setStatusMessage("Regenerating caption from your feedback…");
 
     try {
-      const response = await fetch(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/caption`, {
+      const request = await safeJsonFetch<{ caption?: string }>(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/caption`, {
         method: "POST"
       });
-      const result = (await response.json()) as { ok?: boolean; caption?: string; error?: string };
-      if (!response.ok || !result.ok) throw new Error(result.error ?? "Regeneration failed.");
+      if (!request.ok) throw new Error(request.error.message);
       setFeedbackOverrides((prev) => ({
         ...prev,
         [channelKey]: {
@@ -364,14 +363,15 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
     setStatusMessage("Generating image…");
 
     try {
-      const response = await fetch(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/image`, {
+      const request = await safeJsonFetch<{ imageUrl?: string }>(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/image`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ visualTweak: visualTweaks[channelKey] ?? "" })
       });
-      const result = (await response.json()) as { ok?: boolean; imageUrl?: string; error?: string };
-      if (!response.ok || !result.ok || !result.imageUrl) throw new Error(result.error ?? "Image generation failed.");
-      setImageUrlOverrides((prev) => ({ ...prev, [channelKey]: result.imageUrl! }));
+      if (!request.ok || !request.data.imageUrl) {
+        throw new Error(request.ok ? "Image generation failed." : request.error.message);
+      }
+      setImageUrlOverrides((prev) => ({ ...prev, [channelKey]: request.data.imageUrl! }));
       setStatusMessage("Image generated.");
       router.refresh();
     } catch (err) {
@@ -390,7 +390,7 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
     setStatusMessage("Reimagining visual concept…");
 
     try {
-      const response = await fetch(
+      const request = await safeJsonFetch<{ imageUrl?: string; visualPrompt?: string }>(
         `/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/reimagine-visual`,
         {
           method: "POST",
@@ -398,9 +398,10 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
           body: JSON.stringify({ visualTweak: visualTweaks[channelKey] ?? "" })
         }
       );
-      const result = (await response.json()) as { ok?: boolean; imageUrl?: string; visualPrompt?: string; error?: string };
-      if (!response.ok || !result.ok || !result.imageUrl) throw new Error(result.error ?? "Reimagine failed.");
-      setImageUrlOverrides((prev) => ({ ...prev, [channelKey]: result.imageUrl! }));
+      if (!request.ok || !request.data.imageUrl) {
+        throw new Error(request.ok ? "Reimagine failed." : request.error.message);
+      }
+      setImageUrlOverrides((prev) => ({ ...prev, [channelKey]: request.data.imageUrl! }));
       setStatusMessage("Visual concept reimagined.");
       router.refresh();
     } catch (err) {
@@ -417,7 +418,7 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
     setAddingToQueue(true);
 
     try {
-      const response = await fetch("/api/queue", {
+      const request = await safeJsonFetch<{ item?: PublishingQueueItem }>("/api/queue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -429,9 +430,8 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
           imagePath: activePackage.imageUrl
         })
       });
-      const result = (await response.json()) as { ok?: boolean; item?: PublishingQueueItem; error?: string };
-      if (!response.ok || !result.ok) throw new Error(result.error ?? "Failed.");
-      setQueueMap((prev) => ({ ...prev, [activeChannel]: result.item }));
+      if (!request.ok) throw new Error(request.error.message);
+      setQueueMap((prev) => ({ ...prev, [activeChannel]: request.data.item }));
       setStatusMessage("Added to publishing queue.");
     } catch (err) {
       setStatusMessage(err instanceof Error ? err.message : "Failed to add to queue.");
