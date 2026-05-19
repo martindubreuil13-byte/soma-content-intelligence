@@ -1,15 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, Eye, Target, Layers, Clock } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { getAgentTrainingSummary } from "@/lib/agent-training";
 import { listExecutionJobs } from "@/lib/db/execution-jobs-db";
 import { getContentRuns } from "@/lib/output-runs";
 import { readPublishingQueue } from "@/lib/publishing-queue";
 import type { ContentChannel, ContentRun } from "@/lib/content-types";
-import { channelLabels } from "@/lib/content-types";
 import { AgentOrb } from "@/components/soma/agent-orb";
+import { AgentMessage } from "@/components/soma/agent-message";
+import { AgentComposer } from "@/components/soma/agent-composer";
 import { MaturityIndicator } from "@/components/soma/maturity-indicator";
-import { ActionCard } from "@/components/soma/action-card";
-import { PremiumPanel } from "@/components/soma/premium-panel";
 import type { OrbState } from "@/components/soma/agent-orb";
 
 export const dynamic = "force-dynamic";
@@ -17,12 +16,7 @@ export const revalidate = 0;
 
 const channelList: ContentChannel[] = ["linkedin", "facebook", "instagram", "tiktok"];
 
-function getAgentState(score: number, runsCount: number): OrbState {
-  if (runsCount === 0) return "idle";
-  if (score < 30) return "learning";
-  if (score < 60) return "preparing";
-  return "idle";
-}
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -31,20 +25,51 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-function getAgentBriefing(score: number, runsCount: number, pendingCount: number): string {
+function getOrbState(score: number, runsCount: number, pending: number): OrbState {
+  if (runsCount === 0) return "idle";
+  if (pending > 0) return "preparing";
+  if (score < 30) return "learning";
+  return "idle";
+}
+
+function getAgentMessage(score: number, runsCount: number, pending: number): string {
   if (runsCount === 0) {
-    return "I'm ready to begin. Start your first mission and I'll learn from everything you create together.";
+    return "I'm still learning your business. The more you teach me, the better I'll become.";
   }
   if (score < 25) {
-    return "I'm still learning your brand and voice. Every piece of feedback you give me shapes how I create.";
+    return "I'm building my understanding of your brand. Every piece of feedback shapes how I create.";
   }
-  if (pendingCount > 0) {
-    return `I've prepared ${pendingCount} piece${pendingCount !== 1 ? "s" : ""} for your review. Your feedback is what helps me grow.`;
+  if (pending > 0) {
+    return `I've prepared ${pending} draft${pending !== 1 ? "s" : ""} based on what I've learned so far. Your feedback is how I improve.`;
   }
   if (score < 60) {
-    return "I've reviewed your latest feedback and refined my creative direction. A few drafts are waiting.";
+    return "I've been learning from your recent reviews and refining my creative direction.";
   }
-  return "I've analyzed your strongest patterns and aligned today's content with what performs best for your brand.";
+  return "I've analyzed your most effective patterns and I'm ready to create content aligned with your brand.";
+}
+
+function getInsights(pending: number, queueCount: number, score: number, runsCount: number): string[] {
+  if (runsCount === 0) return [];
+  const out: string[] = [];
+  if (pending > 0) out.push(`${pending} draft${pending !== 1 ? "s" : ""} waiting for your feedback.`);
+  if (queueCount > 0) out.push(`${queueCount} approved piece${queueCount !== 1 ? "s" : ""} ready to publish.`);
+  if (out.length === 0 && score > 0) out.push("All caught up — give me a new direction to work on.");
+  return out.slice(0, 2);
+}
+
+function getSuggestions(score: number, runsCount: number): string[] {
+  if (runsCount === 0) {
+    return [
+      "Tell me about your business and who you serve",
+      "Create my first piece of content",
+      "Help me define my brand voice",
+    ];
+  }
+  const list = ["Create a sharp post from an idea I have"];
+  if (score < 40) list.push("Here's a visual reference I want you to learn from");
+  list.push("Help me promote something specific today");
+  if (score >= 40) list.push("What content direction has worked best recently?");
+  return list.slice(0, 4);
 }
 
 function getRunStatus(run: ContentRun) {
@@ -52,275 +77,223 @@ function getRunStatus(run: ContentRun) {
   const captionApproved = all.filter((p) => p.feedback.caption.status === "approved").length;
   const imageApproved = all.filter((p) => p.feedback.image.status === "approved").length;
   const anyPending = all.some((p) => p.feedback.caption.status === "pending");
-
   if (captionApproved === channelList.length && imageApproved === channelList.length)
     return { label: "Ready", color: "emerald" as const };
-  if (captionApproved > 0 || imageApproved > 0)
-    return { label: "In review", color: "amber" as const };
-  if (anyPending)
-    return { label: "Needs review", color: "violet" as const };
+  if (anyPending) return { label: "Needs review", color: "violet" as const };
+  if (captionApproved > 0 || imageApproved > 0) return { label: "In review", color: "amber" as const };
   return { label: "Draft", color: "neutral" as const };
 }
 
-const statusStyles = {
-  emerald: "border-emerald-300/22 bg-emerald-300/8 text-emerald-200/80",
-  amber:   "border-soma-rose/25 bg-soma-rose/10 text-soma-pearl",
-  violet:  "border-violet-soft/25 bg-violet-deep/12 text-violet-pale",
-  neutral: "border-white/10 bg-white/[0.04] text-white/40",
+const statusBadge = {
+  emerald: "border-emerald-300/20 bg-emerald-300/6 text-emerald-200/70",
+  violet:  "border-violet-soft/22 bg-violet-deep/10 text-violet-pale",
+  amber:   "border-soma-rose/20 bg-soma-rose/6 text-soma-pearl",
+  neutral: "border-white/[0.07] bg-transparent text-white/32",
 };
 
-function ChannelDots({ run }: { run: ContentRun }) {
-  return (
-    <div className="flex items-center gap-2.5">
-      {channelList.map((ch) => {
-        const pkg = run.channels[ch];
-        const ok = pkg.feedback.caption.status === "approved";
-        const rejected = pkg.feedback.caption.status === "rejected";
-        return (
-          <div key={ch} className="flex flex-col items-center gap-1">
-            <span className="text-[9px] font-semibold uppercase tracking-wider text-white/30">
-              {channelLabels[ch].slice(0, 2)}
-            </span>
-            <div
-              className={`h-1.5 w-1.5 rounded-full ${ok ? "bg-emerald-400" : rejected ? "bg-mist-rose/70" : "bg-white/18"}`}
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+// ─── Slim run row ─────────────────────────────────────────────────────────────
 
-function RunCard({ run, score }: { run: ContentRun; score: number }) {
+function SlimRunRow({ run }: { run: ContentRun }) {
   const status = getRunStatus(run);
-  const preview = run.channels.linkedin?.caption?.slice(0, 110)?.replace(/\n/g, " ") ?? "";
+  const preview =
+    (run.hasOriginalIdea ? run.originalIdea : run.channels.linkedin?.caption ?? "Generated content")
+      ?.slice(0, 90)
+      ?.replace(/\n/g, " ") ?? "";
 
   return (
     <Link
       href={`/review/${encodeURIComponent(run.id)}`}
-      className="group relative block overflow-hidden rounded-[20px] p-5 transition duration-300"
-      style={{
-        border: "1px solid rgba(255,255,255,0.07)",
-        background: "rgba(26, 20, 36, 0.6)",
-      }}
+      className="group flex items-center justify-between gap-4 rounded-[14px] px-4 py-3 transition hover:bg-white/[0.04]"
     >
-      <div
-        className="absolute inset-x-0 top-0 h-px opacity-0 transition duration-300 group-hover:opacity-100"
-        style={{ background: "linear-gradient(90deg, transparent, rgba(128,112,184,0.8), rgba(168,113,138,0.65), transparent)" }}
-      />
-
-      <div className="mb-3.5 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/30">
-            {run.timestamp}
-          </p>
-          <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-white/72">
-            {run.hasOriginalIdea ? run.originalIdea : "Generated content run"}
-          </p>
-        </div>
-        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusStyles[status.color]}`}>
+      <p className="min-w-0 truncate text-[13px] text-white/45 group-hover:text-white/65 transition">
+        {preview}
+      </p>
+      <div className="flex shrink-0 items-center gap-2">
+        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusBadge[status.color]}`}>
           {status.label}
         </span>
-      </div>
-
-      {preview && (
-        <p className="mb-4 line-clamp-2 text-sm leading-6 text-white/38">{preview}…</p>
-      )}
-
-      <div className="flex items-center justify-between gap-3">
-        <ChannelDots run={run} />
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <p className="text-[9px] font-semibold uppercase tracking-wider text-white/28">Confidence</p>
-            <p className="font-display text-base text-soma-pearl">{score}</p>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-[14px] border border-violet-soft/22 bg-violet-deep/12 px-3 py-1.5 text-sm font-semibold text-violet-pale transition duration-200 group-hover:border-violet-soft/42 group-hover:bg-violet-deep/22 group-hover:text-white">
-            Review
-            <ArrowRight size={13} />
-          </div>
-        </div>
+        <ArrowRight size={12} className="text-white/18 group-hover:text-white/40 transition" />
       </div>
     </Link>
   );
 }
 
-function AgentReady() {
-  return (
-    <div className="flex min-h-[44vh] flex-col items-center justify-center rounded-[24px] p-10 text-center"
-      style={{ border: "1px dashed rgba(128,112,184,0.18)", background: "rgba(128,112,184,0.03)" }}
-    >
-      <AgentOrb state="idle" size="lg" className="mb-6" />
-      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-violet-muted/60">Agent ready</p>
-      <h2 className="mt-3 font-display text-2xl text-white/80">SOMA is waiting for its first mission</h2>
-      <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-white/38">
-        Create a mission to start generating content. SOMA will learn from every piece of feedback you give.
-      </p>
-      <Link
-        href="/missions"
-        className="mt-7 flex items-center gap-2 rounded-[14px] border border-violet-soft/28 bg-violet-deep/14 px-5 py-3 text-sm font-semibold text-violet-pale transition duration-200 hover:border-violet-soft/45 hover:bg-violet-deep/22 hover:text-white"
-      >
-        Start a mission
-        <ArrowRight size={14} />
-      </Link>
-    </div>
-  );
-}
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function TodayPage() {
   const [runs, queue, jobs] = await Promise.all([
     getContentRuns(),
     readPublishingQueue(),
-    listExecutionJobs({ limit: 3 }).catch(() => []),
+    listExecutionJobs({ limit: 4 }).catch(() => []),
   ]);
-  const trainingSummary = await getAgentTrainingSummary(runs);
+  const summary = await getAgentTrainingSummary(runs);
 
   const today = new Date();
-  const dateLabel = today.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  const dateLabel = today.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
   const queueCount = queue.filter((q) => q.status === "approved").length;
   const pendingRuns = runs.filter((r) => getRunStatus(r).color === "violet").length;
-  const orbState = getAgentState(trainingSummary.score, runs.length);
-  const briefing = getAgentBriefing(trainingSummary.score, runs.length, pendingRuns);
+
+  const orbState = getOrbState(summary.score, runs.length, pendingRuns);
+  const message = getAgentMessage(summary.score, runs.length, pendingRuns);
+  const insights = getInsights(pendingRuns, queueCount, summary.score, runs.length);
+  const suggestions = getSuggestions(summary.score, runs.length);
   const greeting = getGreeting();
 
+  const memorySignals = [
+    { label: "Maturity",   value: summary.stage },
+    { label: "Confidence", value: `${summary.score}/100` },
+    { label: "Evaluated",  value: String(summary.evaluatedSamples) },
+    { label: "Queue",      value: `${queueCount} ready` },
+  ];
+
   return (
-    <div className="min-h-screen px-5 py-7 sm:px-6 lg:px-8 lg:py-9">
-      <div className="mx-auto max-w-2xl space-y-7">
+    <div className="min-h-screen px-5 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <div className="mx-auto max-w-[920px]">
 
-        {/* Hero — Agent briefing */}
-        <PremiumPanel variant="elevated" className="!p-0 overflow-hidden">
-          <div className="p-7">
-            <div className="flex items-start gap-6">
-              <AgentOrb state={orbState} size="lg" className="mt-1 shrink-0" />
-
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/28">
-                  {dateLabel}
-                </p>
-                <h1 className="mt-2 font-display text-2xl text-white sm:text-3xl">
-                  {greeting}.
-                </h1>
-                <p className="mt-2.5 text-sm leading-6 text-white/55 max-w-sm">
-                  {briefing}
-                </p>
-
-                <div className="mt-5">
-                  <MaturityIndicator score={trainingSummary.score} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom strip — quick stats */}
-          <div
-            className="flex items-center gap-6 px-7 py-3.5"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.055)", background: "rgba(0,0,0,0.2)" }}
-          >
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-400/70" />
-              <span className="text-[11px] text-white/40">{queueCount} ready to publish</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-violet-soft/70" />
-              <span className="text-[11px] text-white/40">{pendingRuns} awaiting review</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-soma-mist/50" />
-              <span className="text-[11px] text-white/40">{runs.length} total runs</span>
-            </div>
-          </div>
-        </PremiumPanel>
-
-        {/* Priority actions */}
-        <div>
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/28">
-            What to do today
-          </p>
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            <ActionCard
-              title="New mission"
-              href="/missions"
-              icon={<Target size={14} />}
-              variant="primary"
-            />
-            <ActionCard
-              title="Review drafts"
-              href="/review"
-              count={pendingRuns}
-              icon={<Eye size={14} />}
-            />
-            <ActionCard
-              title="Assets"
-              href="/assets"
-              icon={<Layers size={14} />}
-            />
-            <ActionCard
-              title="Queue"
-              count={queueCount}
-              href="/queue"
-              icon={<Clock size={14} />}
-            />
-          </div>
+        {/* ── Hero ── */}
+        <div className="flex flex-col items-center">
+          <AgentOrb state={orbState} size="xl" />
+          <AgentMessage
+            greeting={`${greeting}.`}
+            message={message}
+            insights={insights}
+            dateLabel={dateLabel}
+          />
         </div>
 
-        {/* Execution jobs (if any active) */}
-        {jobs.length > 0 && (
-          <PremiumPanel variant="subtle">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-              Work in progress
-            </p>
-            <div className="space-y-1.5">
-              {jobs.map((job) => (
+        {/* ── Memory signals ── */}
+        <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
+          {memorySignals.map((s) => (
+            <span
+              key={s.label}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.07] px-3 py-1 text-[11px] font-semibold text-white/30"
+            >
+              <span className="h-1 w-1 rounded-full bg-violet-soft/50" />
+              {s.label}
+              <span className="text-white/16">·</span>
+              {s.value}
+            </span>
+          ))}
+        </div>
+
+        {/* ── Composer ── */}
+        <div className="mt-10">
+          <AgentComposer suggestions={suggestions} />
+        </div>
+
+        {/* ── Progressive disclosure: what SOMA knows ── */}
+        <details className="group mt-10">
+          <summary className="flex w-full cursor-pointer select-none items-center justify-center gap-2 text-[12px] font-semibold text-white/28 transition hover:text-white/48">
+            <ChevronDown
+              size={14}
+              className="transition-transform duration-200 group-open:rotate-180"
+            />
+            Show what SOMA knows right now
+          </summary>
+
+          <div className="mt-6 space-y-5">
+            {/* Maturity */}
+            <div
+              className="rounded-[18px] p-5"
+              style={{ border: "1px solid rgba(255,255,255,0.07)", background: "rgba(26,20,36,0.5)" }}
+            >
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/28">
+                Agent maturity
+              </p>
+              <MaturityIndicator score={summary.score} />
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-2.5">
+              {[
+                { label: "Evaluated",     value: summary.evaluatedSamples },
+                { label: "Approved",      value: summary.approved },
+                { label: "Raw score",     value: Math.round(summary.rawScore) },
+              ].map((stat) => (
                 <div
-                  key={job.id}
-                  className="flex items-center justify-between gap-3 rounded-[12px] px-3 py-2 text-xs"
-                  style={{ background: "rgba(255,255,255,0.03)" }}
+                  key={stat.label}
+                  className="rounded-[16px] p-4 text-center"
+                  style={{ border: "1px solid rgba(255,255,255,0.065)", background: "rgba(255,255,255,0.02)" }}
                 >
-                  <span className="truncate font-semibold text-white/52">
-                    {job.jobType.replace(/_/g, " ")}
-                  </span>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 font-semibold ${
-                      job.status === "completed"
-                        ? "bg-emerald-300/8 text-emerald-200/70"
-                        : job.status === "running"
-                          ? "bg-violet-soft/12 text-violet-pale"
-                          : job.status === "failed"
-                            ? "bg-mist-rose/10 text-soma-pearl/70"
-                            : "bg-white/[0.05] text-white/38"
-                    }`}
-                  >
-                    {job.status === "queued" && job.retryCount > 0 ? "retrying" : job.status}
-                  </span>
+                  <p className="font-display text-xl text-soma-pearl">{stat.value}</p>
+                  <p className="mt-0.5 text-[10px] text-white/28">{stat.label}</p>
                 </div>
               ))}
             </div>
-          </PremiumPanel>
-        )}
 
-        {/* Content runs */}
-        <div>
-          {runs.length === 0 ? (
-            <AgentReady />
-          ) : (
-            <>
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/28">
-                  Ready for review
+            {/* Execution jobs */}
+            {jobs.length > 0 && (
+              <div
+                className="rounded-[16px] p-4"
+                style={{ border: "1px solid rgba(255,255,255,0.065)", background: "rgba(255,255,255,0.02)" }}
+              >
+                <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25">
+                  Work in progress
                 </p>
-                <div className="flex items-center gap-3 text-[9px] text-white/25">
-                  <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />approved</span>
-                  <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-mist-rose/70" />rejected</span>
-                  <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-white/18" />pending</span>
+                <div className="space-y-1.5">
+                  {jobs.map((job) => (
+                    <div key={job.id} className="flex items-center justify-between gap-3 rounded-[10px] px-3 py-2 text-xs" style={{ background: "rgba(255,255,255,0.025)" }}>
+                      <span className="truncate text-white/45">{job.jobType.replace(/_/g, " ")}</span>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 font-semibold ${
+                        job.status === "completed" ? "bg-emerald-300/7 text-emerald-200/65"
+                        : job.status === "running"  ? "bg-violet-soft/10 text-violet-pale"
+                        : job.status === "failed"   ? "bg-mist-rose/8 text-soma-pearl/65"
+                        : "bg-white/[0.04] text-white/35"
+                      }`}>
+                        {job.status === "queued" && job.retryCount > 0 ? "retrying" : job.status}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="space-y-2.5">
-                {runs.map((run) => (
-                  <RunCard key={run.id} run={run} score={trainingSummary.score} />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+            )}
+
+            {/* Quick links */}
+            <div className="flex gap-2.5">
+              <Link href="/memory" className="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] border border-violet-soft/18 bg-violet-deep/8 py-2.5 text-xs font-semibold text-violet-pale/70 transition hover:border-violet-soft/32 hover:text-violet-pale">
+                Full memory report
+                <ArrowRight size={11} />
+              </Link>
+              <Link href="/training" className="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] border border-white/[0.07] bg-transparent py-2.5 text-xs font-semibold text-white/35 transition hover:border-white/12 hover:text-white/55">
+                Training detail
+                <ArrowRight size={11} />
+              </Link>
+            </div>
+          </div>
+        </details>
+
+        {/* ── Content runs — secondary, below fold ── */}
+        {runs.length > 0 && (
+          <div className="mt-12">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.05)" }} />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/22">
+                {runs.length} draft{runs.length !== 1 ? "s" : ""} in memory
+              </p>
+              <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.05)" }} />
+            </div>
+
+            <div className="space-y-0.5">
+              {runs.map((run) => (
+                <SlimRunRow key={run.id} run={run} />
+              ))}
+            </div>
+
+            <div className="mt-4 text-center">
+              <Link
+                href="/review"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/28 transition hover:text-white/50"
+              >
+                Open full review
+                <ArrowRight size={12} />
+              </Link>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

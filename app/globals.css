@@ -53,6 +53,15 @@ a {
   background: linear-gradient(90deg, transparent, rgba(128, 112, 184, 0.85), rgba(80, 50, 120, 0.55), transparent);
 }
 
+/* Disclosure — suppress browser arrow */
+details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
 /* Agent orb keyframes */
 @keyframes orb-morph {
   0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
