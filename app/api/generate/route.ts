@@ -10,6 +10,7 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { buildGenerationContext, renderContextForPrompt } from "@/lib/context/context-assembly";
 import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
 import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 
@@ -52,10 +53,18 @@ export async function POST(request: Request) {
   const cwd = process.cwd();
   const inputPath = path.join(cwd, "inputs", "raw-idea.txt");
   const pythonCommand = process.env.PYTHON_BIN ?? getProjectPythonPath(cwd);
+  const assembledContext = await buildGenerationContext({
+    objective: "generation",
+    rawIdea: idea,
+    includeSignedAssetUrls: false,
+  }).catch(() => null);
+  const rawIdeaForPython = assembledContext
+    ? [`Original idea:`, idea, "", renderContextForPrompt(assembledContext)].join("\n")
+    : idea;
 
   try {
     await mkdir(path.dirname(inputPath), { recursive: true });
-    await writeFile(inputPath, idea, "utf8");
+    await writeFile(inputPath, rawIdeaForPython, "utf8");
 
     const { stdout, stderr } = await execFileAsync(pythonCommand, ["agent.py"], {
       cwd,
@@ -89,6 +98,14 @@ export async function POST(request: Request) {
         });
         return null;
       });
+
+      await buildGenerationContext({
+        objective: "generation",
+        rawIdea: idea,
+        legacyRunId: runId,
+        includeSignedAssetUrls: false,
+        persistSnapshot: true,
+      }).catch(() => null);
 
       await Promise.all(
         channels.map(async (channel) => {

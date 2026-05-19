@@ -18,6 +18,7 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { buildGenerationContext, renderContextForPrompt } from "@/lib/context/context-assembly";
 import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
 import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 
@@ -211,8 +212,15 @@ export async function POST(request: Request, context: RouteContext) {
       metadata.concept_angles?.[channel]
     );
     const assetMap = await readTextFile(path.join(process.cwd(), "assets", "reference-notes", "asset-map.md"));
+    const unifiedContext = await buildGenerationContext({
+      objective: "visual_regeneration",
+      channel,
+      legacyRunId: runId,
+      includeSignedAssetUrls: true,
+      persistSnapshot: true,
+    }).catch(() => null);
     const promptResult = await createReimaginedVisualPrompt({
-      assetMap,
+      assetMap: [unifiedContext ? renderContextForPrompt(unifiedContext) : "", assetMap].filter(Boolean).join("\n\n"),
       caption,
       channel,
       previousPrompt: currentVisualPrompt,

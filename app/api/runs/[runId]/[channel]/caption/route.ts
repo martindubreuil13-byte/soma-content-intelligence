@@ -12,6 +12,7 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { buildGenerationContext, renderContextForPrompt } from "@/lib/context/context-assembly";
 import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
 import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 import type { ContentChannel } from "@/lib/content-types";
@@ -138,6 +139,10 @@ function buildIntelligenceSection(ctx: IntelligenceContext): string {
 
   lines.push("--- END BRAND INTELLIGENCE ---");
   return lines.join("\n");
+}
+
+function compactPromptSections(sections: string[]) {
+  return sections.filter((section) => section.trim()).join("\n\n");
 }
 
 async function buildTrainingInjectionsSection(): Promise<string> {
@@ -335,7 +340,18 @@ export async function POST(_request: Request, context: RouteContext) {
       loadIntelligenceContext(channel as ContentChannel),
       buildTrainingInjectionsSection(),
     ]);
-    const intelligenceSection = buildIntelligenceSection(intelligenceCtx);
+    const unifiedContext = await buildGenerationContext({
+      objective: "caption_regeneration",
+      channel: channel as ContentChannel,
+      rawIdea: typeof metadata.original_idea === "string" ? metadata.original_idea : null,
+      legacyRunId: runId,
+      includeSignedAssetUrls: false,
+      persistSnapshot: true,
+    }).catch(() => null);
+    const intelligenceSection = compactPromptSections([
+      unifiedContext ? renderContextForPrompt(unifiedContext) : "",
+      buildIntelligenceSection(intelligenceCtx),
+    ]);
 
     const caption = await createRegeneratedCaption({
       channel,
