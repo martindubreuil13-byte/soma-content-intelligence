@@ -4,7 +4,10 @@ import type { AuthChangeEvent, Session, Subscription } from "@supabase/supabase-
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion, type Variants } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { AgentOrb } from "@/components/soma/agent-orb";
+import type { OrbState } from "@/components/soma/agent-orb";
 import "./soma.css";
 
 type BrowserSupabaseClient = ReturnType<typeof createClient>;
@@ -28,7 +31,6 @@ function waitForBrowserSession(supabase: BrowserSupabaseClient, timeoutMs = 5000
         finish(true);
         return;
       }
-
       if (event === "SIGNED_OUT") {
         finish(false);
       }
@@ -42,25 +44,6 @@ function waitForBrowserSession(supabase: BrowserSupabaseClient, timeoutMs = 5000
 
     timeoutId = window.setTimeout(() => finish(false), timeoutMs);
   });
-}
-
-// ── Scroll-reveal hook ───────────────────────────────────────────────────────
-
-function useScrollReveal() {
-  useEffect(() => {
-    const container = document.querySelector(".soma-scroll") as HTMLElement | null;
-    const items = document.querySelectorAll<Element>(".soma-reveal");
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) entry.target.classList.add("visible");
-        });
-      },
-      { root: container, threshold: 0.1 }
-    );
-    items.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
 }
 
 // ── Login modal ──────────────────────────────────────────────────────────────
@@ -160,7 +143,6 @@ function LoginModal({ onAuth, onClose }: { onAuth: () => void; onClose: () => vo
           opacity: loading ? 0.92 : 1,
         }}
       >
-        {/* Close */}
         {!loading && (
           <button
             onClick={onClose}
@@ -313,11 +295,9 @@ function SomaNav({ onLogin }: { onLogin: () => void }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const container = document.querySelector(".soma-scroll") as HTMLElement | null;
-    if (!container) return;
-    const onScroll = () => setScrolled(container.scrollTop > 48);
-    container.addEventListener("scroll", onScroll, { passive: true });
-    return () => container.removeEventListener("scroll", onScroll);
+    const onScroll = () => setScrolled(window.scrollY > 48);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
@@ -387,333 +367,111 @@ function SomaNav({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-// ── Intelligence card (hero mock) ────────────────────────────────────────────
+// ── Shared animation variants ─────────────────────────────────────────────────
 
-const HERO_SIGNALS: { label: string; type: "visual" | "tone" | "strategy" }[] = [
-  { label: "cinematic restraint", type: "visual" },
-  { label: "documentary framing", type: "visual" },
-  { label: "peer-level voice", type: "tone" },
-  { label: "tension first", type: "strategy" },
-  { label: "muted earthy palette", type: "visual" },
-  { label: "late-night operator", type: "tone" },
-  { label: "soft diffused light", type: "visual" },
-  { label: "social proof light", type: "strategy" },
-];
+type CubicBezier = [number, number, number, number];
+const spring: CubicBezier = [0.16, 1, 0.3, 1];
 
-function SignalChip({ label, type }: { label: string; type: "visual" | "tone" | "strategy" }) {
-  const colors = {
-    visual: { border: "rgba(200,144,122,0.2)", bg: "rgba(200,144,122,0.07)", color: "rgba(200,144,122,0.75)" },
-    tone: { border: "rgba(255,255,255,0.1)", bg: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)" },
-    strategy: { border: "rgba(212,191,160,0.15)", bg: "rgba(212,191,160,0.05)", color: "rgba(212,191,160,0.55)" },
-  };
-  const c = colors[type];
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 32 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: spring } },
+};
+
+const fadeIn: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 1, ease: "easeOut" } },
+};
+
+const stagger: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.13 } },
+};
+
+const vp = { once: true, margin: "-60px" };
+
+// ── SECTION 1: Hero ───────────────────────────────────────────────────────────
+
+function HeroSection({ onLogin }: { onLogin: () => void }) {
   return (
-    <span style={{
-      display: "inline-flex",
-      borderRadius: 999,
-      border: `1px solid ${c.border}`,
-      background: c.bg,
-      color: c.color,
-      fontSize: 10,
-      fontWeight: 500,
-      padding: "4px 10px",
-    }}>
-      {label}
-    </span>
-  );
-}
-
-function IntelligenceCard() {
-  return (
-    <div
-      className="soma-card-anim soma-float"
+    <section
       style={{
-        borderRadius: 28,
-        border: "1px solid rgba(255,255,255,0.07)",
-        padding: "1.75rem",
-        background: "linear-gradient(145deg,rgba(27,24,32,0.97) 0%,rgba(20,18,24,0.99) 100%)",
-        boxShadow: "0 48px 120px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(200,144,122,0.05), inset 0 1px 0 rgba(255,255,255,0.04)",
-        backdropFilter: "blur(16px)",
+        position: "relative",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        padding: "0 1.5rem",
       }}
     >
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "1.25rem" }}>
-        <div>
-          <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#89808F", marginBottom: 4 }}>
-            Brand Intelligence
-          </p>
-          <p style={{ fontSize: 14, fontWeight: 600, color: "#EEE8E4" }}>Creative Memory</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div className="soma-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: "#C8907A" }} />
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#C8907A" }}>
-            Live
-          </span>
-        </div>
-      </div>
+      {/* Depth layers */}
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 90% 65% at 50% 48%, rgba(80,28,110,0.28) 0%, transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 55% 45% at 22% 18%, rgba(168,113,138,0.12) 0%, transparent 65%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 40% 40% at 80% 80%, rgba(35,18,50,0.35) 0%, transparent 65%)", pointerEvents: "none" }} />
 
-      {/* Stats row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: "1.25rem" }}>
-        {[
-          { n: "12", label: "Active signals" },
-          { n: "3", label: "References" },
-          { n: "94%", label: "Consistency" },
-        ].map(({ n, label }) => (
-          <div key={label} style={{ borderRadius: 16, border: "1px solid rgba(255,255,255,0.05)", padding: "12px", background: "rgba(255,255,255,0.02)" }}>
-            <p style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 22, color: "#D4BFA0", margin: 0, lineHeight: 1 }}>{n}</p>
-            <p style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>{label}</p>
-          </div>
-        ))}
-      </div>
+      {/* Content */}
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "0" }}>
 
-      {/* Signal chips */}
-      <div style={{ marginBottom: "1.25rem" }}>
-        <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", marginBottom: 10 }}>
-          Active training signals
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {HERO_SIGNALS.map((s) => (
-            <SignalChip key={s.label} label={s.label} type={s.type} />
-          ))}
-        </div>
-      </div>
+        {/* Orb entrance */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.8, ease: spring }}
+        >
+          <AgentOrb state="idle" size="2xl" maturityLevel={2} />
+        </motion.div>
 
-      {/* Recent generation */}
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "1rem" }}>
-        <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", marginBottom: 8 }}>
-          Recent generation
-        </p>
-        {[
-          { text: "LinkedIn — Series B announcement", t: "2m ago" },
-          { text: "Twitter thread — product philosophy", t: "18m ago" },
-        ].map(({ text, t }) => (
-          <div key={text} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <p style={{ fontSize: 11, color: "rgba(238,232,228,0.45)", margin: 0 }}>{text}</p>
-            <p style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", margin: 0, marginLeft: 12, whiteSpace: "nowrap" }}>{t}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+        {/* Label */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7, duration: 1 }}
+          style={{ marginTop: "2.5rem", fontSize: 9, fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#89808F" }}
+        >
+          SOMA · Adaptive Creative Intelligence
+        </motion.p>
 
-// ── Differentiators ──────────────────────────────────────────────────────────
+        {/* Headline */}
+        <motion.h1
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.95, duration: 1.1, ease: spring }}
+          style={{
+            marginTop: "1.5rem",
+            fontFamily: "var(--font-display), Georgia, serif",
+            fontSize: "clamp(2.6rem, 5.5vw, 4.25rem)",
+            lineHeight: 1.08,
+            letterSpacing: "-0.028em",
+            color: "#EEE8E4",
+            maxWidth: 580,
+          }}
+        >
+          Your brand develops<br />a creative memory.
+        </motion.h1>
 
-const DIFFERENTIATOR_CARDS = [
-  {
-    glyph: "◎",
-    title: "Adaptive Learning",
-    body: "Every reference injected becomes operational intelligence. Visual signals, tone patterns, strategic frameworks — extracted and routed into every generation cycle.",
-  },
-  {
-    glyph: "◈",
-    title: "Strategic Memory",
-    body: "Constraints and preferences persist across campaigns. SOMA doesn't repeat mistakes. It compounds learned restraint into an identity that deepens over time.",
-  },
-  {
-    glyph: "◇",
-    title: "Creative Consistency",
-    body: "The same brand voice across every channel and format — without a style guide nobody reads. Consistency trained into the system, not enforced manually.",
-  },
-];
+        {/* Sub */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.3, duration: 1 }}
+          style={{ marginTop: "1.5rem", fontSize: 15, lineHeight: 1.85, color: "#5A5060", maxWidth: 380 }}
+        >
+          Every reference you feed it. Every piece of feedback you give. SOMA conditions itself to your brand — and gets better the longer you work together.
+        </motion.p>
 
-function DifferentiatorsSection() {
-  return (
-    <section id="how-it-works" className="soma-section-padding" style={{ padding: "7rem 1.5rem", position: "relative" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto" }}>
-        <div className="soma-reveal" style={{ maxWidth: 480, marginBottom: "4rem" }}>
-          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#89808F", marginBottom: 12 }}>
-            How it works
-          </p>
-          <h2 style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: "clamp(2rem, 4vw, 2.75rem)", color: "#EEE8E4", lineHeight: 1.2, margin: 0 }}>
-            Intelligence that compounds.
-          </h2>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.25rem" }}>
-          {DIFFERENTIATOR_CARDS.map((card, i) => (
-            <div
-              key={card.title}
-              className="soma-reveal"
-              style={{
-                borderRadius: 24,
-                border: "1px solid rgba(255,255,255,0.06)",
-                padding: "1.75rem",
-                background: "linear-gradient(145deg,rgba(27,24,32,0.65) 0%,rgba(20,18,24,0.8) 100%)",
-                transitionDelay: `${i * 90}ms`,
-              }}
-            >
-              <p style={{ fontSize: 24, color: "#C8907A", marginBottom: "1.25rem" }}>{card.glyph}</p>
-              <h3 style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 20, color: "#EEE8E4", marginBottom: "0.75rem" }}>
-                {card.title}
-              </h3>
-              <p style={{ fontSize: 13, lineHeight: 1.75, color: "#89808F", margin: 0 }}>{card.body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ── Visual intelligence section ───────────────────────────────────────────────
-
-type ChipColor = { border: string; bg: string; color: string };
-
-function ChipRow({ label, chips, chipColor }: { label: string; chips: string[]; chipColor: ChipColor }) {
-  return (
-    <div>
-      <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", marginBottom: 8 }}>
-        {label}
-      </p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {chips.map((c) => (
-          <span
-            key={c}
-            style={{
-              borderRadius: 999,
-              border: `1px solid ${chipColor.border}`,
-              background: chipColor.bg,
-              color: chipColor.color,
-              fontSize: 10,
-              padding: "3px 9px",
-            }}
-          >
-            {c}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function VisualIntelligenceSection() {
-  const roseChip: ChipColor = { border: "rgba(200,144,122,0.2)", bg: "rgba(200,144,122,0.07)", color: "rgba(200,144,122,0.75)" };
-  const neutralChip: ChipColor = { border: "rgba(255,255,255,0.1)", bg: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)" };
-  const dimChip: ChipColor = { border: "rgba(255,255,255,0.08)", bg: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.42)" };
-  const avoidChip: ChipColor = { border: "rgba(248,113,113,0.15)", bg: "rgba(248,113,113,0.05)", color: "rgba(248,113,113,0.6)" };
-
-  return (
-    <section className="soma-section-padding" style={{ position: "relative", padding: "7rem 1.5rem", overflow: "hidden" }}>
-      {/* ambient glow */}
-      <div
-        className="soma-orb-3"
-        style={{
-          position: "absolute",
-          width: 640,
-          height: 640,
-          right: -120,
-          top: "50%",
-          transform: "translateY(-50%)",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(200,144,122,0.07) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
-
-      <div style={{ position: "relative", maxWidth: 1152, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "4rem", alignItems: "center" }}>
-          {/* Copy */}
-          <div className="soma-reveal">
-            <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#89808F", marginBottom: 12 }}>
-              Visual intelligence
-            </p>
-            <h2 style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: "clamp(1.9rem, 3.5vw, 2.6rem)", color: "#EEE8E4", lineHeight: 1.25, marginBottom: "1.25rem" }}>
-              References trained.<br />
-              Signals extracted.<br />
-              Identity preserved.
-            </h2>
-            <p style={{ fontSize: 13, lineHeight: 1.85, color: "#5A5060", maxWidth: 400 }}>
-              Upload an image, paste a caption, drop a PDF. SOMA reads it, extracts the creative intelligence, and routes it precisely — visual signals to image prompts, tone signals to copy, constraints to every output.
-            </p>
-          </div>
-
-          {/* Intelligence panel */}
-          <div className="soma-reveal" style={{ transitionDelay: "120ms" }}>
-            <div style={{
-              borderRadius: 24,
-              border: "1px solid rgba(255,255,255,0.07)",
-              padding: "1.5rem",
-              background: "linear-gradient(145deg,rgba(27,24,32,0.97) 0%,rgba(20,18,24,0.99) 100%)",
-              boxShadow: "0 32px 80px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(200,144,122,0.04)",
-            }}>
-              {/* Panel header */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
-                <div>
-                  <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#89808F", marginBottom: 4 }}>
-                    Extracted intelligence
-                  </p>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#EEE8E4" }}>Campaign visual reference</p>
-                </div>
-                <span style={{ borderRadius: 999, border: "1px solid rgba(200,144,122,0.22)", background: "rgba(200,144,122,0.08)", color: "#C8907A", fontSize: 9, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", padding: "4px 10px" }}>
-                  Visual
-                </span>
-              </div>
-
-              {/* Signal groups */}
-              <div style={{ display: "grid", gap: "1rem" }}>
-                <ChipRow label="Visual signals" chips={["soft diffused light", "muted earthy palette", "grainy film texture", "wide environmental frame"]} chipColor={roseChip} />
-                <ChipRow label="Tone register" chips={["restrained authority", "peer-level directness", "quiet fatigue"]} chipColor={neutralChip} />
-                <ChipRow label="Strategic pattern" chips={["tension before resolution", "problem-first", "social proof light"]} chipColor={dimChip} />
-                <ChipRow label="Audience signal" chips={["senior operators", "time-pressured founders"]} chipColor={dimChip} />
-                <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "1rem" }}>
-                  <ChipRow label="Avoid" chips={["no studio lighting", "avoid polished perfection", "no motivational energy"]} chipColor={avoidChip} />
-                </div>
-              </div>
-
-              {/* Routing indicator */}
-              <div style={{ marginTop: "1.25rem", display: "flex", alignItems: "center", gap: 8, borderRadius: 14, border: "1px solid rgba(255,255,255,0.05)", padding: "10px 14px", background: "rgba(255,255,255,0.02)" }}>
-                <div className="soma-pulse" style={{ width: 5, height: 5, borderRadius: "50%", background: "#C8907A", flexShrink: 0 }} />
-                <p style={{ fontSize: 10, color: "rgba(255,255,255,0.32)", margin: 0 }}>
-                  Routing visual → image prompt · tone → caption · constraints → all
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ── Final CTA ────────────────────────────────────────────────────────────────
-
-function CtaSection({ onLogin }: { onLogin: () => void }) {
-  return (
-    <section className="soma-section-padding" style={{ position: "relative", padding: "8rem 1.5rem", overflow: "hidden", textAlign: "center" }}>
-      {/* ambient glow */}
-      <div
-        className="soma-orb-1"
-        style={{
-          position: "absolute",
-          width: 720,
-          height: 720,
-          left: "50%",
-          top: "50%",
-          transform: "translate(-50%, -50%)",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(200,144,122,0.08) 0%, transparent 65%)",
-          pointerEvents: "none",
-        }}
-      />
-
-      <div className="soma-reveal" style={{ position: "relative", maxWidth: 560, margin: "0 auto" }}>
-        <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase", color: "#89808F", marginBottom: 16 }}>
-          Get started
-        </p>
-        <h2 style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: "clamp(2.4rem, 5vw, 3.75rem)", color: "#EEE8E4", lineHeight: 1.15, marginBottom: "1.25rem" }}>
-          Train your marketing system.
-        </h2>
-        <p style={{ fontSize: 15, lineHeight: 1.8, color: "#5A5060", marginBottom: "2.5rem" }}>
-          SOMA conditions your brand&apos;s creative intelligence. Content that learns. Identity that compounds.
-        </p>
-
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 14 }}>
+        {/* CTAs */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.6, duration: 0.9, ease: spring }}
+          style={{ marginTop: "2.5rem", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 14 }}
+        >
           <button
             onClick={onLogin}
             style={{
               borderRadius: 999,
-              padding: "14px 32px",
+              padding: "15px 36px",
               fontSize: 14,
               fontWeight: 700,
               border: "none",
@@ -721,6 +479,512 @@ function CtaSection({ onLogin }: { onLogin: () => void }) {
               background: "linear-gradient(135deg, #C8907A 0%, #D4BFA0 100%)",
               color: "#0B0A0E",
               transition: "opacity 0.15s",
+              letterSpacing: "0.01em",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+          >
+            Enter SOMA
+          </button>
+          <button
+            onClick={onLogin}
+            style={{
+              borderRadius: 999,
+              padding: "14px 28px",
+              fontSize: 14,
+              fontWeight: 600,
+              border: "1px solid rgba(255,255,255,0.1)",
+              background: "none",
+              cursor: "pointer",
+              color: "#89808F",
+              transition: "border-color 0.15s, color 0.15s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#89808F"; }}
+          >
+            Sign in
+          </button>
+        </motion.div>
+      </div>
+
+      {/* Scroll hint */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.3 }}
+        transition={{ delay: 2.2, duration: 1 }}
+        style={{ position: "absolute", bottom: 36, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}
+      >
+        <div style={{ width: 1, height: 44, background: "linear-gradient(to bottom, transparent, #C8907A)" }} />
+        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "#C8907A" }}>scroll</span>
+      </motion.div>
+    </section>
+  );
+}
+
+// ── SECTION 2: The Relationship ───────────────────────────────────────────────
+
+const STEPS = [
+  {
+    n: "01",
+    title: "You feed references.",
+    body: "Campaigns you admire. Content you've created. Brand guidelines, tone samples, competitive examples. SOMA reads everything.",
+  },
+  {
+    n: "02",
+    title: "SOMA extracts intelligence.",
+    body: "Visual signals. Tone register. Strategic patterns. Constraints to avoid. Everything classified, routed, and stored as operational memory.",
+  },
+  {
+    n: "03",
+    title: "Your identity compounds.",
+    body: "Each generation carries your voice. Each piece of feedback sharpens the signal. Over time, SOMA becomes an extension of how you think.",
+  },
+];
+
+function RelationshipSection() {
+  return (
+    <section style={{ position: "relative", padding: "9rem 1.5rem", overflow: "hidden" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+
+        {/* Heading */}
+        <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={vp} style={{ marginBottom: "5rem", maxWidth: 580 }}>
+          <motion.p variants={fadeUp} style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.26em", textTransform: "uppercase", color: "#89808F", marginBottom: 16 }}>
+            The relationship
+          </motion.p>
+          <motion.h2 variants={fadeUp} style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: "clamp(2rem, 4.5vw, 3.25rem)", lineHeight: 1.1, letterSpacing: "-0.022em", color: "#EEE8E4", margin: 0 }}>
+            You don&apos;t schedule content.<br />You train a mind.
+          </motion.h2>
+          <motion.p variants={fadeUp} style={{ marginTop: "1.5rem", fontSize: 14, lineHeight: 1.9, color: "#5A5060", maxWidth: 460 }}>
+            SOMA is not a content generator. It conditions itself to your brand — learning your aesthetic, your voice, your strategic instincts — and compounds that understanding with every session.
+          </motion.p>
+        </motion.div>
+
+        {/* Steps */}
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="visible"
+          viewport={vp}
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}
+        >
+          {STEPS.map((step) => (
+            <motion.div
+              key={step.n}
+              variants={fadeUp}
+              style={{
+                borderRadius: 22,
+                border: "1px solid rgba(255,255,255,0.055)",
+                padding: "2rem",
+                background: "linear-gradient(145deg, rgba(27,24,32,0.55) 0%, rgba(20,18,24,0.7) 100%)",
+              }}
+            >
+              <p style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 11, color: "rgba(200,144,122,0.5)", letterSpacing: "0.12em", marginBottom: "1.25rem" }}>{step.n}</p>
+              <h3 style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 19, color: "#D4BFA0", lineHeight: 1.25, marginBottom: "0.85rem" }}>{step.title}</h3>
+              <p style={{ fontSize: 13, lineHeight: 1.8, color: "#5A5060", margin: 0 }}>{step.body}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+      </div>
+    </section>
+  );
+}
+
+// ── SECTION 3: Evolution System ───────────────────────────────────────────────
+
+const STAGES: { level: number; name: string; desc: string; state: OrbState }[] = [
+  { level: 0, name: "Observer",    desc: "Learning patterns. No assumptions yet.",                  state: "learning" },
+  { level: 1, name: "Apprentice",  desc: "First signals identified. Consistency forming.",           state: "learning" },
+  { level: 2, name: "Junior",      desc: "Voice recognizable. Patterns reliable.",                   state: "idle" },
+  { level: 3, name: "Senior",      desc: "Anticipates your direction. Rare course-corrections.",     state: "preparing" },
+  { level: 4, name: "Autonomous",  desc: "Creates independently. Your identity preserved.",          state: "idle" },
+];
+
+function EvolutionSection() {
+  return (
+    <section style={{ position: "relative", padding: "9rem 1.5rem", overflow: "hidden" }}>
+      {/* Ambient left glow */}
+      <div style={{ position: "absolute", width: 600, height: 600, left: -200, top: "50%", transform: "translateY(-50%)", borderRadius: "50%", background: "radial-gradient(circle, rgba(128,112,184,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+
+        <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={vp} style={{ marginBottom: "5rem", textAlign: "center" }}>
+          <motion.p variants={fadeUp} style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.26em", textTransform: "uppercase", color: "#89808F", marginBottom: 16 }}>
+            The maturity model
+          </motion.p>
+          <motion.h2 variants={fadeUp} style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: "clamp(2rem, 4.5vw, 3.25rem)", lineHeight: 1.1, letterSpacing: "-0.022em", color: "#EEE8E4", margin: 0 }}>
+            From observer<br />to autonomous system.
+          </motion.h2>
+          <motion.p variants={fadeUp} style={{ marginTop: "1.25rem", fontSize: 14, lineHeight: 1.85, color: "#5A5060", maxWidth: 400, margin: "1.25rem auto 0" }}>
+            SOMA doesn&apos;t arrive trained. It evolves through every reference, every approval, every correction you give it.
+          </motion.p>
+        </motion.div>
+
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="visible"
+          viewport={vp}
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "2px" }}
+        >
+          {STAGES.map((stage, i) => (
+            <motion.div
+              key={stage.name}
+              variants={fadeUp}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                padding: "2.5rem 1.25rem",
+                borderRadius: i === 0 ? "18px 0 0 18px" : i === STAGES.length - 1 ? "0 18px 18px 0" : 0,
+                border: "1px solid rgba(255,255,255,0.045)",
+                background: `rgba(27,24,32,${0.3 + i * 0.1})`,
+                position: "relative",
+              }}
+            >
+              <AgentOrb state={stage.state} size="sm" maturityLevel={stage.level} />
+              <p style={{ marginTop: "1.25rem", fontSize: 12, fontWeight: 700, color: "#D4BFA0", letterSpacing: "0.04em" }}>{stage.name}</p>
+              <p style={{ marginTop: "0.5rem", fontSize: 11, lineHeight: 1.65, color: "#5A5060" }}>{stage.desc}</p>
+              <div style={{ marginTop: "1rem", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: i === 4 ? "rgba(200,144,122,0.55)" : "rgba(255,255,255,0.14)", textTransform: "uppercase" }}>
+                Level {i}
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+      </div>
+    </section>
+  );
+}
+
+// ── SECTION 4: Daily Ritual ───────────────────────────────────────────────────
+
+function DailyRitualSection() {
+  return (
+    <section style={{ position: "relative", padding: "9rem 1.5rem", overflow: "hidden" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "5rem", alignItems: "center" }}>
+
+          {/* Copy */}
+          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={vp}>
+            <motion.p variants={fadeUp} style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.26em", textTransform: "uppercase", color: "#89808F", marginBottom: 16 }}>
+              The daily ritual
+            </motion.p>
+            <motion.h2 variants={fadeUp} style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: "clamp(1.9rem, 4vw, 3rem)", lineHeight: 1.1, letterSpacing: "-0.022em", color: "#EEE8E4", margin: 0 }}>
+              Every morning,<br />SOMA has already<br />been thinking.
+            </motion.h2>
+            <motion.p variants={fadeUp} style={{ marginTop: "1.5rem", fontSize: 14, lineHeight: 1.9, color: "#5A5060", maxWidth: 400 }}>
+              You open the workspace and SOMA is already there — with drafts prepared, directions suggested, waiting to respond to your input. Not a blank page. A briefing.
+            </motion.p>
+            <motion.div variants={fadeUp} style={{ marginTop: "2rem", display: "grid", gap: "0.85rem" }}>
+              {[
+                "Drafts prepared overnight based on your mission queue",
+                "SOMA tells you what it prepared and why",
+                "Your feedback sharpens the next cycle",
+              ].map((line) => (
+                <div key={line} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#C8907A", marginTop: 7, flexShrink: 0 }} />
+                  <p style={{ fontSize: 13, lineHeight: 1.7, color: "#5A5060", margin: 0 }}>{line}</p>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+
+          {/* Interface mockup */}
+          <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={vp}>
+            <div style={{
+              borderRadius: 26,
+              border: "1px solid rgba(255,255,255,0.065)",
+              background: "linear-gradient(145deg, rgba(27,24,32,0.96) 0%, rgba(16,14,22,0.98) 100%)",
+              boxShadow: "0 48px 120px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(128,112,184,0.06), inset 0 1px 0 rgba(255,255,255,0.04)",
+              overflow: "hidden",
+            }}>
+              {/* Mock window chrome */}
+              <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.04)", display: "flex", alignItems: "center", gap: 6 }}>
+                {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: `rgba(255,255,255,${0.07 + i * 0.02})` }} />)}
+                <div style={{ flex: 1, marginLeft: 8, height: 7, borderRadius: 4, background: "rgba(255,255,255,0.04)", maxWidth: 160 }} />
+              </div>
+
+              {/* Mock today page content */}
+              <div style={{ padding: "2.5rem 2rem 2rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "1.25rem" }}>
+                  <AgentOrb state="preparing" size="md" maturityLevel={3} />
+                  <div>
+                    <p style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 22, color: "#EEE8E4", marginBottom: 6 }}>I prepared a few directions.</p>
+                    <p style={{ fontSize: 12, lineHeight: 1.7, color: "#5A5060", maxWidth: 260, margin: "0 auto" }}>Based on what I&apos;ve learned from your feedback so far. Your reaction is how I keep improving.</p>
+                  </div>
+                  <button style={{ borderRadius: 14, border: "1px solid rgba(128,112,184,0.28)", background: "rgba(74,56,128,0.12)", padding: "10px 20px", fontSize: 12, fontWeight: 600, color: "#B8ADDC", cursor: "default" }}>
+                    Talk to SOMA →
+                  </button>
+                </div>
+
+                {/* Mock disclosure rows */}
+                <div style={{ marginTop: "2rem", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                  {["What SOMA remembers", "What SOMA prepared — 3"].map((label) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)" }}>{label}</span>
+                      <div style={{ width: 10, height: 10, borderRadius: 2, border: "1px solid rgba(255,255,255,0.12)" }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── SECTION 5: Memory ─────────────────────────────────────────────────────────
+
+const MEMORY_SIGNALS: { label: string; category: "visual" | "tone" | "strategy" | "avoid" }[] = [
+  { label: "soft diffused light", category: "visual" },
+  { label: "muted earthy palette", category: "visual" },
+  { label: "grainy film texture", category: "visual" },
+  { label: "peer-level directness", category: "tone" },
+  { label: "restrained authority", category: "tone" },
+  { label: "tension before resolution", category: "strategy" },
+  { label: "senior operators", category: "strategy" },
+  { label: "no motivational energy", category: "avoid" },
+  { label: "avoid polished perfection", category: "avoid" },
+];
+
+const chipColors = {
+  visual:   { border: "rgba(200,144,122,0.22)", bg: "rgba(200,144,122,0.07)", color: "rgba(200,144,122,0.75)" },
+  tone:     { border: "rgba(255,255,255,0.1)",  bg: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)" },
+  strategy: { border: "rgba(212,191,160,0.15)", bg: "rgba(212,191,160,0.05)", color: "rgba(212,191,160,0.55)" },
+  avoid:    { border: "rgba(248,113,113,0.15)", bg: "rgba(248,113,113,0.05)", color: "rgba(248,113,113,0.6)" },
+};
+
+function MemorySection() {
+  return (
+    <section style={{ position: "relative", padding: "9rem 1.5rem", overflow: "hidden" }}>
+      <div style={{ position: "absolute", width: 700, height: 700, right: -250, top: "50%", transform: "translateY(-50%)", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,144,122,0.05) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "5rem", alignItems: "center" }}>
+
+          {/* Intelligence panel */}
+          <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={vp}>
+            <div style={{
+              borderRadius: 24,
+              border: "1px solid rgba(255,255,255,0.07)",
+              padding: "1.75rem",
+              background: "linear-gradient(145deg, rgba(27,24,32,0.97) 0%, rgba(20,18,24,0.99) 100%)",
+              boxShadow: "0 40px 100px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
+            }}>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+                <div>
+                  <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#89808F", marginBottom: 4 }}>Brand Intelligence</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "#EEE8E4" }}>Creative Memory</p>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div className="soma-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: "#C8907A" }} />
+                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#C8907A" }}>Active</span>
+                </div>
+              </div>
+
+              {/* Signal chips by category */}
+              {(["visual", "tone", "strategy", "avoid"] as const).map((cat) => {
+                const signals = MEMORY_SIGNALS.filter(s => s.category === cat);
+                const label = cat === "avoid" ? "Trained constraints" : cat === "visual" ? "Visual signals" : cat === "tone" ? "Tone register" : "Strategic pattern";
+                return (
+                  <div key={cat} style={{ marginBottom: "1rem" }}>
+                    <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", marginBottom: 8 }}>{label}</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {signals.map(s => (
+                        <span key={s.label} style={{
+                          borderRadius: 999,
+                          border: `1px solid ${chipColors[cat].border}`,
+                          background: chipColors[cat].bg,
+                          color: chipColors[cat].color,
+                          fontSize: 10,
+                          padding: "3px 9px",
+                        }}>{s.label}</span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Routing line */}
+              <div style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: 8, borderRadius: 12, border: "1px solid rgba(255,255,255,0.05)", padding: "9px 13px", background: "rgba(255,255,255,0.02)" }}>
+                <div className="soma-pulse" style={{ width: 5, height: 5, borderRadius: "50%", background: "#C8907A", flexShrink: 0 }} />
+                <p style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", margin: 0 }}>Routing visual → image prompts · tone → captions · constraints → all outputs</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Copy */}
+          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={vp}>
+            <motion.p variants={fadeUp} style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.26em", textTransform: "uppercase", color: "#89808F", marginBottom: 16 }}>
+              Persistent intelligence
+            </motion.p>
+            <motion.h2 variants={fadeUp} style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: "clamp(1.9rem, 4vw, 3rem)", lineHeight: 1.1, letterSpacing: "-0.022em", color: "#EEE8E4", margin: 0 }}>
+              SOMA remembers<br />everything you&apos;ve taught it.
+            </motion.h2>
+            <motion.p variants={fadeUp} style={{ marginTop: "1.5rem", fontSize: 14, lineHeight: 1.9, color: "#5A5060", maxWidth: 400 }}>
+              Not a prompt. Not a style guide that everyone ignores. A trained system where your aesthetic decisions — visual, tonal, strategic — are extracted from every reference and encoded into every generation cycle.
+            </motion.p>
+            <motion.div variants={fadeUp} style={{ marginTop: "2rem", display: "grid", gap: "0.85rem" }}>
+              {[
+                "References extracted into classified signal types",
+                "Feedback routed back as reinforcement signals",
+                "Constraints trained in — not enforced manually",
+              ].map((line) => (
+                <div key={line} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#C8907A", marginTop: 7, flexShrink: 0 }} />
+                  <p style={{ fontSize: 13, lineHeight: 1.7, color: "#5A5060", margin: 0 }}>{line}</p>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── SECTION 6: Autonomy ───────────────────────────────────────────────────────
+
+const AUTONOMY_STAGES = [
+  {
+    phase: "Before",
+    label: "The old model",
+    items: ["Brief a designer, wait for drafts", "Write the copy yourself, post manually", "Repeat next week. Nothing compounds."],
+    dim: true,
+  },
+  {
+    phase: "Training period",
+    label: "Building the relationship",
+    items: ["Feed references, give feedback", "SOMA extracts and stores your intelligence", "Each session makes the next one faster."],
+    dim: false,
+  },
+  {
+    phase: "Autonomous",
+    label: "The outcome",
+    items: ["SOMA prepares directions every morning", "You review, react, approve — or redirect", "Your brand compounds. You stop starting from zero."],
+    dim: false,
+    accent: true,
+  },
+];
+
+function AutonomySection() {
+  return (
+    <section style={{ position: "relative", padding: "9rem 1.5rem", overflow: "hidden" }}>
+      <div style={{ position: "absolute", width: 600, height: 600, left: "50%", top: "50%", transform: "translate(-50%, -50%)", borderRadius: "50%", background: "radial-gradient(circle, rgba(80,28,110,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+
+        <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={vp} style={{ marginBottom: "5rem", textAlign: "center" }}>
+          <motion.p variants={fadeUp} style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.26em", textTransform: "uppercase", color: "#89808F", marginBottom: 16 }}>
+            The outcome
+          </motion.p>
+          <motion.h2 variants={fadeUp} style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: "clamp(2rem, 4.5vw, 3.25rem)", lineHeight: 1.1, letterSpacing: "-0.022em", color: "#EEE8E4", margin: 0 }}>
+            Content creation was<br />never the bottleneck.
+          </motion.h2>
+          <motion.p variants={fadeUp} style={{ marginTop: "1.25rem", fontSize: 14, lineHeight: 1.85, color: "#5A5060", maxWidth: 400, margin: "1.25rem auto 0" }}>
+            The bottleneck was building a system that holds your brand identity and acts on it without you starting from scratch every time.
+          </motion.p>
+        </motion.div>
+
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="visible"
+          viewport={vp}
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.25rem" }}
+        >
+          {AUTONOMY_STAGES.map((stage) => (
+            <motion.div
+              key={stage.phase}
+              variants={fadeUp}
+              style={{
+                borderRadius: 22,
+                border: stage.accent
+                  ? "1px solid rgba(200,144,122,0.2)"
+                  : "1px solid rgba(255,255,255,0.05)",
+                padding: "2rem",
+                background: stage.accent
+                  ? "linear-gradient(145deg, rgba(40,28,36,0.7) 0%, rgba(27,20,28,0.85) 100%)"
+                  : "linear-gradient(145deg, rgba(22,19,28,0.5) 0%, rgba(16,14,22,0.65) 100%)",
+              }}
+            >
+              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: stage.accent ? "#C8907A" : "rgba(255,255,255,0.2)", marginBottom: 8 }}>
+                {stage.phase}
+              </p>
+              <p style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 17, color: stage.dim ? "rgba(238,232,228,0.3)" : stage.accent ? "#EEE8E4" : "#D4BFA0", marginBottom: "1.5rem" }}>
+                {stage.label}
+              </p>
+              <div style={{ display: "grid", gap: "0.65rem" }}>
+                {stage.items.map((item) => (
+                  <div key={item} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <div style={{ width: 3, height: 3, borderRadius: "50%", background: stage.accent ? "#C8907A" : stage.dim ? "rgba(255,255,255,0.15)" : "rgba(212,191,160,0.4)", marginTop: 6, flexShrink: 0 }} />
+                    <p style={{ fontSize: 12, lineHeight: 1.7, color: stage.dim ? "#3A3540" : stage.accent ? "#89808F" : "#5A5060", margin: 0 }}>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+      </div>
+    </section>
+  );
+}
+
+// ── SECTION 7: Final CTA ──────────────────────────────────────────────────────
+
+function FinalCtaSection({ onLogin }: { onLogin: () => void }) {
+  return (
+    <section style={{ position: "relative", minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "9rem 1.5rem", overflow: "hidden", textAlign: "center" }}>
+      {/* Deep glow */}
+      <div style={{ position: "absolute", width: 900, height: 900, left: "50%", top: "50%", transform: "translate(-50%, -50%)", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,144,122,0.07) 0%, rgba(80,28,110,0.08) 40%, transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(80,28,110,0.12) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+      <motion.div
+        variants={stagger}
+        initial="hidden"
+        whileInView="visible"
+        viewport={vp}
+        style={{ position: "relative", maxWidth: 560 }}
+      >
+        <motion.div variants={fadeUp} style={{ display: "flex", justifyContent: "center", marginBottom: "2.5rem" }}>
+          <AgentOrb state="idle" size="lg" maturityLevel={4} />
+        </motion.div>
+
+        <motion.p variants={fadeUp} style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "#89808F", marginBottom: 20 }}>
+          Get started
+        </motion.p>
+
+        <motion.h2 variants={fadeUp} style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: "clamp(2.5rem, 5.5vw, 4rem)", lineHeight: 1.08, letterSpacing: "-0.025em", color: "#EEE8E4", margin: 0 }}>
+          Begin training<br />SOMA.
+        </motion.h2>
+
+        <motion.p variants={fadeUp} style={{ marginTop: "1.5rem", fontSize: 15, lineHeight: 1.85, color: "#5A5060" }}>
+          The earlier you start, the more it knows. Every session builds the intelligence your brand runs on.
+        </motion.p>
+
+        <motion.div variants={fadeUp} style={{ marginTop: "2.5rem", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 14 }}>
+          <button
+            onClick={onLogin}
+            style={{
+              borderRadius: 999,
+              padding: "16px 40px",
+              fontSize: 15,
+              fontWeight: 700,
+              border: "none",
+              cursor: "pointer",
+              background: "linear-gradient(135deg, #C8907A 0%, #D4BFA0 100%)",
+              color: "#0B0A0E",
+              transition: "opacity 0.15s",
+              letterSpacing: "0.01em",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
@@ -731,8 +995,8 @@ function CtaSection({ onLogin }: { onLogin: () => void }) {
             onClick={onLogin}
             style={{
               borderRadius: 999,
-              padding: "13px 32px",
-              fontSize: 14,
+              padding: "15px 32px",
+              fontSize: 15,
               fontWeight: 600,
               border: "1px solid rgba(255,255,255,0.1)",
               background: "none",
@@ -745,8 +1009,8 @@ function CtaSection({ onLogin }: { onLogin: () => void }) {
           >
             Login
           </button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 }
@@ -775,7 +1039,6 @@ function SomaFooter() {
 export function SomaLandingPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const router = useRouter();
-  useScrollReveal();
 
   function openLogin() { setModalOpen(true); }
   function closeLogin() { setModalOpen(false); }
@@ -786,22 +1049,10 @@ export function SomaLandingPage() {
     router.refresh();
   }
 
-  function scrollToSystem() {
-    const container = document.querySelector(".soma-scroll") as HTMLElement | null;
-    const target = document.getElementById("how-it-works");
-    if (!container || !target) return;
-    container.scrollTo({ top: target.offsetTop - 80, behavior: "smooth" });
-  }
-
   return (
     <div
-      className="soma-scroll"
       style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 200,
-        overflowY: "auto",
-        overflowX: "hidden",
+        minHeight: "100vh",
         background: "#0B0A0E",
         color: "#EEE8E4",
         fontFamily: "var(--font-body), system-ui, sans-serif",
@@ -826,206 +1077,19 @@ export function SomaLandingPage() {
             padding-bottom: calc(2.5rem + env(safe-area-inset-bottom, 16px)) !important;
             animation: soma-slide-up 0.32s cubic-bezier(0.16, 1, 0.3, 1) both !important;
           }
-          .soma-hero-inner {
-            padding-top: 5.25rem !important;
-            padding-bottom: 2.5rem !important;
-            gap: 2rem !important;
-          }
-          .soma-hero-card {
-            max-height: 310px;
-            overflow: hidden;
-            -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-            mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-          }
-          .soma-section-padding {
-            padding-top: 4.5rem !important;
-            padding-bottom: 4.5rem !important;
-          }
         }
       `}</style>
+
       {modalOpen && <LoginModal onAuth={handleAuth} onClose={closeLogin} />}
       <SomaNav onLogin={openLogin} />
 
-      {/* ── Hero ── */}
-      <section
-        style={{
-          position: "relative",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          padding: "0 1.5rem",
-        }}
-      >
-        {/* Ambient orbs */}
-        <div
-          className="soma-orb-1"
-          style={{
-            position: "absolute",
-            width: 900,
-            height: 900,
-            left: "50%",
-            top: "40%",
-            transform: "translate(-50%, -50%)",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(200,144,122,0.065) 0%, transparent 65%)",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          className="soma-orb-2"
-          style={{
-            position: "absolute",
-            width: 500,
-            height: 500,
-            right: -80,
-            top: 80,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(212,191,160,0.045) 0%, transparent 65%)",
-            pointerEvents: "none",
-          }}
-        />
-
-        <div
-          className="soma-hero-inner"
-          style={{
-            position: "relative",
-            maxWidth: 1152,
-            margin: "0 auto",
-            width: "100%",
-            flex: 1,
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: "4rem",
-            paddingTop: "7rem",
-            paddingBottom: "5rem",
-          }}
-        >
-          {/* Left: copy */}
-          <div style={{ flex: "1 1 320px", maxWidth: 520 }}>
-            {/* Tag */}
-            <div
-              className="soma-tag"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                borderRadius: 999,
-                border: "1px solid rgba(255,255,255,0.09)",
-                background: "rgba(27,24,32,0.75)",
-                padding: "6px 16px",
-                marginBottom: "2rem",
-              }}
-            >
-              <div className="soma-pulse" style={{ width: 5, height: 5, borderRadius: "50%", background: "#C8907A" }} />
-              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#89808F" }}>
-                SOMA by MINDRA
-              </span>
-            </div>
-
-            {/* Headline */}
-            <h1
-              className="soma-headline"
-              style={{
-                fontFamily: "var(--font-display), Georgia, serif",
-                fontSize: "clamp(3rem, 6vw, 4.75rem)",
-                lineHeight: 1.08,
-                letterSpacing: "-0.02em",
-                color: "#EEE8E4",
-                margin: 0,
-              }}
-            >
-              Your brand<br />
-              develops{" "}
-              <span className="soma-shimmer-text">memory.</span>
-            </h1>
-
-            {/* Sub */}
-            <p
-              className="soma-sub"
-              style={{
-                marginTop: "1.75rem",
-                fontSize: "clamp(14px, 1.5vw, 16px)",
-                lineHeight: 1.85,
-                color: "#5A5060",
-                maxWidth: 400,
-              }}
-            >
-              SOMA conditions your creative intelligence across every campaign. References in. Signals extracted. Identity that compounds.
-            </p>
-
-            {/* CTAs */}
-            <div className="soma-ctas" style={{ marginTop: "2.5rem", display: "flex", flexWrap: "wrap", gap: 14 }}>
-              <button
-                onClick={openLogin}
-                style={{
-                  borderRadius: 999,
-                  padding: "14px 28px",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  border: "none",
-                  cursor: "pointer",
-                  background: "linear-gradient(135deg, #C8907A 0%, #D4BFA0 100%)",
-                  color: "#0B0A0E",
-                  transition: "opacity 0.15s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-              >
-                Try SOMA
-              </button>
-              <button
-                onClick={scrollToSystem}
-                style={{
-                  borderRadius: 999,
-                  padding: "13px 28px",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  background: "none",
-                  cursor: "pointer",
-                  color: "#89808F",
-                  transition: "border-color 0.15s, color 0.15s",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#89808F"; }}
-              >
-                Explore the system
-              </button>
-            </div>
-          </div>
-
-          {/* Right: intelligence card */}
-          <div className="soma-hero-card" style={{ flex: "1 1 320px", maxWidth: 480, width: "100%" }}>
-            <IntelligenceCard />
-          </div>
-        </div>
-
-        {/* Scroll hint */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 32,
-            left: "50%",
-            transform: "translateX(-50%)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 6,
-            opacity: 0.3,
-            animation: "soma-fade-in 1s ease-out 1.5s both",
-          }}
-        >
-          <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, transparent, #C8907A)" }} />
-          <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase", color: "#C8907A" }}>scroll</span>
-        </div>
-      </section>
-
-      <DifferentiatorsSection />
-      <VisualIntelligenceSection />
-      <CtaSection onLogin={openLogin} />
+      <HeroSection onLogin={openLogin} />
+      <RelationshipSection />
+      <EvolutionSection />
+      <DailyRitualSection />
+      <MemorySection />
+      <AutonomySection />
+      <FinalCtaSection onLogin={openLogin} />
       <SomaFooter />
     </div>
   );

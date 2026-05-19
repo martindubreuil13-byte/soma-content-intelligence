@@ -5,10 +5,11 @@ import { clsx } from "clsx";
 export type OrbState = "idle" | "listening" | "thinking" | "preparing" | "learning";
 
 const sizeMap = {
-  sm:  { wrap: "w-10 h-10",  mid: "w-8 h-8",   core: "w-5 h-5"  },
-  md:  { wrap: "w-20 h-20",  mid: "w-16 h-16",  core: "w-9 h-9"  },
-  lg:  { wrap: "w-32 h-32",  mid: "w-24 h-24",  core: "w-14 h-14" },
-  xl:  { wrap: "w-48 h-48",  mid: "w-36 h-36",  core: "w-20 h-20" },
+  sm:   { wrap: "w-10 h-10",  mid: "w-8 h-8",   core: "w-5 h-5"  },
+  md:   { wrap: "w-20 h-20",  mid: "w-16 h-16",  core: "w-9 h-9"  },
+  lg:   { wrap: "w-32 h-32",  mid: "w-24 h-24",  core: "w-14 h-14" },
+  xl:   { wrap: "w-48 h-48",  mid: "w-36 h-36",  core: "w-20 h-20" },
+  "2xl": { wrap: "w-72 h-72",  mid: "w-56 h-56",  core: "w-28 h-28" },
 };
 
 const stateGlow: Record<OrbState, string> = {
@@ -43,7 +44,7 @@ function maturityMods(level: number) {
 
 interface AgentOrbProps {
   state?: OrbState;
-  size?: keyof typeof sizeMap;
+  size?: keyof typeof sizeMap | "2xl";
   maturityLevel?: number;
   className?: string;
 }
