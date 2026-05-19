@@ -1,16 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import {
   Brain,
-  CheckSquare,
   Eye,
   Layers,
   LogOut,
-  Settings,
   SlidersHorizontal,
   Sparkles,
   Target,
@@ -18,13 +15,12 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { AppWorkspaceContext } from "@/lib/workspace/workspace-context";
-import { MaturityIndicator } from "@/components/soma/maturity-indicator";
+import { AgentOrb } from "@/components/soma/agent-orb";
 
 type NavItem = {
   href: string;
   label: string;
   icon: React.ElementType;
-  badge?: string;
   catches?: string[];
 };
 
@@ -49,6 +45,14 @@ function isActivePath(pathname: string, item: NavItem) {
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
+function scoreToMaturityLevel(score: number): number {
+  if (score >= 85) return 4;
+  if (score >= 65) return 3;
+  if (score >= 40) return 2;
+  if (score >= 20) return 1;
+  return 0;
+}
+
 interface AppSidebarProps {
   context: AppWorkspaceContext;
   agentScore?: number;
@@ -57,6 +61,8 @@ interface AppSidebarProps {
 export function AppSidebar({ context, agentScore = 0 }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const maturityLevel = scoreToMaturityLevel(agentScore);
+  const initial = (context.user.email ?? "S").slice(0, 1).toUpperCase();
 
   async function handleLogout() {
     const supabase = createClient();
@@ -66,105 +72,84 @@ export function AppSidebar({ context, agentScore = 0 }: AppSidebarProps) {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col lg:flex"
+    <aside
+      className="fixed inset-y-0 left-0 z-40 hidden w-16 flex-col items-center lg:flex"
       style={{
         background: "linear-gradient(175deg, #100D1A 0%, #0C0910 50%, #0F0B15 100%)",
         borderRight: "1px solid rgba(255,255,255,0.055)",
       }}
     >
-      {/* Logo */}
-      <div className="px-5 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.055)" }}>
-        <Link href="/app" className="block">
-          <Image
-            src="/logos/soma-logo-white.png"
-            alt="SOMA"
-            width={1536}
-            height={1024}
-            priority
-            className="h-auto w-[108px] opacity-90"
-          />
+      {/* SOMA orb — links to Today */}
+      <div
+        className="flex w-full shrink-0 items-center justify-center py-4"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.045)" }}
+      >
+        <Link href="/app" className="group relative flex items-center justify-center">
+          <AgentOrb state="idle" size="sm" maturityLevel={maturityLevel} />
+          {/* Tooltip */}
+          <span className="pointer-events-none absolute left-[calc(100%+10px)] top-1/2 z-50 -translate-y-1/2 whitespace-nowrap rounded-[10px] border border-white/[0.07] bg-[#1A1424]/95 px-3 py-1.5 text-[11px] font-semibold text-white/62 opacity-0 shadow-panel backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100">
+            SOMA Today
+          </span>
         </Link>
-        <div className="mt-4 flex items-center gap-2">
-          <div className="relative flex h-2 w-2 shrink-0 items-center justify-center">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-soft opacity-60" />
-            <span className="relative h-1.5 w-1.5 rounded-full bg-violet-pale" />
-          </div>
-          <p className="truncate text-[11px] font-semibold text-white/40">
-            {context.organization.name}
-          </p>
-        </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <div className="grid gap-0.5">
-          {navItems.map((item) => {
-            const active = isActivePath(pathname, item);
-            return (
+      <nav className="flex flex-1 flex-col items-center gap-0.5 py-3 px-2 w-full">
+        {navItems.map((item) => {
+          const active = isActivePath(pathname, item);
+          return (
+            <div key={item.href} className="group relative w-full flex justify-center">
               <Link
-                key={item.href}
                 href={item.href}
                 className={clsx(
-                  "group flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-sm font-semibold transition duration-200",
+                  "flex h-10 w-10 items-center justify-center rounded-[13px] transition duration-200",
                   active
-                    ? "bg-white/[0.08] text-white"
-                    : "text-white/42 hover:bg-white/[0.05] hover:text-white/72"
+                    ? "bg-white/[0.08]"
+                    : "hover:bg-white/[0.05]"
                 )}
               >
                 <item.icon
-                  size={16}
+                  size={17}
                   className={clsx(
                     "shrink-0 transition",
                     active
                       ? "text-violet-pale"
-                      : "text-white/28 group-hover:text-white/50"
+                      : "text-white/28 group-hover:text-white/55"
                   )}
                 />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                {item.badge && (
-                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/30">
-                    {item.badge}
-                  </span>
-                )}
                 {active && (
-                  <span className="h-1 w-1 shrink-0 rounded-full bg-violet-soft" />
+                  <span className="absolute right-1.5 top-1/2 h-1 w-1 -translate-y-1/2 rounded-full bg-violet-soft/70" />
                 )}
               </Link>
-            );
-          })}
-        </div>
+              {/* Tooltip */}
+              <span className="pointer-events-none absolute left-[calc(100%+8px)] top-1/2 z-50 -translate-y-1/2 whitespace-nowrap rounded-[10px] border border-white/[0.07] bg-[#1A1424]/95 px-3 py-1.5 text-[11px] font-semibold text-white/62 opacity-0 shadow-panel backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100">
+                {item.label}
+              </span>
+            </div>
+          );
+        })}
       </nav>
 
-      {/* Maturity strip */}
-      <div className="px-4 pb-4" style={{ borderTop: "1px solid rgba(255,255,255,0.055)" }}>
-        <div className="pt-4">
-          <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/25">
-            Agent maturity
-          </p>
-          <MaturityIndicator score={agentScore} compact />
+      {/* Footer */}
+      <div
+        className="flex w-full shrink-0 flex-col items-center gap-2 py-3"
+        style={{ borderTop: "1px solid rgba(255,255,255,0.045)" }}
+      >
+        {/* User initial */}
+        <div
+          title={context.user.email ?? "Signed in"}
+          className="flex h-8 w-8 cursor-default items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[11px] font-semibold text-soma-pearl"
+        >
+          {initial}
         </div>
-      </div>
-
-      {/* User footer */}
-      <div className="px-4 pb-5" style={{ borderTop: "1px solid rgba(255,255,255,0.055)" }}>
-        <div className="flex items-center gap-2.5 pt-4">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-[11px] font-semibold text-soma-pearl">
-            {(context.user.email ?? "S").slice(0, 1).toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] font-semibold text-white/60">
-              {context.user.email ?? "Signed in"}
-            </p>
-            <p className="text-[9px] text-white/25">SOMA operator</p>
-          </div>
-          <button
-            onClick={() => { void handleLogout(); }}
-            className="flex items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.03] p-1.5 text-white/30 transition hover:bg-white/[0.06] hover:text-white/60"
-            title="Sign out"
-          >
-            <LogOut size={13} />
-          </button>
-        </div>
+        {/* Logout */}
+        <button
+          onClick={() => { void handleLogout(); }}
+          title="Sign out"
+          className="flex h-8 w-8 items-center justify-center rounded-[10px] border border-white/[0.06] bg-transparent text-white/25 transition hover:bg-white/[0.06] hover:text-white/55"
+        >
+          <LogOut size={13} />
+        </button>
       </div>
     </aside>
   );

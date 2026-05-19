@@ -1,14 +1,13 @@
-import Link from "next/link";
-import { ArrowRight, ChevronDown } from "lucide-react";
 import { getAgentTrainingSummary } from "@/lib/agent-training";
 import { listExecutionJobs } from "@/lib/db/execution-jobs-db";
 import { getContentRuns } from "@/lib/output-runs";
 import { readPublishingQueue } from "@/lib/publishing-queue";
 import type { ContentChannel, ContentRun } from "@/lib/content-types";
 import { AgentOrb } from "@/components/soma/agent-orb";
-import { MaturityIndicator } from "@/components/soma/maturity-indicator";
 import { TodayInteraction } from "@/components/soma/today-interaction";
+import { ContextDrawer } from "@/components/soma/context-drawer";
 import type { OrbState } from "@/components/soma/agent-orb";
+import type { PreparedRun, DrawerSummary } from "@/components/soma/context-drawer";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -122,40 +121,6 @@ function getSomaSpeech(score: number, runsCount: number, pending: number): SomaS
   };
 }
 
-const statusBadge = {
-  emerald: "border-emerald-300/20 bg-emerald-300/6 text-emerald-200/70",
-  violet:  "border-violet-soft/22 bg-violet-deep/10 text-violet-pale",
-  amber:   "border-soma-rose/20 bg-soma-rose/6 text-soma-pearl",
-  neutral: "border-white/[0.07] bg-transparent text-white/30",
-};
-
-// ─── Slim run row ─────────────────────────────────────────────────────────────
-
-function SlimRunRow({ run }: { run: ContentRun }) {
-  const status = getRunStatus(run);
-  const preview =
-    (run.hasOriginalIdea ? run.originalIdea : run.channels.linkedin?.caption ?? "Generated content")
-      ?.slice(0, 82)
-      ?.replace(/\n/g, " ") ?? "";
-
-  return (
-    <Link
-      href={`/review/${encodeURIComponent(run.id)}`}
-      className="group flex items-center justify-between gap-4 rounded-[12px] px-3 py-2.5 transition hover:bg-white/[0.04]"
-    >
-      <p className="min-w-0 truncate text-[13px] text-white/40 transition group-hover:text-white/62">
-        {preview}
-      </p>
-      <div className="flex shrink-0 items-center gap-2">
-        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusBadge[status.color]}`}>
-          {status.label}
-        </span>
-        <ArrowRight size={11} className="text-white/16 transition group-hover:text-white/38" />
-      </div>
-    </Link>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function TodayPage() {
@@ -184,14 +149,29 @@ export default async function TodayPage() {
   const secondaryHref =
     pendingRuns > 0 ? "/review" : runs.length === 0 ? "/assets" : undefined;
 
-  const approvalRate =
-    summary.evaluatedSamples > 0
-      ? Math.round((summary.approved / summary.evaluatedSamples) * 100)
-      : 0;
+  // Pre-transform runs for the context drawer (server → client boundary)
+  const preparedRuns: PreparedRun[] = runs.map((run) => {
+    const status = getRunStatus(run);
+    const preview =
+      (run.hasOriginalIdea ? run.originalIdea : run.channels.linkedin?.caption ?? "Generated content")
+        ?.slice(0, 82)
+        ?.replace(/\n/g, " ") ?? "";
+    return { id: run.id, preview, statusLabel: status.label, statusColor: status.color };
+  });
+
+  const drawerSummary: DrawerSummary = {
+    score: summary.score,
+    stage: summary.stage,
+    stageDescription: summary.stageDescription,
+    evaluatedSamples: summary.evaluatedSamples,
+    approved: summary.approved,
+  };
+
+  const activeJobCount = jobs.filter((j) => j.status === "running").length;
 
   return (
     <div className="min-h-screen px-5 py-14 sm:px-6 lg:px-8 lg:py-20">
-      <div className="mx-auto max-w-[760px]">
+      <div className="mx-auto max-w-[700px]">
 
         {/* ── Presence ── */}
         <div className="flex flex-col items-center text-center">
@@ -214,127 +194,13 @@ export default async function TodayPage() {
           />
         </div>
 
-        {/* ── Section divider ── */}
-        <div className="mt-16 flex items-center gap-5">
-          <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.04)" }} />
-          <span className="text-[9px] font-semibold uppercase tracking-[0.32em] text-white/18">
-            Context
-          </span>
-          <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.04)" }} />
-        </div>
-
-        {/* ── Disclosures ── */}
-        <div className="mt-0 divide-y" style={{ borderColor: "transparent" }}>
-
-          {/* What SOMA remembers */}
-          <details className="group" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-            <summary className="flex cursor-pointer select-none items-center justify-between py-4">
-              <span className="text-[13px] font-semibold text-white/30 transition group-open:text-white/55 hover:text-white/52">
-                What SOMA remembers
-              </span>
-              <ChevronDown
-                size={13}
-                className="text-white/22 transition-transform duration-200 group-open:rotate-180"
-              />
-            </summary>
-
-            <div className="space-y-4 pb-7 pt-1">
-              <MaturityIndicator score={summary.score} />
-              <div className="space-y-1.5 text-[13px] leading-6 text-white/32">
-                <p>— {summary.stage}: {summary.stageDescription}</p>
-                {summary.evaluatedSamples > 0 ? (
-                  <p>
-                    — Reviewed {summary.evaluatedSamples} piece{summary.evaluatedSamples !== 1 ? "s" : ""},
-                    {" "}{summary.approved} approved
-                    {summary.evaluatedSamples > 0 ? ` · ${approvalRate}% approval rate` : ""}
-                  </p>
-                ) : (
-                  <p>— No reviews yet. I&apos;m learning from scratch.</p>
-                )}
-                {queueCount > 0 && (
-                  <p>
-                    — {queueCount} piece{queueCount !== 1 ? "s" : ""} approved and ready to publish.
-                  </p>
-                )}
-              </div>
-              <Link
-                href="/memory"
-                className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-violet-pale/55 transition hover:text-violet-pale"
-              >
-                Full memory report <ArrowRight size={11} />
-              </Link>
-            </div>
-          </details>
-
-          {/* What SOMA prepared */}
-          <details className="group">
-            <summary className="flex cursor-pointer select-none items-center justify-between py-4">
-              <span className="text-[13px] font-semibold text-white/30 transition group-open:text-white/55 hover:text-white/52">
-                What SOMA prepared
-              </span>
-              <div className="flex items-center gap-2">
-                {runs.length > 0 && (
-                  <span className="rounded-full border border-violet-soft/16 bg-violet-deep/8 px-2 py-0.5 text-[10px] font-semibold text-violet-pale/50">
-                    {runs.length}
-                  </span>
-                )}
-                <ChevronDown
-                  size={13}
-                  className="text-white/22 transition-transform duration-200 group-open:rotate-180"
-                />
-              </div>
-            </summary>
-
-            <div className="pb-7 pt-1">
-              {runs.length === 0 ? (
-                <p className="text-[13px] text-white/28">
-                  No drafts yet. Start a mission and I&apos;ll prepare content for your review.
-                </p>
-              ) : (
-                <>
-                  <div className="space-y-0.5">
-                    {runs.map((run) => (
-                      <SlimRunRow key={run.id} run={run} />
-                    ))}
-                  </div>
-                  <div className="mt-4 pl-3">
-                    <Link
-                      href="/review"
-                      className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-white/25 transition hover:text-white/48"
-                    >
-                      Open full review <ArrowRight size={11} />
-                    </Link>
-                  </div>
-                </>
-              )}
-
-              {jobs.length > 0 && (
-                <div className="mt-4 space-y-1.5">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/20">
-                    Working right now
-                  </p>
-                  {jobs.map((job) => (
-                    <div
-                      key={job.id}
-                      className="flex items-center justify-between rounded-[10px] px-3 py-2 text-xs"
-                      style={{ background: "rgba(255,255,255,0.025)" }}
-                    >
-                      <span className="text-white/38">{job.jobType.replace(/_/g, " ")}</span>
-                      <span className={`rounded-full px-2 py-0.5 font-semibold ${
-                        job.status === "completed" ? "bg-emerald-300/7 text-emerald-200/60"
-                        : job.status === "running"  ? "bg-violet-soft/10 text-violet-pale"
-                        : "bg-white/[0.04] text-white/28"
-                      }`}>
-                        {job.status === "queued" && job.retryCount > 0 ? "retrying" : job.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </details>
-
-        </div>
+        {/* ── Context drawer (trigger + panel) ── */}
+        <ContextDrawer
+          summary={drawerSummary}
+          preparedRuns={preparedRuns}
+          queueCount={queueCount}
+          activeJobCount={activeJobCount}
+        />
 
       </div>
     </div>

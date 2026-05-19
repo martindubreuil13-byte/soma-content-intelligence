@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AppBottomBar } from "@/components/layout/app-bottom-bar";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { getCurrentOrganizationForUserId } from "@/lib/auth/current-organization";
 import { createWorkspaceContext } from "@/lib/workspace/workspace-context";
@@ -49,8 +50,9 @@ export default async function AuthenticatedAppLayout({
       <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.018)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.018)_1px,transparent_1px)] bg-[size:48px_48px] opacity-30" />
 
       <AppSidebar context={context} agentScore={agentScore} />
+      <AppBottomBar />
 
-      <div className="relative min-h-screen lg:pl-64">
+      <div className="relative min-h-screen pb-16 lg:pb-0 lg:pl-16">
         <AppHeader context={context} />
         <main className="pb-12">{children}</main>
       </div>
