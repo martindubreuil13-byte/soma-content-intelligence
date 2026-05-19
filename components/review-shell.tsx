@@ -335,7 +335,7 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
     setStatusMessage("Regenerating caption from your feedback…");
 
     try {
-      const request = await safeJsonFetch<{ caption?: string }>(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/caption`, {
+      const request = await safeJsonFetch<{ caption?: string }>(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/caption?executeNow=1`, {
         method: "POST"
       });
       if (!request.ok) throw new Error(request.error.message);
@@ -363,7 +363,7 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
     setStatusMessage("Generating image…");
 
     try {
-      const request = await safeJsonFetch<{ imageUrl?: string }>(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/image`, {
+      const request = await safeJsonFetch<{ imageUrl?: string }>(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/image?executeNow=1`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ visualTweak: visualTweaks[channelKey] ?? "" })
@@ -391,7 +391,7 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
 
     try {
       const request = await safeJsonFetch<{ imageUrl?: string; visualPrompt?: string }>(
-        `/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/reimagine-visual`,
+        `/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/reimagine-visual?executeNow=1`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

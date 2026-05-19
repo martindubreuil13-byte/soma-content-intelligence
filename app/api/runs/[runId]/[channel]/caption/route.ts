@@ -12,8 +12,10 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { createExecutionJob } from "@/lib/db/execution-jobs-db";
 import { buildGenerationContext, renderContextForPrompt } from "@/lib/context/context-assembly";
 import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
+import { successResponse, validationError } from "@/lib/http/api-response";
 import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 import type { ContentChannel } from "@/lib/content-types";
 import type { ICP, Angle, HookStyle, CTAStyle, NegativeConstraint } from "@/lib/brand-intelligence";
@@ -307,12 +309,30 @@ Rules:
   return parsedContent.caption.trim();
 }
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   const { runId, channel } = await context.params;
-  const validationError = validateRunChannel(runId, channel);
+  const validationMessage = validateRunChannel(runId, channel);
 
-  if (validationError || !isChannel(channel)) {
-    return NextResponse.json({ error: validationError ?? "Invalid channel." }, { status: 400 });
+  if (validationMessage || !isChannel(channel)) {
+    return validationError(validationMessage ?? "Invalid channel.");
+  }
+
+  const url = new URL(request.url);
+  const executeNow = url.searchParams.get("executeNow") === "1";
+
+  if (!executeNow) {
+    const job = await createExecutionJob({
+      jobType: "caption_regeneration",
+      payload: { runId, channel },
+      priority: 60,
+    });
+
+    return successResponse({
+      jobId: job.id,
+      status: "queued",
+      runId,
+      channel,
+    }, { status: 202 });
   }
 
   return runInlineExecutionJob(

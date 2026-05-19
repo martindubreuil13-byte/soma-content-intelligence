@@ -1,10 +1,12 @@
 import { updateScheduleConfig } from "@/lib/schedule-config";
 import { runGeneration } from "@/lib/generation-runner";
+import { createExecutionJob } from "@/lib/db/execution-jobs-db";
 import { errorResponse, successResponse, validationError } from "@/lib/http/api-response";
 
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
+  const url = new URL(request.url);
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return validationError("Invalid generation request.");
 
@@ -15,7 +17,24 @@ export async function POST(request: Request) {
           weekday: "long",
           day: "numeric",
           month: "long",
-        })}`;
+      })}`;
+  const executeNow = body.executeNow === true || url.searchParams.get("executeNow") === "1";
+
+  if (!executeNow) {
+    const job = await createExecutionJob({
+      jobType: "generation",
+      priority: 50,
+      payload: { idea, source: "manual" },
+      metadata: { trigger: "schedule_manual_run" },
+    });
+
+    await updateScheduleConfig({ lastRunAt: new Date().toISOString() }).catch(() => {});
+
+    return successResponse({
+      jobId: job.id,
+      status: "queued",
+    }, { status: 202 });
+  }
 
   const result = await runGeneration(idea);
 

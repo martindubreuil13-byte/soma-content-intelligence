@@ -5,6 +5,7 @@ import { promisify } from "util";
 import { NextResponse } from "next/server";
 import { channels, getChannelPath, readTextFile } from "@/lib/channel-image-generation";
 import { ensureCaptionVersion, ensureVisualPromptVersion } from "@/lib/feedback-lineage";
+import { createExecutionJob } from "@/lib/db/execution-jobs-db";
 import {
   createGenerationArtifact,
   createGenerationRun,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/db/generation-runs-db";
 import { buildGenerationContext, renderContextForPrompt } from "@/lib/context/context-assembly";
 import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
+import { successResponse, validationError } from "@/lib/http/api-response";
 import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 
 const execFileAsync = promisify(execFile);
@@ -35,11 +37,26 @@ function extractRunId(stdout: string) {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as { idea?: unknown };
+  const url = new URL(request.url);
+  const body = (await request.json().catch(() => ({}))) as { idea?: unknown; executeNow?: unknown };
   const idea = typeof body.idea === "string" ? body.idea.trim() : "";
+  const executeNow = body.executeNow === true || url.searchParams.get("executeNow") === "1";
 
   if (!idea) {
-    return NextResponse.json({ error: "Raw idea is required." }, { status: 400 });
+    return validationError("Raw idea is required.");
+  }
+
+  if (!executeNow) {
+    const job = await createExecutionJob({
+      jobType: "generation",
+      payload: { idea, source: "manual" },
+      priority: 50,
+    });
+
+    return successResponse({
+      jobId: job.id,
+      status: "queued",
+    }, { status: 202 });
   }
 
   return runInlineExecutionJob(

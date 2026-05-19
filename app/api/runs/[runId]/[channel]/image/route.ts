@@ -12,7 +12,9 @@ import {
   validateRunChannel
 } from "@/lib/channel-image-generation";
 import { getApprovedCaptionVersion } from "@/lib/feedback-lineage";
+import { createExecutionJob } from "@/lib/db/execution-jobs-db";
 import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
+import { successResponse, validationError } from "@/lib/http/api-response";
 import { getSignedImageUrl } from "@/lib/storage/generation-storage";
 
 type RouteContext = {
@@ -81,22 +83,40 @@ export async function GET(request: Request, context: RouteContext) {
 
 export async function POST(_request: Request, context: RouteContext) {
   const { runId, channel } = await context.params;
-  const validationError = validateRunChannel(runId, channel);
+  const validationMessage = validateRunChannel(runId, channel);
 
-  if (validationError || !isChannel(channel)) {
-    return NextResponse.json({ error: validationError ?? "Invalid channel." }, { status: 400 });
+  if (validationMessage || !isChannel(channel)) {
+    return validationError(validationMessage ?? "Invalid channel.");
+  }
+
+  const url = new URL(_request.url);
+  const requestBody = (await _request.json().catch(() => ({}))) as ImageRequest & { executeNow?: unknown };
+  const executeNow = requestBody.executeNow === true || url.searchParams.get("executeNow") === "1";
+  const visualTweak = normalizeVisualTweak(requestBody.visualTweak);
+
+  if (!executeNow) {
+    const job = await createExecutionJob({
+      jobType: "image_generation",
+      payload: { runId, channel, visualTweak },
+      priority: 70,
+    });
+
+    return successResponse({
+      jobId: job.id,
+      status: "queued",
+      runId,
+      channel,
+    }, { status: 202 });
   }
 
   return runInlineExecutionJob(
     {
       jobType: "image_generation",
-      payload: { runId, channel },
+      payload: { runId, channel, visualTweak },
       priority: 70,
     },
     async () => {
   try {
-    const requestBody = (await _request.json().catch(() => ({}))) as ImageRequest;
-    const visualTweak = normalizeVisualTweak(requestBody.visualTweak);
     const visualPromptPath = path.join(getChannelPath(runId, channel), "visual_prompt.txt");
     const visualPrompt = await readTextFile(visualPromptPath);
     const approvedCaption = await getApprovedCaptionVersion(runId, channel);

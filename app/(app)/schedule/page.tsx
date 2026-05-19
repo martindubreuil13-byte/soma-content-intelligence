@@ -7,6 +7,7 @@ import type { ScheduleConfig } from "@/lib/autopilot-types";
 import type { ContentChannel } from "@/lib/content-types";
 import { channelLabels } from "@/lib/content-types";
 import { safeJsonFetch } from "@/lib/client/fetch-safe";
+import { waitForJobCompletion } from "@/lib/client/job-polling";
 
 const allChannels: ContentChannel[] = ["linkedin", "facebook", "instagram", "tiktok"];
 
@@ -56,17 +57,35 @@ export default function SchedulePage() {
     setLastRunId(null);
 
     try {
-      const result = await safeJsonFetch<{ runId?: string | null }>("/api/schedule/run", {
+      const result = await safeJsonFetch<{ jobId?: string; runId?: string | null }>("/api/schedule/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idea: runIdea.trim() || undefined })
       });
       if (!result.ok) throw new Error(result.error.message);
 
-      setLastRunId(result.data.runId ?? null);
+      let runId = result.data.runId ?? null;
+      if (result.data.jobId) {
+        setStatusMessage("Generation queued. Starting worker...");
+        void fetch(`/api/workers/jobs/${encodeURIComponent(result.data.jobId)}/run?dev=1`, { method: "POST" });
+        const completed = await waitForJobCompletion(result.data.jobId, {
+          timeoutMs: 240_000,
+          onUpdate: (snapshot) => {
+            if (snapshot.job.status === "running") setStatusMessage("Generation running...");
+            if (snapshot.job.status === "queued") setStatusMessage("Generation queued...");
+          },
+        });
+        if (!completed.ok) throw new Error(completed.error.message);
+        if (completed.data.job.status === "failed") {
+          throw new Error(completed.data.job.errorMessage ?? "Generation failed.");
+        }
+        runId = typeof completed.data.job.result.runId === "string" ? completed.data.job.result.runId : null;
+      }
+
+      setLastRunId(runId);
       setStatusMessage(
-        result.data.runId
-          ? `Generation complete. Run ID: ${result.data.runId}`
+        runId
+          ? `Generation complete. Run ID: ${runId}`
           : "Generation complete. Refresh the Today screen to see the new run."
       );
     } catch (err) {

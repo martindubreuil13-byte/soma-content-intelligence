@@ -18,8 +18,10 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { createExecutionJob } from "@/lib/db/execution-jobs-db";
 import { buildGenerationContext, renderContextForPrompt } from "@/lib/context/context-assembly";
 import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
+import { successResponse, validationError } from "@/lib/http/api-response";
 import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 
 type RouteContext = {
@@ -173,15 +175,34 @@ Rules:
 
 export async function POST(request: Request, context: RouteContext) {
   const { runId, channel } = await context.params;
-  const validationError = validateRunChannel(runId, channel);
+  const validationMessage = validateRunChannel(runId, channel);
 
-  if (validationError || !isChannel(channel)) {
-    return NextResponse.json({ error: validationError ?? "Invalid channel." }, { status: 400 });
+  if (validationMessage || !isChannel(channel)) {
+    return validationError(validationMessage ?? "Invalid channel.");
   }
 
   const channelPath = getChannelPath(runId, channel);
   const captionPath = path.join(channelPath, "caption.txt");
   const visualPromptPath = path.join(channelPath, "visual_prompt.txt");
+  const url = new URL(request.url);
+  const requestBody = (await request.json().catch(() => ({}))) as ReimagineRequest & { executeNow?: unknown };
+  const visualTweak = normalizeVisualTweak(requestBody.visualTweak);
+  const executeNow = requestBody.executeNow === true || url.searchParams.get("executeNow") === "1";
+
+  if (!executeNow) {
+    const job = await createExecutionJob({
+      jobType: "visual_regeneration",
+      payload: { runId, channel, visualTweak },
+      priority: 70,
+    });
+
+    return successResponse({
+      jobId: job.id,
+      status: "queued",
+      runId,
+      channel,
+    }, { status: 202 });
+  }
 
   return runInlineExecutionJob(
     {
@@ -191,8 +212,6 @@ export async function POST(request: Request, context: RouteContext) {
     },
     async () => {
   try {
-    const requestBody = (await request.json().catch(() => ({}))) as ReimagineRequest;
-    const visualTweak = normalizeVisualTweak(requestBody.visualTweak);
     const caption = await readTextFile(captionPath);
     const approvedCaption = await getApprovedCaptionVersion(runId, channel);
 

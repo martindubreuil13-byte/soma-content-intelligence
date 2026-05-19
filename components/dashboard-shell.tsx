@@ -8,6 +8,7 @@ import { IdeaInputPanel } from "@/components/idea-input-panel";
 import { RunSidebar } from "@/components/run-sidebar";
 import { TopBar } from "@/components/top-bar";
 import { safeJsonFetch } from "@/lib/client/fetch-safe";
+import { waitForJobCompletion } from "@/lib/client/job-polling";
 import { cleanChannelContent } from "@/lib/content-formatting";
 import type { TrainingSummary } from "@/lib/agent-training";
 import type {
@@ -100,7 +101,7 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setStatusMessage("Writing raw idea and waking the Python engine...");
 
     try {
-      const request = await safeJsonFetch<{ runId?: string | null }>("/api/generate", {
+      const request = await safeJsonFetch<{ jobId?: string; status?: string; runId?: string | null }>("/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -112,7 +113,30 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
         throw new Error(request.error.message);
       }
 
-      setStatusMessage("Generated. Refreshing the local archive...");
+      if (request.data.jobId) {
+        setStatusMessage("Generation queued. Starting worker...");
+        void fetch(`/api/workers/jobs/${encodeURIComponent(request.data.jobId)}/run?dev=1`, { method: "POST" });
+        const completed = await waitForJobCompletion(request.data.jobId, {
+          timeoutMs: 240_000,
+          onUpdate: (snapshot) => {
+            if (snapshot.job.status === "running") setStatusMessage("Generation running...");
+            if (snapshot.job.status === "queued") setStatusMessage("Generation queued...");
+          },
+        });
+
+        if (!completed.ok) throw new Error(completed.error.message);
+        if (completed.data.job.status === "failed") {
+          throw new Error(completed.data.job.errorMessage ?? "Generation failed.");
+        }
+
+        const runId = typeof completed.data.job.result.runId === "string" ? completed.data.job.result.runId : null;
+        if (runId) {
+          setPendingRunId(runId);
+          setSelectedRunId(runId);
+        }
+      }
+
+      setStatusMessage("Generated. Refreshing the archive...");
 
       if (request.data.runId) {
         setPendingRunId(request.data.runId);
@@ -160,7 +184,7 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
 
     try {
       const request = await safeJsonFetch<{ imageUrl?: string }>(
-        `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/image`,
+        `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/image?executeNow=1`,
         {
           method: "POST",
           headers: {
@@ -211,7 +235,7 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setStatusMessage(`Regenerating ${activeChannel} caption from your feedback...`);
 
     try {
-      const request = await safeJsonFetch<{ caption?: string }>(`/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/caption`, {
+      const request = await safeJsonFetch<{ caption?: string }>(`/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/caption?executeNow=1`, {
         method: "POST"
       });
 
@@ -275,7 +299,7 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
 
     try {
       const request = await safeJsonFetch<{ imageUrl?: string; visualPrompt?: string }>(
-        `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/reimagine-visual`,
+        `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/reimagine-visual?executeNow=1`,
         {
           method: "POST",
           headers: {

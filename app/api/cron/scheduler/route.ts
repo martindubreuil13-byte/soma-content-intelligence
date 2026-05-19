@@ -6,8 +6,10 @@ import {
   releaseSchedulerLock,
   updateSchedulerHeartbeat,
 } from "@/lib/db/scheduler-runtime-db";
+import { createExecutionJob } from "@/lib/db/execution-jobs-db";
 import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
 import { errorResponse, successResponse, unauthorizedError } from "@/lib/http/api-response";
+import { runExecutionJob, runNextExecutionJob } from "@/lib/workers/worker-runtime";
 import type { ScheduleConfig } from "@/lib/autopilot-types";
 
 export const dynamic = "force-dynamic";
@@ -196,26 +198,30 @@ export async function GET(request: Request) {
     }
   }
 
-  const result = await runInlineExecutionJob(
-    {
-      jobType: "scheduler_tick",
-      payload: { force, dev: isDev },
-      priority: 40,
-      maxRetries: 1,
-    },
-    async () => runSchedulerTick(force)
-  )
-    .then(({ job, result }) => ({ ...result, executionJobId: job.id, executionStatus: job.status }))
-    .catch((error) => ({
-      ok: false,
-      error: error instanceof Error ? error.message : "Scheduler tick failed.",
-      log: ["[scheduler] execution job failed"],
-    }));
+  const maxJobsParam = Number(url.searchParams.get("maxJobs") ?? 1);
+  const maxJobs = Number.isFinite(maxJobsParam) ? Math.min(Math.max(1, maxJobsParam), 3) : 1;
+  const schedulerJob = await createExecutionJob({
+    jobType: "scheduler_tick",
+    payload: { force, dev: isDev },
+    priority: 40,
+    maxRetries: 1,
+  });
+  const schedulerResult = await runExecutionJob(schedulerJob.id);
 
-  if (result.ok === false) {
-    console.warn("[cron/scheduler] failed", result.error);
-    return errorResponse(result.error ?? "Scheduler tick failed.", { status: 500, code: "scheduler_failed", details: { log: result.log } });
+  if (schedulerResult.ok === false) {
+    console.warn("[cron/scheduler] failed", schedulerResult.error);
+    return errorResponse(schedulerResult.error ?? "Scheduler tick failed.", {
+      status: 500,
+      code: "scheduler_failed",
+      details: { jobId: schedulerJob.id },
+    });
   }
 
-  return successResponse(result);
+  const workerResult = await runNextExecutionJob({ maxJobs });
+
+  return successResponse({
+    schedulerJobId: schedulerJob.id,
+    schedulerStatus: schedulerResult.job?.status ?? "completed",
+    worker: workerResult,
+  });
 }

@@ -204,6 +204,26 @@ export async function listExecutionJobs(filters: { status?: ExecutionJobStatus |
   return (data ?? []).map(toJob);
 }
 
+export async function listExecutionEvents(executionJobId: string, limit = 20): Promise<ExecutionEvent[]> {
+  const context = await requireWorkspaceContext();
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("execution_events")
+    .select(eventSelect)
+    .eq("organization_id", context.organization.id)
+    .eq("execution_job_id", executionJobId)
+    .order("created_at", { ascending: false })
+    .limit(limit)
+    .returns<ExecutionEventRow[]>();
+
+  if (error) {
+    console.error("EXECUTION EVENT LIST ERROR", error);
+    throw error;
+  }
+
+  return (data ?? []).map(toEvent).reverse();
+}
+
 export async function acquireNextExecutionJob(workerId: string, staleAfterSeconds = 300): Promise<ExecutionJob | null> {
   const context = await requireWorkspaceContext();
   const supabase = await createServerSupabase();
