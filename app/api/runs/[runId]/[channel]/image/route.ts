@@ -12,6 +12,7 @@ import {
   validateRunChannel
 } from "@/lib/channel-image-generation";
 import { getApprovedCaptionVersion } from "@/lib/feedback-lineage";
+import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
 import { getSignedImageUrl } from "@/lib/storage/generation-storage";
 
 type RouteContext = {
@@ -86,6 +87,13 @@ export async function POST(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: validationError ?? "Invalid channel." }, { status: 400 });
   }
 
+  return runInlineExecutionJob(
+    {
+      jobType: "image_generation",
+      payload: { runId, channel },
+      priority: 70,
+    },
+    async () => {
   try {
     const requestBody = (await _request.json().catch(() => ({}))) as ImageRequest;
     const visualTweak = normalizeVisualTweak(requestBody.visualTweak);
@@ -94,11 +102,11 @@ export async function POST(_request: Request, context: RouteContext) {
     const approvedCaption = await getApprovedCaptionVersion(runId, channel);
 
     if (!approvedCaption) {
-      return NextResponse.json({ error: "Approve the latest caption before generating an image." }, { status: 409 });
+      throw Object.assign(new Error("Approve the latest caption before generating an image."), { status: 409 });
     }
 
     if (!visualPrompt) {
-      return NextResponse.json({ error: "visual_prompt.txt is empty." }, { status: 400 });
+      throw Object.assign(new Error("visual_prompt.txt is empty."), { status: 400 });
     }
 
     const imagePath = path.join(getChannelPath(runId, channel), imageFileName);
@@ -118,14 +126,14 @@ export async function POST(_request: Request, context: RouteContext) {
       visualPrompt
     });
 
-    return NextResponse.json({
+    return {
       ok: true,
       runId,
       channel,
       visualPrompt,
       reimagined: false,
       ...generated
-    });
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Image generation failed.";
 
@@ -135,6 +143,13 @@ export async function POST(_request: Request, context: RouteContext) {
       message
     });
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    throw Object.assign(new Error(message), { status: error && typeof error === "object" && "status" in error ? error.status : 500 });
   }
+    }
+  )
+    .then(({ job, result }) => NextResponse.json({ ...result, executionJobId: job.id, executionStatus: job.status }))
+    .catch((error) => {
+      const status = error && typeof error === "object" && "status" in error && typeof error.status === "number" ? error.status : 500;
+      return NextResponse.json({ error: error instanceof Error ? error.message : "Image generation failed." }, { status });
+    });
 }

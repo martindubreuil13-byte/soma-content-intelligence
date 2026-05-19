@@ -1,6 +1,20 @@
 import { readdir, readFile, stat } from "fs/promises";
 import path from "path";
 import { containsMultipleChannelHeadings, splitContentByChannel } from "@/lib/content-formatting";
+import { listGenerationAssets } from "@/lib/db/generation-assets-db";
+import {
+  listGenerationArtifacts,
+  listGenerationChannels,
+  listGenerationRuns,
+  type GenerationArtifact,
+  type GenerationChannel,
+  type GenerationRun,
+} from "@/lib/db/generation-runs-db";
+import {
+  getFeedbackLineage,
+  lineageVersionToFeedbackVersion,
+  type FeedbackLineageVersion,
+} from "@/lib/db/feedback-lineage-db";
 import {
   currentFeedbackFromLineage,
   getCurrentVersionId,
@@ -111,6 +125,79 @@ function isContentPackage(value: unknown): value is { caption?: unknown; visual_
 
 function getString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function lineageFromDbVersions(versions: FeedbackLineageVersion[]): ChannelFeedbackLineage {
+  return {
+    captionVersions: versions
+      .filter((version) => version.artifactType === "caption")
+      .map(lineageVersionToFeedbackVersion),
+    visualPromptVersions: versions
+      .filter((version) => version.artifactType === "visualPrompt")
+      .map(lineageVersionToFeedbackVersion),
+    imageVersions: versions
+      .filter((version) => version.artifactType === "image")
+      .map(lineageVersionToFeedbackVersion),
+  };
+}
+
+function latestArtifactContent(artifacts: GenerationArtifact[], channel: GenerationChannel | undefined, type: string) {
+  return artifacts
+    .filter((artifact) => artifact.artifactType === type && (!channel || artifact.channelId === channel.id))
+    .at(-1)?.content ?? "";
+}
+
+async function readDbRun(run: GenerationRun): Promise<ContentRun> {
+  const [dbChannels, artifacts, assets] = await Promise.all([
+    listGenerationChannels(run.id),
+    listGenerationArtifacts(run.id),
+    listGenerationAssets({ generationRunId: run.id, assetType: "generated_image" }).catch(() => []),
+  ]);
+  const channelPackages = Object.fromEntries(
+    await Promise.all(
+      channels.map(async (channel) => {
+        const dbChannel = dbChannels.find((item) => item.channel === channel);
+        const dbLineage = await getFeedbackLineage({ generationRunId: run.id, channel }).catch(() => null);
+        const feedbackLineage = dbLineage ? lineageFromDbVersions(dbLineage.versions) : neutralFeedbackLineage;
+        const imageAsset = assets.find((asset) => asset.generationChannelId === dbChannel?.id);
+        const caption =
+          dbChannel?.caption ||
+          latestArtifactContent(artifacts, dbChannel, "caption") ||
+          "";
+        const visualPrompt =
+          dbChannel?.visualPrompt ||
+          latestArtifactContent(artifacts, dbChannel, "visual_prompt") ||
+          "";
+
+        return [
+          channel,
+          {
+            caption,
+            currentCaptionVersionId: getCurrentVersionId(feedbackLineage, "caption"),
+            currentVisualPromptVersionId: getCurrentVersionId(feedbackLineage, "visualPrompt"),
+            currentImageVersionId: getCurrentVersionId(feedbackLineage, "image"),
+            feedback: currentFeedbackFromLineage(feedbackLineage),
+            feedbackLineage,
+            visualPrompt,
+            ...(imageAsset || dbChannel?.imageUrl
+              ? { imageUrl: dbChannel?.imageUrl ?? `/api/runs/${encodeURIComponent(run.legacyRunId ?? run.id)}/${channel}/image` }
+              : {}),
+          },
+        ];
+      })
+    )
+  ) as Record<ContentChannel, ContentPackage>;
+
+  return {
+    id: run.legacyRunId ?? run.id,
+    folderName: run.legacyRunId ?? run.id,
+    timestamp: run.createdAt,
+    title: run.title ?? "Generated content run",
+    mood: run.status,
+    originalIdea: run.rawIdea ?? missingOriginalIdeaMessage,
+    hasOriginalIdea: Boolean(run.rawIdea),
+    channels: channelPackages,
+  };
 }
 
 async function readRun(folderName: string): Promise<ContentRun> {
@@ -249,6 +336,15 @@ async function readRun(folderName: string): Promise<ContentRun> {
 }
 
 export async function getContentRuns(): Promise<ContentRun[]> {
+  try {
+    const dbRuns = await listGenerationRuns();
+    if (dbRuns.length) {
+      return Promise.all(dbRuns.map(readDbRun));
+    }
+  } catch {
+    // Fall back to local outputs for legacy/dev compatibility.
+  }
+
   const outputPath = path.join(process.cwd(), "outputs");
 
   try {

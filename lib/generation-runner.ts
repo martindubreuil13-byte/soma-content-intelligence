@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { promisify } from "util";
 import { channels, getChannelPath, readTextFile } from "@/lib/channel-image-generation";
+import { createGenerationRun } from "@/lib/db/generation-runs-db";
 import { ensureCaptionVersion, ensureVisualPromptVersion } from "@/lib/feedback-lineage";
 
 const execFileAsync = promisify(execFile);
@@ -60,6 +61,23 @@ export async function runGeneration(idea: string): Promise<GenerationResult> {
     const runId = extractRunId(stdout);
 
     if (runId) {
+      await createGenerationRun({
+        legacyRunId: runId,
+        title: idea.slice(0, 120),
+        rawIdea: idea,
+        status: "completed",
+        source: "scheduler",
+        completedAt: new Date().toISOString(),
+        metadata: {
+          stdout_excerpt: stdout.slice(0, 2000),
+          stderr_excerpt: stderr?.slice(0, 2000) ?? "",
+        },
+      }).catch((error) => {
+        console.error("[generation-runner] DB run persistence failed", {
+          runId,
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      });
       await initFeedbackLineage(runId);
     }
 

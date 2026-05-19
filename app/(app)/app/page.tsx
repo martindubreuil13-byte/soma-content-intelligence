@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { getAgentTrainingSummary } from "@/lib/agent-training";
+import { listExecutionJobs } from "@/lib/db/execution-jobs-db";
 import { getContentRuns } from "@/lib/output-runs";
 import { readPublishingQueue } from "@/lib/publishing-queue";
 import type { ContentChannel, ContentRun } from "@/lib/content-types";
@@ -140,7 +141,11 @@ function EmptyState() {
 }
 
 export default async function AppPage() {
-  const [runs, queue] = await Promise.all([getContentRuns(), readPublishingQueue()]);
+  const [runs, queue, jobs] = await Promise.all([
+    getContentRuns(),
+    readPublishingQueue(),
+    listExecutionJobs({ limit: 5 }).catch(() => []),
+  ]);
   const trainingSummary = await getAgentTrainingSummary(runs);
   const today = new Date();
   const dateLabel = today.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
@@ -204,6 +209,35 @@ export default async function AppPage() {
               Schedule
             </Link>
           </div>
+
+          {jobs.length ? (
+            <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/38">Execution</p>
+                <p className="text-[10px] text-white/30">latest jobs</p>
+              </div>
+              <div className="grid gap-2">
+                {jobs.map((job) => (
+                  <div key={job.id} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.035] px-3 py-2 text-xs">
+                    <span className="truncate font-semibold text-white/62">{job.jobType.replace(/_/g, " ")}</span>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-1 font-semibold ${
+                        job.status === "completed"
+                          ? "bg-emerald-300/10 text-emerald-200"
+                          : job.status === "running"
+                            ? "bg-peach/10 text-peach"
+                            : job.status === "failed"
+                              ? "bg-plasma/10 text-peach"
+                              : "bg-white/[0.06] text-white/45"
+                      }`}
+                    >
+                      {job.status === "queued" && job.retryCount > 0 ? "retrying" : job.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {/* Run cards */}
           {runs.length === 0 ? (

@@ -10,6 +10,7 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
 import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 
 const execFileAsync = promisify(execFile);
@@ -39,6 +40,14 @@ export async function POST(request: Request) {
   if (!idea) {
     return NextResponse.json({ error: "Raw idea is required." }, { status: 400 });
   }
+
+  return runInlineExecutionJob(
+    {
+      jobType: "generation",
+      payload: { idea },
+      priority: 50,
+    },
+    async () => {
 
   const cwd = process.cwd();
   const inputPath = path.join(cwd, "inputs", "raw-idea.txt");
@@ -257,12 +266,12 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({
+    return {
       ok: true,
       runId,
       stdout,
       stderr
-    });
+    };
   } catch (error) {
     const execError = error as ExecFileError;
     const message = execError.message ?? "Generation failed.";
@@ -278,14 +287,25 @@ export async function POST(request: Request) {
       stdout
     });
 
-    return NextResponse.json(
-      {
-        error: message,
+    throw Object.assign(new Error(message), {
+      details: {
         stderr,
         stdout,
         pythonCommand
-      },
-      { status: 500 }
-    );
+      }
+    });
   }
+    }
+  )
+    .then(({ job, result }) => NextResponse.json({ ...result, executionJobId: job.id, executionStatus: job.status }))
+    .catch((error) => {
+      const details = error && typeof error === "object" && "details" in error ? error.details : {};
+      return NextResponse.json(
+        {
+          error: error instanceof Error ? error.message : "Generation failed.",
+          ...(details && typeof details === "object" ? details : {}),
+        },
+        { status: 500 }
+      );
+    });
 }

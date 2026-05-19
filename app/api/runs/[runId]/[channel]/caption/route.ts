@@ -12,6 +12,7 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
 import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 import type { ContentChannel } from "@/lib/content-types";
 import type { ICP, Angle, HookStyle, CTAStyle, NegativeConstraint } from "@/lib/brand-intelligence";
@@ -309,6 +310,13 @@ export async function POST(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: validationError ?? "Invalid channel." }, { status: 400 });
   }
 
+  return runInlineExecutionJob(
+    {
+      jobType: "caption_regeneration",
+      payload: { runId, channel },
+      priority: 60,
+    },
+    async () => {
   try {
     const channelPath = getChannelPath(runId, channel);
     const captionPath = path.join(channelPath, "caption.txt");
@@ -435,13 +443,13 @@ export async function POST(_request: Request, context: RouteContext) {
       });
     }
 
-    return NextResponse.json({
+    return {
       ok: true,
       runId,
       channel,
       caption,
       captionVersionId: version.id
-    });
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Caption regeneration failed.";
 
@@ -451,6 +459,10 @@ export async function POST(_request: Request, context: RouteContext) {
       message
     });
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    throw new Error(message);
   }
+    }
+  )
+    .then(({ job, result }) => NextResponse.json({ ...result, executionJobId: job.id, executionStatus: job.status }))
+    .catch((error) => NextResponse.json({ error: error instanceof Error ? error.message : "Caption regeneration failed." }, { status: 500 }));
 }

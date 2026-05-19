@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { readScheduleConfig, updateScheduleConfig } from "@/lib/schedule-config";
 import { runGeneration } from "@/lib/generation-runner";
+import {
+  acquireSchedulerLock,
+  markSchedulerFailure,
+  releaseSchedulerLock,
+  updateSchedulerHeartbeat,
+} from "@/lib/db/scheduler-runtime-db";
+import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
 import type { ScheduleConfig } from "@/lib/autopilot-types";
 
 export const dynamic = "force-dynamic";
@@ -101,6 +108,7 @@ function isDue(config: ScheduleConfig): { due: boolean; reason: string } {
 
 async function runSchedulerTick(force: boolean): Promise<TickResult> {
   const log: string[] = [];
+  const schedulerKey = "content_generation";
 
   log.push(`[scheduler] tick at ${new Date().toISOString()}`);
 
@@ -119,6 +127,12 @@ async function runSchedulerTick(force: boolean): Promise<TickResult> {
     log.push("[scheduler] force=true — bypassing time check");
   }
 
+  const lock = await acquireSchedulerLock(schedulerKey, 300);
+  if (!lock.acquired) {
+    log.push("[scheduler] skipped — scheduler lock is already active");
+    return { skipped: true, reason: "scheduler already running", log };
+  }
+
   log.push("[scheduler] starting generation");
 
   const idea = `Scheduled generation — ${new Date().toLocaleDateString("en-GB", {
@@ -127,15 +141,24 @@ async function runSchedulerTick(force: boolean): Promise<TickResult> {
     month: "long",
   })}`;
 
-  const result = await runGeneration(idea);
+  await updateSchedulerHeartbeat(schedulerKey, 300);
+  const result = await runGeneration(idea).catch(async (error) => {
+    const message = error instanceof Error ? error.message : "generation threw unexpectedly";
+    await markSchedulerFailure(schedulerKey, message);
+    return { ok: false, runId: null, error: message, stderr: "" };
+  });
 
   if (result.ok && result.runId) {
     log.push(`[scheduler] generation succeeded — runId: ${result.runId}`);
+    await releaseSchedulerLock(schedulerKey, { run_id: result.runId });
   } else {
     log.push(`[scheduler] generation failed — ${result.error ?? "unknown error"}`);
     if (result.stderr) {
       log.push(`[scheduler] stderr: ${result.stderr.slice(0, 400)}`);
     }
+    await markSchedulerFailure(schedulerKey, result.error ?? "unknown scheduler generation error", {
+      stderr: result.stderr?.slice(0, 1000) ?? "",
+    });
   }
 
   // Update lastRunAt regardless of success/failure.
@@ -173,7 +196,21 @@ export async function GET(request: Request) {
     }
   }
 
-  const result = await runSchedulerTick(force);
+  const result = await runInlineExecutionJob(
+    {
+      jobType: "scheduler_tick",
+      payload: { force, dev: isDev },
+      priority: 40,
+      maxRetries: 1,
+    },
+    async () => runSchedulerTick(force)
+  )
+    .then(({ job, result }) => ({ ...result, executionJobId: job.id, executionStatus: job.status }))
+    .catch((error) => ({
+      ok: false,
+      error: error instanceof Error ? error.message : "Scheduler tick failed.",
+      log: ["[scheduler] execution job failed"],
+    }));
 
   console.log("[cron/scheduler]", result.log.join(" | "));
 

@@ -1,12 +1,8 @@
-import { readdir, readFile } from "fs/promises";
-import path from "path";
 import { readPersistentLearningSignals } from "@/lib/agent-training";
+import { listFeedbackLineageVersions } from "@/lib/db/feedback-lineage-db";
 import { savePreferenceMemory } from "@/lib/db/intelligence-db";
 import type { ContentChannel, FeedbackStatus, FeedbackTarget } from "@/lib/content-types";
-import { channels } from "@/lib/channel-image-generation";
-import { normalizeChannelLineage } from "@/lib/feedback-lineage";
 
-const outputFolderPattern = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$/;
 const preferenceCategories = [
   "preferred_visual_styles",
   "avoid_visual_patterns",
@@ -34,8 +30,6 @@ export type PreferenceMemory = Record<PreferenceCategory, string[]> & {
   channel_approved_tags: Partial<Record<ContentChannel, string[]>>;
   channel_rejected_tags: Partial<Record<ContentChannel, string[]>>;
 };
-
-type FeedbackJson = Partial<Record<ContentChannel, unknown>>;
 
 function emptyPreferenceMemory(): PreferenceMemory {
   return {
@@ -236,70 +230,29 @@ function mergeUnique(...values: string[][]) {
 }
 
 async function readFeedbackEntries() {
-  const outputsPath = path.join(process.cwd(), "outputs");
   const entries: FeedbackEntry[] = [];
 
-  let folderNames: string[] = [];
-
   try {
-    const outputEntries = await readdir(outputsPath, { withFileTypes: true });
-
-    folderNames = outputEntries
-      .filter((entry) => entry.isDirectory() && outputFolderPattern.test(entry.name))
-      .map((entry) => entry.name);
-  } catch {
-    return entries;
-  }
-
-  await Promise.all(
-    folderNames.map(async (folderName) => {
-      try {
-        const parsedFeedback = JSON.parse(await readFile(path.join(outputsPath, folderName, "feedback.json"), "utf8")) as unknown;
-
-        if (!parsedFeedback || typeof parsedFeedback !== "object" || Array.isArray(parsedFeedback)) {
-          return;
+    const lineageVersions = await listFeedbackLineageVersions();
+    entries.push(
+      ...lineageVersions.flatMap((version) => {
+        const channel = typeof version.metadata.channel === "string" ? version.metadata.channel : "";
+        if (channel !== "linkedin" && channel !== "facebook" && channel !== "instagram" && channel !== "tiktok") {
+          return [];
         }
 
-        const feedback = parsedFeedback as FeedbackJson;
-
-        channels.forEach((channel) => {
-          const lineage = normalizeChannelLineage(feedback[channel]);
-
-          entries.push(
-            ...lineage.captionVersions.flatMap((version) =>
-              getFeedbackSectionEntries({
-                channel,
-                notes: version.notes,
-                status: version.status,
-                tags: version.tags,
-                target: "caption"
-              })
-            ),
-            ...lineage.imageVersions.flatMap((version) =>
-              getFeedbackSectionEntries({
-                channel,
-                notes: version.notes,
-                status: version.status,
-                tags: version.tags,
-                target: "image"
-              })
-            ),
-            ...lineage.visualPromptVersions.flatMap((version) =>
-              getFeedbackSectionEntries({
-                channel,
-                notes: version.notes,
-                status: version.status,
-                tags: version.tags,
-                target: "image"
-              })
-            )
-          );
+        return getFeedbackSectionEntries({
+          channel,
+          notes: version.notes,
+          status: version.status,
+          tags: version.tags,
+          target: version.artifactType === "visualPrompt" ? "image" : version.artifactType
         });
-      } catch {
-        // Ignore runs without feedback.json or malformed feedback files.
-      }
-    })
-  );
+      })
+    );
+  } catch {
+    // Keep preference rebuild non-blocking if lineage tables are not migrated yet.
+  }
 
   const persistentSignals = await readPersistentLearningSignals();
 

@@ -18,6 +18,7 @@ import {
   createGenerationRun,
   upsertGenerationChannel,
 } from "@/lib/db/generation-runs-db";
+import { runInlineExecutionJob } from "@/lib/orchestration/execution-orchestrator";
 import { uploadArtifactText, uploadJsonSnapshot } from "@/lib/storage/generation-storage";
 
 type RouteContext = {
@@ -181,6 +182,13 @@ export async function POST(request: Request, context: RouteContext) {
   const captionPath = path.join(channelPath, "caption.txt");
   const visualPromptPath = path.join(channelPath, "visual_prompt.txt");
 
+  return runInlineExecutionJob(
+    {
+      jobType: "visual_regeneration",
+      payload: { runId, channel },
+      priority: 70,
+    },
+    async () => {
   try {
     const requestBody = (await request.json().catch(() => ({}))) as ReimagineRequest;
     const visualTweak = normalizeVisualTweak(requestBody.visualTweak);
@@ -188,11 +196,11 @@ export async function POST(request: Request, context: RouteContext) {
     const approvedCaption = await getApprovedCaptionVersion(runId, channel);
 
     if (!approvedCaption) {
-      return NextResponse.json({ error: "Approve the latest caption before regenerating an image." }, { status: 409 });
+      throw Object.assign(new Error("Approve the latest caption before regenerating an image."), { status: 409 });
     }
 
     if (!caption) {
-      return NextResponse.json({ error: "caption.txt is empty." }, { status: 400 });
+      throw Object.assign(new Error("caption.txt is empty."), { status: 400 });
     }
 
     const currentVisualPrompt = await readTextFile(visualPromptPath);
@@ -329,7 +337,7 @@ export async function POST(request: Request, context: RouteContext) {
         });
       });
 
-    return NextResponse.json({
+    return {
       ok: true,
       runId,
       channel,
@@ -338,7 +346,7 @@ export async function POST(request: Request, context: RouteContext) {
       visualArchetype: selection.visualArchetype,
       conceptAngle: selection.conceptAngle,
       ...generated
-    });
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Reimagine visual failed.";
 
@@ -348,6 +356,13 @@ export async function POST(request: Request, context: RouteContext) {
       message
     });
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    throw Object.assign(new Error(message), { status: error && typeof error === "object" && "status" in error ? error.status : 500 });
   }
+    }
+  )
+    .then(({ job, result }) => NextResponse.json({ ...result, executionJobId: job.id, executionStatus: job.status }))
+    .catch((error) => {
+      const status = error && typeof error === "object" && "status" in error && typeof error.status === "number" ? error.status : 500;
+      return NextResponse.json({ error: error instanceof Error ? error.message : "Reimagine visual failed." }, { status });
+    });
 }

@@ -1,5 +1,12 @@
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
+import {
+  appendLineageVersion,
+  createLineageArtifact,
+  getFeedbackLineage,
+  lineageVersionToFeedbackVersion,
+  updateLineageVersionFeedback,
+} from "@/lib/db/feedback-lineage-db";
 import type {
   ChannelFeedback,
   ChannelFeedbackLineage,
@@ -283,8 +290,53 @@ function emptyFeedbackFile(): FeedbackFile {
   return Object.fromEntries(feedbackChannels.map((channel) => [channel, serializeLineage(emptyChannelLineage())])) as FeedbackFile;
 }
 
+async function readDbFeedback(runId: string): Promise<FeedbackFile | null> {
+  const entries = await Promise.all(
+    feedbackChannels.map(async (channel) => {
+      const result = await getFeedbackLineage({ legacyRunId: runId, channel });
+      if (!result) return [channel, serializeLineage(emptyChannelLineage())] as const;
+
+      const captionVersions = result.versions
+        .filter((version) => version.artifactType === "caption")
+        .map(lineageVersionToFeedbackVersion);
+      const visualPromptVersions = result.versions
+        .filter((version) => version.artifactType === "visualPrompt")
+        .map(lineageVersionToFeedbackVersion);
+      const imageVersions = result.versions
+        .filter((version) => version.artifactType === "image")
+        .map(lineageVersionToFeedbackVersion);
+
+      return [
+        channel,
+        serializeLineage({
+          captionVersions,
+          visualPromptVersions,
+          imageVersions,
+        }),
+      ] as const;
+    })
+  );
+  const hasDbLineage = entries.some(([, lineage]) => {
+    return lineage.caption_versions.length || lineage.visual_prompt_versions.length || lineage.image_versions.length;
+  });
+
+  return hasDbLineage ? (Object.fromEntries(entries) as FeedbackFile) : null;
+}
+
 export async function readFeedbackFile(runId: string) {
   const feedbackPath = path.join(process.cwd(), "outputs", runId, "feedback.json");
+
+  try {
+    const dbFeedback = await readDbFeedback(runId);
+    if (dbFeedback) {
+      return {
+        feedback: dbFeedback,
+        feedbackPath
+      };
+    }
+  } catch {
+    // DB lineage may not exist for legacy/local-only runs; fall back to the compatibility mirror.
+  }
 
   try {
     const parsedFeedback = JSON.parse(await readFile(feedbackPath, "utf8")) as unknown;
@@ -313,10 +365,51 @@ export async function readFeedbackFile(runId: string) {
 }
 
 export async function writeFeedbackFile(feedbackPath: string, feedback: FeedbackFile) {
-  await writeFile(feedbackPath, `${JSON.stringify(feedback, null, 2)}\n`);
+  try {
+    await writeFile(feedbackPath, `${JSON.stringify(feedback, null, 2)}\n`);
+  } catch {
+    // The filesystem mirror is optional in DB-first runtime.
+  }
 }
 
 export async function appendImageVersion(runId: string, channel: ContentChannel, input: AppendImageVersionInput) {
+  try {
+    const artifact = await createLineageArtifact({
+      legacyRunId: runId,
+      channel,
+      artifactType: "image",
+      metadata: {
+        image_path: input.imagePath,
+        prompt_excerpt: input.promptExcerpt,
+      },
+    });
+    const latest = await getFeedbackLineage({ legacyRunId: runId, channel });
+    const sourceVisualPromptVersionId = latest?.versions
+      .filter((version) => version.artifactType === "visualPrompt")
+      .at(-1)?.id;
+    const version = await appendLineageVersion({
+      legacyRunId: runId,
+      channel,
+      artifactType: "image",
+      generationArtifactId: artifact?.id ?? null,
+      status: "pending",
+      metadata: {
+        generation_type: input.generationType,
+        archetype: input.archetype ?? "",
+        concept_angle: input.conceptAngle ?? "",
+        prompt_excerpt: input.promptExcerpt,
+        image_path: input.imagePath,
+        parent_caption_version_id: input.parentCaptionVersionId ?? "",
+        regeneration_index: latest?.versions.filter((item) => item.artifactType === "image").length ?? 0,
+        source_visual_prompt_version_id: sourceVisualPromptVersionId ?? "",
+      },
+    });
+
+    return lineageVersionToFeedbackVersion(version);
+  } catch {
+    // Fall back to the optional local mirror for legacy/offline runs.
+  }
+
   const { feedback, feedbackPath } = await readFeedbackFile(runId);
   const lineage = normalizeChannelLineage(feedback[channel]);
   const version: FeedbackVersion = {
@@ -342,6 +435,36 @@ export async function appendImageVersion(runId: string, channel: ContentChannel,
 }
 
 export async function appendCaptionVersion(runId: string, channel: ContentChannel, input: AppendCaptionVersionInput) {
+  try {
+    const artifact = await createLineageArtifact({
+      legacyRunId: runId,
+      channel,
+      artifactType: "caption",
+      content: input.caption,
+      metadata: {
+        caption_excerpt: excerpt(input.caption),
+      },
+    });
+    const latest = await getFeedbackLineage({ legacyRunId: runId, channel });
+    const version = await appendLineageVersion({
+      legacyRunId: runId,
+      channel,
+      artifactType: "caption",
+      generationArtifactId: artifact?.id ?? null,
+      content: input.caption,
+      status: "pending",
+      metadata: {
+        generation_type: input.generationType,
+        caption_excerpt: excerpt(input.caption),
+        regeneration_index: latest?.versions.filter((item) => item.artifactType === "caption").length ?? 0,
+      },
+    });
+
+    return lineageVersionToFeedbackVersion(version);
+  } catch {
+    // Fall back to the optional local mirror for legacy/offline runs.
+  }
+
   const { feedback, feedbackPath } = await readFeedbackFile(runId);
   const lineage = normalizeChannelLineage(feedback[channel]);
   const version: FeedbackVersion = {
@@ -363,6 +486,34 @@ export async function appendCaptionVersion(runId: string, channel: ContentChanne
 }
 
 export async function appendVisualPromptVersion(runId: string, channel: ContentChannel, input: AppendVisualPromptVersionInput) {
+  try {
+    const artifact = await createLineageArtifact({
+      legacyRunId: runId,
+      channel,
+      artifactType: "visualPrompt",
+      content: input.visualPrompt,
+      metadata: {
+        prompt_excerpt: excerpt(input.visualPrompt),
+      },
+    });
+    const version = await appendLineageVersion({
+      legacyRunId: runId,
+      channel,
+      artifactType: "visualPrompt",
+      generationArtifactId: artifact?.id ?? null,
+      content: input.visualPrompt,
+      status: "pending",
+      metadata: {
+        generation_type: input.generationType,
+        prompt_excerpt: excerpt(input.visualPrompt),
+      },
+    });
+
+    return lineageVersionToFeedbackVersion(version);
+  } catch {
+    // Fall back to the optional local mirror for legacy/offline runs.
+  }
+
   const { feedback, feedbackPath } = await readFeedbackFile(runId);
   const lineage = normalizeChannelLineage(feedback[channel]);
   const version: FeedbackVersion = {
@@ -383,6 +534,23 @@ export async function appendVisualPromptVersion(runId: string, channel: ContentC
 }
 
 export async function ensureCaptionVersion(runId: string, channel: ContentChannel, caption: string) {
+  try {
+    const current = await getFeedbackLineage({ legacyRunId: runId, channel });
+    const latestCaption = current?.versions.filter((version) => version.artifactType === "caption").at(-1);
+    const latestText = typeof latestCaption?.metadata.text === "string" ? latestCaption.metadata.text : "";
+
+    if (!latestCaption || (caption && latestText && latestText !== caption)) {
+      return appendCaptionVersion(runId, channel, {
+        caption,
+        generationType: latestCaption ? "regenerate" : "initial",
+      });
+    }
+
+    return lineageVersionToFeedbackVersion(latestCaption);
+  } catch {
+    // Fall back to the optional local mirror for legacy/offline runs.
+  }
+
   const { feedback, feedbackPath } = await readFeedbackFile(runId);
   const lineage = normalizeChannelLineage(feedback[channel]);
 
@@ -407,6 +575,23 @@ export async function ensureCaptionVersion(runId: string, channel: ContentChanne
 }
 
 export async function ensureVisualPromptVersion(runId: string, channel: ContentChannel, visualPrompt: string) {
+  try {
+    const current = await getFeedbackLineage({ legacyRunId: runId, channel });
+    const latestVisualPrompt = current?.versions.filter((version) => version.artifactType === "visualPrompt").at(-1);
+    const latestText = typeof latestVisualPrompt?.metadata.text === "string" ? latestVisualPrompt.metadata.text : "";
+
+    if (!latestVisualPrompt || (visualPrompt && latestText && latestText !== visualPrompt)) {
+      return appendVisualPromptVersion(runId, channel, {
+        visualPrompt,
+        generationType: latestVisualPrompt ? "regenerate" : "initial",
+      });
+    }
+
+    return lineageVersionToFeedbackVersion(latestVisualPrompt);
+  } catch {
+    // Fall back to the optional local mirror for legacy/offline runs.
+  }
+
   const { feedback, feedbackPath } = await readFeedbackFile(runId);
   const lineage = normalizeChannelLineage(feedback[channel]);
 
@@ -449,6 +634,33 @@ export async function updateVersionFeedback({
   target: FeedbackTarget;
   versionId?: string;
 }) {
+  try {
+    const current = await getFeedbackLineage({ legacyRunId: runId, channel });
+    const versions =
+      target === "caption"
+        ? current?.versions.filter((version) => version.artifactType === "caption")
+        : target === "visualPrompt"
+          ? current?.versions.filter((version) => version.artifactType === "visualPrompt")
+          : current?.versions.filter((version) => version.artifactType === "image");
+    const dbVersion =
+      versions?.find((candidate) => candidate.id === requestedVersionId) ??
+      versions?.find((candidate) => candidate.metadata.legacy_version_id === requestedVersionId) ??
+      versions?.at(-1);
+
+    if (dbVersion) {
+      const updated = await updateLineageVersionFeedback({
+        versionId: dbVersion.id,
+        status,
+        notes,
+        tags,
+      });
+
+      if (updated) return lineageVersionToFeedbackVersion(updated);
+    }
+  } catch {
+    // Fall back to the optional local mirror for legacy/offline runs.
+  }
+
   const { feedback, feedbackPath } = await readFeedbackFile(runId);
   const lineage = normalizeChannelLineage(feedback[channel]);
   const versions =
@@ -486,6 +698,16 @@ export async function updateVersionFeedback({
 }
 
 export async function getApprovedCaptionVersion(runId: string, channel: ContentChannel) {
+  try {
+    const current = await getFeedbackLineage({ legacyRunId: runId, channel });
+    const latestCaption = current?.versions.filter((version) => version.artifactType === "caption").at(-1);
+    if (latestCaption?.status === "approved") {
+      return lineageVersionToFeedbackVersion(latestCaption);
+    }
+  } catch {
+    // Fall back to the optional local mirror for legacy/offline runs.
+  }
+
   const { feedback } = await readFeedbackFile(runId);
   const lineage = normalizeChannelLineage(feedback[channel]);
   const latestCaption = lineage.captionVersions.at(-1);
