@@ -348,7 +348,7 @@ export async function markExecutionJobFailed(id: string, errorMessage: string, m
     throw error;
   }
 
-  await appendExecutionEvent(id, shouldRetry ? "retrying" : "failed", errorMessage, metadata);
+  await appendExecutionEvent(id, shouldRetry ? "retry_scheduled" : "failed", errorMessage, metadata);
   return toJob(data);
 }
 

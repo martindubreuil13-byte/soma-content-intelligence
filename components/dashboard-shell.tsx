@@ -183,8 +183,8 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setStatusMessage(`Generating ${activeChannel} image from the internal visual brief...`);
 
     try {
-      const request = await safeJsonFetch<{ imageUrl?: string }>(
-        `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/image?executeNow=1`,
+      const request = await safeJsonFetch<{ jobId?: string; imageUrl?: string }>(
+        `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/image`,
         {
           method: "POST",
           headers: {
@@ -194,11 +194,27 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
         }
       );
 
-      if (!request.ok || !request.data.imageUrl) {
-        throw new Error(request.ok ? "Image generation failed." : request.error.message);
+      if (!request.ok) throw new Error(request.error.message);
+      let imageUrl = request.data.imageUrl;
+      if (request.data.jobId) {
+        setStatusMessage("Image queued...");
+        void fetch(`/api/workers/jobs/${encodeURIComponent(request.data.jobId)}/run?dev=1`, { method: "POST" });
+        const completed = await waitForJobCompletion(request.data.jobId, {
+          timeoutMs: 240_000,
+          onUpdate: (snapshot) => {
+            if (snapshot.job.status === "running") setStatusMessage(`Generating ${activeChannel} image...`);
+            if (snapshot.job.status === "queued") setStatusMessage("Image queued...");
+          },
+        });
+        if (!completed.ok) throw new Error(completed.error.message);
+        if (completed.data.job.status === "failed") {
+          throw new Error(completed.data.job.errorMessage ?? "Image generation failed.");
+        }
+        imageUrl = typeof completed.data.job.result.imageUrl === "string" ? completed.data.job.result.imageUrl : imageUrl;
       }
-
-      const imageUrl = request.data.imageUrl;
+      if (!imageUrl) {
+        throw new Error("Image generation failed.");
+      }
 
       setGeneratedImageUrls((currentUrls) => ({
         ...currentUrls,
@@ -235,17 +251,35 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setStatusMessage(`Regenerating ${activeChannel} caption from your feedback...`);
 
     try {
-      const request = await safeJsonFetch<{ caption?: string }>(`/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/caption?executeNow=1`, {
+      const request = await safeJsonFetch<{ jobId?: string; caption?: string }>(`/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/caption`, {
         method: "POST"
       });
 
-      if (!request.ok || !request.data.caption) {
-        throw new Error(request.ok ? "Caption regeneration failed." : request.error.message);
+      if (!request.ok) throw new Error(request.error.message);
+      let caption = request.data.caption;
+      if (request.data.jobId) {
+        setStatusMessage("Caption queued...");
+        void fetch(`/api/workers/jobs/${encodeURIComponent(request.data.jobId)}/run?dev=1`, { method: "POST" });
+        const completed = await waitForJobCompletion(request.data.jobId, {
+          timeoutMs: 180_000,
+          onUpdate: (snapshot) => {
+            if (snapshot.job.status === "running") setStatusMessage(`Regenerating ${activeChannel} caption...`);
+            if (snapshot.job.status === "queued") setStatusMessage("Caption queued...");
+          },
+        });
+        if (!completed.ok) throw new Error(completed.error.message);
+        if (completed.data.job.status === "failed") {
+          throw new Error(completed.data.job.errorMessage ?? "Caption regeneration failed.");
+        }
+        caption = typeof completed.data.job.result.caption === "string" ? completed.data.job.result.caption : caption;
+      }
+      if (!caption) {
+        throw new Error("Caption regeneration failed.");
       }
 
       setGeneratedCaptions((currentCaptions) => ({
         ...currentCaptions,
-        [channelKey]: request.data.caption ?? ""
+        [channelKey]: caption ?? ""
       }));
       setGeneratedImageExists((currentExists) => {
         const nextExists = { ...currentExists };
@@ -298,8 +332,8 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
     setStatusMessage(`Reimagining ${activeChannel} visual concept...`);
 
     try {
-      const request = await safeJsonFetch<{ imageUrl?: string; visualPrompt?: string }>(
-        `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/reimagine-visual?executeNow=1`,
+      const request = await safeJsonFetch<{ jobId?: string; imageUrl?: string; visualPrompt?: string }>(
+        `/api/runs/${encodeURIComponent(selectedRun.id)}/${activeChannel}/reimagine-visual`,
         {
           method: "POST",
           headers: {
@@ -309,13 +343,33 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
         }
       );
 
-      if (!request.ok || !request.data.imageUrl || !request.data.visualPrompt) {
-        throw new Error(request.ok ? "Reimagine visual failed." : request.error.message);
+      if (!request.ok) throw new Error(request.error.message);
+      let imageUrl = request.data.imageUrl;
+      let visualPrompt = request.data.visualPrompt;
+      if (request.data.jobId) {
+        setStatusMessage("Visual concept queued...");
+        void fetch(`/api/workers/jobs/${encodeURIComponent(request.data.jobId)}/run?dev=1`, { method: "POST" });
+        const completed = await waitForJobCompletion(request.data.jobId, {
+          timeoutMs: 240_000,
+          onUpdate: (snapshot) => {
+            if (snapshot.job.status === "running") setStatusMessage(`Reimagining ${activeChannel} visual concept...`);
+            if (snapshot.job.status === "queued") setStatusMessage("Visual concept queued...");
+          },
+        });
+        if (!completed.ok) throw new Error(completed.error.message);
+        if (completed.data.job.status === "failed") {
+          throw new Error(completed.data.job.errorMessage ?? "Reimagine visual failed.");
+        }
+        imageUrl = typeof completed.data.job.result.imageUrl === "string" ? completed.data.job.result.imageUrl : imageUrl;
+        visualPrompt = typeof completed.data.job.result.visualPrompt === "string" ? completed.data.job.result.visualPrompt : visualPrompt;
+      }
+      if (!imageUrl || !visualPrompt) {
+        throw new Error("Reimagine visual failed.");
       }
 
       setGeneratedImageUrls((currentUrls) => ({
         ...currentUrls,
-        [imageKey]: request.data.imageUrl ?? ""
+        [imageKey]: imageUrl ?? ""
       }));
       setGeneratedImageExists((currentExists) => ({
         ...currentExists,
@@ -323,7 +377,7 @@ export function DashboardShell({ runs, trainingSummary }: DashboardShellProps) {
       }));
       setGeneratedVisualPrompts((currentPrompts) => ({
         ...currentPrompts,
-        [imageKey]: request.data.visualPrompt ?? ""
+        [imageKey]: visualPrompt ?? ""
       }));
       setStatusMessage("Image direction reworked and saved locally.");
       router.refresh();

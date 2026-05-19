@@ -17,5 +17,22 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const events = await listExecutionEvents(jobId, 25);
 
-  return successResponse({ job, events });
+  return successResponse({
+    job,
+    events,
+    status: job.status,
+    retryCount: job.retryCount,
+    maxRetries: job.maxRetries,
+    failureReason: job.errorMessage,
+    generationRunId: job.generationRunId,
+    jobType: job.jobType,
+    payload: job.payload,
+    timestamps: {
+      scheduledFor: job.scheduledFor,
+      startedAt: job.startedAt,
+      completedAt: job.completedAt,
+      failedAt: job.failedAt,
+      updatedAt: job.updatedAt,
+    },
+  });
 }

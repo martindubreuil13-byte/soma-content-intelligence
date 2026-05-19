@@ -19,6 +19,7 @@ import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import { cleanChannelContent } from "@/lib/content-formatting";
 import { safeJsonFetch } from "@/lib/client/fetch-safe";
+import { waitForJobCompletion } from "@/lib/client/job-polling";
 import type { TrainingSummary } from "@/lib/agent-training";
 import type {
   ChannelFeedback,
@@ -335,10 +336,27 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
     setStatusMessage("Regenerating caption from your feedback…");
 
     try {
-      const request = await safeJsonFetch<{ caption?: string }>(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/caption?executeNow=1`, {
+      const request = await safeJsonFetch<{ jobId?: string; caption?: string }>(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/caption`, {
         method: "POST"
       });
       if (!request.ok) throw new Error(request.error.message);
+      let caption = request.data.caption;
+      if (request.data.jobId) {
+        setStatusMessage("Caption queued...");
+        void fetch(`/api/workers/jobs/${encodeURIComponent(request.data.jobId)}/run?dev=1`, { method: "POST" });
+        const completed = await waitForJobCompletion(request.data.jobId, {
+          timeoutMs: 180_000,
+          onUpdate: (snapshot) => {
+            if (snapshot.job.status === "running") setStatusMessage("Regenerating caption...");
+            if (snapshot.job.status === "queued") setStatusMessage("Caption queued...");
+          },
+        });
+        if (!completed.ok) throw new Error(completed.error.message);
+        if (completed.data.job.status === "failed") {
+          throw new Error(completed.data.job.errorMessage ?? "Regeneration failed.");
+        }
+        caption = typeof completed.data.job.result.caption === "string" ? completed.data.job.result.caption : caption;
+      }
       setFeedbackOverrides((prev) => ({
         ...prev,
         [channelKey]: {
@@ -347,7 +365,7 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
           image: { status: "pending", notes: "" }
         }
       }));
-      setStatusMessage("Caption regenerated.");
+      setStatusMessage(caption ? "Caption regenerated." : "Caption job completed.");
       router.refresh();
     } catch (err) {
       setStatusMessage(err instanceof Error ? err.message : "Regeneration failed.");
@@ -363,15 +381,33 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
     setStatusMessage("Generating image…");
 
     try {
-      const request = await safeJsonFetch<{ imageUrl?: string }>(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/image?executeNow=1`, {
+      const request = await safeJsonFetch<{ jobId?: string; imageUrl?: string }>(`/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/image`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ visualTweak: visualTweaks[channelKey] ?? "" })
       });
-      if (!request.ok || !request.data.imageUrl) {
-        throw new Error(request.ok ? "Image generation failed." : request.error.message);
+      if (!request.ok) throw new Error(request.error.message);
+      let imageUrl = request.data.imageUrl;
+      if (request.data.jobId) {
+        setStatusMessage("Image queued...");
+        void fetch(`/api/workers/jobs/${encodeURIComponent(request.data.jobId)}/run?dev=1`, { method: "POST" });
+        const completed = await waitForJobCompletion(request.data.jobId, {
+          timeoutMs: 240_000,
+          onUpdate: (snapshot) => {
+            if (snapshot.job.status === "running") setStatusMessage("Generating image...");
+            if (snapshot.job.status === "queued") setStatusMessage("Image queued...");
+          },
+        });
+        if (!completed.ok) throw new Error(completed.error.message);
+        if (completed.data.job.status === "failed") {
+          throw new Error(completed.data.job.errorMessage ?? "Image generation failed.");
+        }
+        imageUrl = typeof completed.data.job.result.imageUrl === "string" ? completed.data.job.result.imageUrl : imageUrl;
       }
-      setImageUrlOverrides((prev) => ({ ...prev, [channelKey]: request.data.imageUrl! }));
+      if (!imageUrl) {
+        throw new Error("Image generation failed.");
+      }
+      setImageUrlOverrides((prev) => ({ ...prev, [channelKey]: imageUrl }));
       setStatusMessage("Image generated.");
       router.refresh();
     } catch (err) {
@@ -390,18 +426,36 @@ export function ReviewShell({ run, trainingSummary, initialQueueMap }: ReviewShe
     setStatusMessage("Reimagining visual concept…");
 
     try {
-      const request = await safeJsonFetch<{ imageUrl?: string; visualPrompt?: string }>(
-        `/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/reimagine-visual?executeNow=1`,
+      const request = await safeJsonFetch<{ jobId?: string; imageUrl?: string; visualPrompt?: string }>(
+        `/api/runs/${encodeURIComponent(run.id)}/${activeChannel}/reimagine-visual`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ visualTweak: visualTweaks[channelKey] ?? "" })
         }
       );
-      if (!request.ok || !request.data.imageUrl) {
-        throw new Error(request.ok ? "Reimagine failed." : request.error.message);
+      if (!request.ok) throw new Error(request.error.message);
+      let imageUrl = request.data.imageUrl;
+      if (request.data.jobId) {
+        setStatusMessage("Visual concept queued...");
+        void fetch(`/api/workers/jobs/${encodeURIComponent(request.data.jobId)}/run?dev=1`, { method: "POST" });
+        const completed = await waitForJobCompletion(request.data.jobId, {
+          timeoutMs: 240_000,
+          onUpdate: (snapshot) => {
+            if (snapshot.job.status === "running") setStatusMessage("Reimagining visual concept...");
+            if (snapshot.job.status === "queued") setStatusMessage("Visual concept queued...");
+          },
+        });
+        if (!completed.ok) throw new Error(completed.error.message);
+        if (completed.data.job.status === "failed") {
+          throw new Error(completed.data.job.errorMessage ?? "Reimagine failed.");
+        }
+        imageUrl = typeof completed.data.job.result.imageUrl === "string" ? completed.data.job.result.imageUrl : imageUrl;
       }
-      setImageUrlOverrides((prev) => ({ ...prev, [channelKey]: request.data.imageUrl! }));
+      if (!imageUrl) {
+        throw new Error("Reimagine failed.");
+      }
+      setImageUrlOverrides((prev) => ({ ...prev, [channelKey]: imageUrl }));
       setStatusMessage("Visual concept reimagined.");
       router.refresh();
     } catch (err) {
