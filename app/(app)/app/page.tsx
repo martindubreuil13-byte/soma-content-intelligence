@@ -200,6 +200,7 @@ export default async function TodayPage() {
           placeholder={speech.composerPlaceholder}
           secondaryLabel={secondaryLabel}
           secondaryHref={secondaryHref}
+          isFirstContact={runs.length === 0}
         />
 
         {/* Context drawer (trigger + panel) */}

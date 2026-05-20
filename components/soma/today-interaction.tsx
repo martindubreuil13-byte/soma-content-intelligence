@@ -7,10 +7,15 @@ import { ArrowRight } from "lucide-react";
 import { AgentComposer } from "@/components/soma/agent-composer";
 import { AgentResponsePreview } from "@/components/soma/agent-response-preview";
 import { AgentOrb } from "@/components/soma/agent-orb";
+import { OnboardingResponse } from "@/components/soma/onboarding-response";
 import { safeJsonFetch } from "@/lib/client/fetch-safe";
 import type { OrbState } from "@/components/soma/agent-orb";
 import type { ConversationExtraction } from "@/lib/intelligence/conversation-extraction";
 import type { SomaInterpretedResponse } from "@/lib/intelligence/soma-response";
+import type {
+  OnboardingAnalysisResult,
+  OnboardingState,
+} from "@/lib/onboarding/onboarding-types";
 
 type Phase = "idle" | "composing" | "thinking" | "responded";
 
@@ -26,6 +31,7 @@ interface TodayInteractionProps {
   placeholder?: string;
   secondaryLabel?: string;
   secondaryHref?: string;
+  isFirstContact?: boolean;
 }
 
 export function TodayInteraction({
@@ -38,6 +44,7 @@ export function TodayInteraction({
   placeholder,
   secondaryLabel,
   secondaryHref,
+  isFirstContact = false,
 }: TodayInteractionProps) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [submittedText, setSubmittedText] = useState("");
@@ -47,6 +54,8 @@ export function TodayInteraction({
   const [somaResponse, setSomaResponse] = useState<SomaInterpretedResponse | null>(null);
   const [suggestedActions, setSuggestedActions] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [onboardingState, setOnboardingState] = useState<OnboardingState | null>(null);
+  const [onboardingResult, setOnboardingResult] = useState<OnboardingAnalysisResult | null>(null);
   const router = useRouter();
 
   const orbState: OrbState =
@@ -61,9 +70,28 @@ export function TodayInteraction({
     setExtraction(null);
     setSomaResponse(null);
     setSuggestedActions([]);
+    setOnboardingResult(null);
     setErrorMessage("");
     setMemorySaved(false);
     setPhase("thinking");
+
+    if (isFirstContact) {
+      const onboarding = await safeJsonFetch<OnboardingAnalysisResult>("/api/soma/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, state: onboardingState }),
+      });
+
+      if (onboarding.ok) {
+        setOnboardingState(onboarding.data.state);
+        setOnboardingResult(onboarding.data);
+        setMemorySaved(true);
+      } else {
+        setErrorMessage(onboarding.error.message);
+      }
+      setPhase("responded");
+      return;
+    }
 
     const result = await safeJsonFetch<{
       extraction: ConversationExtraction;
@@ -102,6 +130,46 @@ export function TodayInteraction({
     setMemorySaved(true);
   }
 
+  async function handleOnboardingAction(action: "confirm_understanding" | "start_mission") {
+    const message = action === "confirm_understanding"
+      ? "Confirm this understanding."
+      : "Start the first mission.";
+    setErrorMessage("");
+
+    const result = await safeJsonFetch<OnboardingAnalysisResult>("/api/soma/onboarding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, state: onboardingState, action }),
+    });
+
+    if (result.ok) {
+      setOnboardingState(result.data.state);
+      setOnboardingResult(result.data);
+      setMemorySaved(true);
+    } else {
+      setErrorMessage(result.error.message);
+    }
+  }
+
+  function handleMissionChoice(choice: NonNullable<OnboardingState["missionBridge"]>) {
+    const nextState: OnboardingState | null = onboardingState
+      ? {
+          ...onboardingState,
+          missionBridge: {
+            ...onboardingState.missionBridge,
+            ...choice,
+          },
+        }
+      : null;
+
+    if (nextState) setOnboardingState(nextState);
+    sessionStorage.setItem("soma_onboarding_mission", JSON.stringify({
+      ...onboardingState?.missionBridge,
+      ...choice,
+      profile: onboardingState?.profile,
+    }));
+  }
+
   function handleReset() {
     setPhase("idle");
     setSubmittedText("");
@@ -109,6 +177,7 @@ export function TodayInteraction({
     setMemorySaved(false);
     setExtraction(null);
     setSomaResponse(null);
+    setOnboardingResult(null);
     setSuggestedActions([]);
     setErrorMessage("");
   }
@@ -160,7 +229,7 @@ export function TodayInteraction({
         <div className="mt-10 w-full animate-fade-up">
           <AgentComposer
             suggestions={suggestions}
-            placeholder={placeholder}
+            placeholder={onboardingResult?.nextQuestion?.question ?? placeholder}
             onSend={handleSend}
           />
           <div className="mt-4 flex items-center justify-center gap-4">
@@ -206,17 +275,33 @@ export function TodayInteraction({
               {errorMessage}
             </p>
           ) : null}
-          <AgentResponsePreview
-            text={submittedText}
-            reference={submittedRef}
-            memorySaved={memorySaved}
-            extraction={extraction}
-            response={somaResponse}
-            suggestedActions={suggestedActions}
-            onCreateMission={handleCreateMission}
-            onSaveMemory={handleSaveMemory}
-            onClose={handleReset}
-          />
+          {isFirstContact && onboardingResult ? (
+            <OnboardingResponse
+              response={onboardingResult.response}
+              profile={onboardingResult.profile}
+              missingFields={onboardingResult.missingFields}
+              nextQuestion={onboardingResult.nextQuestion}
+              confidence={onboardingResult.confidence}
+              readyForMission={onboardingResult.readyForMission}
+              onAnswer={() => setPhase("composing")}
+              onCorrect={() => setPhase("composing")}
+              onConfirm={() => handleOnboardingAction("confirm_understanding")}
+              onStartMission={() => handleOnboardingAction("start_mission")}
+              onMissionChoice={handleMissionChoice}
+            />
+          ) : (
+            <AgentResponsePreview
+              text={submittedText}
+              reference={submittedRef}
+              memorySaved={memorySaved}
+              extraction={extraction}
+              response={somaResponse}
+              suggestedActions={suggestedActions}
+              onCreateMission={handleCreateMission}
+              onSaveMemory={handleSaveMemory}
+              onClose={handleReset}
+            />
+          )}
         </>
       )}
     </div>
