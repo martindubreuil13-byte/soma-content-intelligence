@@ -373,8 +373,8 @@ type CubicBezier = [number, number, number, number];
 const spring: CubicBezier = [0.16, 1, 0.3, 1];
 
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 32 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: spring } },
+  hidden: { opacity: 0, y: 4, filter: "blur(8px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 1.4, ease: "easeOut" } },
 };
 
 const fadeIn: Variants = {
@@ -405,38 +405,100 @@ function HeroSection({ onLogin }: { onLogin: () => void }) {
         padding: "0 1.5rem",
       }}
     >
-      {/* Depth layers */}
-      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 90% 65% at 50% 48%, rgba(80,28,110,0.28) 0%, transparent 70%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 55% 45% at 22% 18%, rgba(168,113,138,0.12) 0%, transparent 65%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 40% 40% at 80% 80%, rgba(35,18,50,0.35) 0%, transparent 65%)", pointerEvents: "none" }} />
+      {/* ── Atmospheric environment ──────────────────────────────────── */}
 
-      {/* Content */}
+      {/* Deep ambient glow — breathes slowly with orb */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "radial-gradient(ellipse 85% 60% at 50% 48%, rgba(70,38,98,0.30) 0%, transparent 72%)",
+        animation: "soma-breathe-orb 9s ease-in-out infinite",
+        pointerEvents: "none",
+      }} />
+
+      {/* Upper-left haze */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "radial-gradient(ellipse 52% 44% at 20% 18%, rgba(155,105,130,0.09) 0%, transparent 65%)",
+        pointerEvents: "none",
+      }} />
+
+      {/* Lower corner depth */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "radial-gradient(ellipse 42% 38% at 82% 82%, rgba(22,10,32,0.5) 0%, transparent 65%)",
+        pointerEvents: "none",
+      }} />
+
+      {/* Vignette — edges pull into darkness, focus toward center */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 25%, rgba(11,10,14,0.65) 100%)",
+        pointerEvents: "none",
+      }} />
+
+      {/* Orb presence aura — appears first, before core resolves */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 5, ease: "easeOut" }}
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -56%)",
+          width: 580,
+          height: 580,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(128,112,184,0.13) 0%, rgba(74,42,100,0.07) 45%, transparent 70%)",
+          filter: "blur(36px)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Fog dissipation — starts as center haze, slowly lifts */}
+      <motion.div
+        initial={{ opacity: 0.72 }}
+        animate={{ opacity: 0 }}
+        transition={{ duration: 6, ease: "easeOut" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(ellipse 78% 68% at 50% 44%, rgba(11,10,14,0.88) 0%, rgba(11,10,14,0.22) 58%, transparent 100%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* ── Content ─────────────────────────────────────────────────── */}
       <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "0" }}>
 
-        {/* Orb entrance */}
+        {/* Orb — emerges from depth over 7 seconds */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.8, ease: spring }}
+          initial={{ opacity: 0.02, filter: "blur(24px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          transition={{ duration: 7, ease: "easeOut" }}
         >
           <AgentOrb state="idle" size="2xl" maturityLevel={2} />
         </motion.div>
 
-        {/* Label */}
+        {/* Label — resolves late, no movement */}
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7, duration: 1 }}
+          initial={{ opacity: 0, filter: "blur(18px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          transition={{ delay: 1.8, duration: 3.4, ease: "easeOut" }}
           style={{ marginTop: "2.5rem", fontSize: 9, fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#89808F" }}
         >
           SOMA · Adaptive Creative Intelligence
         </motion.p>
 
-        {/* Headline */}
+        {/* Headline — resolves from blur, near-zero translate */}
         <motion.h1
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.95, duration: 1.1, ease: spring }}
+          initial={{ opacity: 0, y: 2, filter: "blur(20px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ delay: 2.2, duration: 3.2, ease: "easeOut" }}
           style={{
             marginTop: "1.5rem",
             fontFamily: "var(--font-display), Georgia, serif",
@@ -450,21 +512,21 @@ function HeroSection({ onLogin }: { onLogin: () => void }) {
           Your brand develops<br />a creative memory.
         </motion.h1>
 
-        {/* Sub */}
+        {/* Sub — resolves after headline */}
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.3, duration: 1 }}
+          initial={{ opacity: 0, filter: "blur(16px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          transition={{ delay: 2.8, duration: 3.0, ease: "easeOut" }}
           style={{ marginTop: "1.5rem", fontSize: 15, lineHeight: 1.85, color: "#5A5060", maxWidth: 380 }}
         >
           Every reference you feed it. Every piece of feedback you give. SOMA conditions itself to your brand — and gets better the longer you work together.
         </motion.p>
 
-        {/* CTAs */}
+        {/* CTAs — pure opacity, no motion */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.6, duration: 0.9, ease: spring }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 3.6, duration: 2.8, ease: "easeOut" }}
           style={{ marginTop: "2.5rem", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 14 }}
         >
           <button
@@ -507,11 +569,11 @@ function HeroSection({ onLogin }: { onLogin: () => void }) {
         </motion.div>
       </div>
 
-      {/* Scroll hint */}
+      {/* Scroll hint — appears very late, very soft */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.3 }}
-        transition={{ delay: 2.2, duration: 1 }}
+        animate={{ opacity: 0.24 }}
+        transition={{ delay: 5.2, duration: 2.2, ease: "easeOut" }}
         style={{ position: "absolute", bottom: 36, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}
       >
         <div style={{ width: 1, height: 44, background: "linear-gradient(to bottom, transparent, #C8907A)" }} />
@@ -1038,15 +1100,15 @@ function SomaFooter() {
 
 export function SomaLandingPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const router = useRouter();
 
   function openLogin() { setModalOpen(true); }
   function closeLogin() { setModalOpen(false); }
 
   function handleAuth() {
-    setModalOpen(false);
+    setTransitioning(true);
     router.push("/app");
-    router.refresh();
   }
 
   return (
@@ -1066,6 +1128,14 @@ export function SomaLandingPage() {
           from { transform: translateY(56px); opacity: 0; }
           to   { transform: translateY(0);   opacity: 1; }
         }
+        @keyframes soma-fade-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes soma-breathe-orb {
+          0%, 100% { opacity: 1; }
+          50%      { opacity: 0.65; }
+        }
         @media (max-width: 600px) {
           .soma-modal-outer {
             align-items: flex-end !important;
@@ -1080,7 +1150,36 @@ export function SomaLandingPage() {
         }
       `}</style>
 
-      {modalOpen && <LoginModal onAuth={handleAuth} onClose={closeLogin} />}
+      {/* Auth transition — covers landing page during navigation to /app */}
+      {transitioning && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 500,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#0B0A0E",
+            gap: "1.75rem",
+            animation: "soma-fade-in 0.18s ease-out both",
+          }}
+        >
+          <AgentOrb state="preparing" size="md" maturityLevel={2} />
+          <p style={{
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.22)",
+          }}>
+            Preparing SOMA
+          </p>
+        </div>
+      )}
+
+      {modalOpen && !transitioning && <LoginModal onAuth={handleAuth} onClose={closeLogin} />}
       <SomaNav onLogin={openLogin} />
 
       <HeroSection onLogin={openLogin} />

@@ -3,7 +3,6 @@ import { listExecutionJobs } from "@/lib/db/execution-jobs-db";
 import { getContentRuns } from "@/lib/output-runs";
 import { readPublishingQueue } from "@/lib/publishing-queue";
 import type { ContentChannel, ContentRun } from "@/lib/content-types";
-import { AgentOrb } from "@/components/soma/agent-orb";
 import { TodayInteraction } from "@/components/soma/today-interaction";
 import { ContextDrawer } from "@/components/soma/context-drawer";
 import type { OrbState } from "@/components/soma/agent-orb";
@@ -34,12 +33,13 @@ function getOrbState(score: number, runsCount: number, pending: number): OrbStat
 function getRunStatus(run: ContentRun) {
   const all = channelList.map((ch) => run.channels[ch]);
   const captionApproved = all.filter((p) => p.feedback.caption.status === "approved").length;
-  const imageApproved = all.filter((p) => p.feedback.image.status === "approved").length;
-  const anyPending = all.some((p) => p.feedback.caption.status === "pending");
+  const imageApproved  = all.filter((p) => p.feedback.image.status === "approved").length;
+  const anyPending     = all.some((p) => p.feedback.caption.status === "pending");
   if (captionApproved === channelList.length && imageApproved === channelList.length)
-    return { label: "Ready", color: "emerald" as const };
-  if (anyPending) return { label: "Needs review", color: "violet" as const };
-  if (captionApproved > 0 || imageApproved > 0) return { label: "In review", color: "amber" as const };
+    return { label: "Ready",        color: "emerald" as const };
+  if (anyPending) return { label: "Needs review", color: "violet"  as const };
+  if (captionApproved > 0 || imageApproved > 0)
+    return { label: "In review",    color: "amber"   as const };
   return { label: "Draft", color: "neutral" as const };
 }
 
@@ -55,13 +55,15 @@ function getSomaSpeech(score: number, runsCount: number, pending: number): SomaS
   if (runsCount === 0) {
     return {
       headline: "I'm ready to learn.",
-      body: "I don't know your business yet. Start by telling me what you do, who you serve, or what kind of content feels right to you.",
+      body: "I don't know your business yet. Let's get to know each other.",
       primaryLabel: "Teach SOMA",
-      composerPlaceholder: "Tell me about your business, your audience, or what kind of content feels right…",
+      composerPlaceholder: "What do you do? Who do you serve? What do you want to be known for?",
       suggestions: [
         "Let me tell you about my business",
-        "Here's a piece of content I want you to learn from",
-        "Help me define what sounds like my brand",
+        "Here is who I serve",
+        "This is the tone I want",
+        "Here is an example I like",
+        "Help me define my brand voice",
       ],
     };
   }
@@ -131,10 +133,10 @@ export default async function TodayPage() {
   ]);
   const summary = await getAgentTrainingSummary(runs);
 
-  const queueCount = queue.filter((q) => q.status === "approved").length;
-  const pendingRuns = runs.filter((r) => getRunStatus(r).color === "violet").length;
-  const speech = getSomaSpeech(summary.score, runs.length, pendingRuns);
-  const orbState = getOrbState(summary.score, runs.length, pendingRuns);
+  const queueCount    = queue.filter((q) => q.status === "approved").length;
+  const pendingRuns   = runs.filter((r) => getRunStatus(r).color === "violet").length;
+  const speech        = getSomaSpeech(summary.score, runs.length, pendingRuns);
+  const orbState      = getOrbState(summary.score, runs.length, pendingRuns);
   const maturityLevel = getMaturityLevel(summary.score);
 
   const secondaryLabel =
@@ -149,22 +151,21 @@ export default async function TodayPage() {
   const secondaryHref =
     pendingRuns > 0 ? "/review" : runs.length === 0 ? "/assets" : undefined;
 
-  // Pre-transform runs for the context drawer (server → client boundary)
+  // Pre-transform for context drawer (crosses server→client boundary)
   const preparedRuns: PreparedRun[] = runs.map((run) => {
-    const status = getRunStatus(run);
+    const status  = getRunStatus(run);
     const preview =
       (run.hasOriginalIdea ? run.originalIdea : run.channels.linkedin?.caption ?? "Generated content")
-        ?.slice(0, 82)
-        ?.replace(/\n/g, " ") ?? "";
+        ?.slice(0, 82)?.replace(/\n/g, " ") ?? "";
     return { id: run.id, preview, statusLabel: status.label, statusColor: status.color };
   });
 
   const drawerSummary: DrawerSummary = {
-    score: summary.score,
-    stage: summary.stage,
-    stageDescription: summary.stageDescription,
-    evaluatedSamples: summary.evaluatedSamples,
-    approved: summary.approved,
+    score:             summary.score,
+    stage:             summary.stage,
+    stageDescription:  summary.stageDescription,
+    evaluatedSamples:  summary.evaluatedSamples,
+    approved:          summary.approved,
   };
 
   const activeJobCount = jobs.filter((j) => j.status === "running").length;
@@ -173,28 +174,20 @@ export default async function TodayPage() {
     <div className="min-h-screen px-5 py-14 sm:px-6 lg:px-8 lg:py-20">
       <div className="mx-auto max-w-[700px]">
 
-        {/* ── Presence ── */}
-        <div className="flex flex-col items-center text-center">
-          <AgentOrb state={orbState} size="xl" maturityLevel={maturityLevel} />
+        {/* Presence + interaction — fully client-driven */}
+        <TodayInteraction
+          headline={speech.headline}
+          body={speech.body}
+          initialOrbState={orbState}
+          maturityLevel={maturityLevel}
+          primaryLabel={speech.primaryLabel}
+          suggestions={speech.suggestions}
+          placeholder={speech.composerPlaceholder}
+          secondaryLabel={secondaryLabel}
+          secondaryHref={secondaryHref}
+        />
 
-          <h1 className="mt-9 font-display text-4xl text-white/90 sm:text-5xl">
-            {speech.headline}
-          </h1>
-
-          <p className="mx-auto mt-5 max-w-[400px] text-[15px] leading-7 text-white/40">
-            {speech.body}
-          </p>
-
-          <TodayInteraction
-            primaryLabel={speech.primaryLabel}
-            suggestions={speech.suggestions}
-            placeholder={speech.composerPlaceholder}
-            secondaryLabel={secondaryLabel}
-            secondaryHref={secondaryHref}
-          />
-        </div>
-
-        {/* ── Context drawer (trigger + panel) ── */}
+        {/* Context drawer (trigger + panel) */}
         <ContextDrawer
           summary={drawerSummary}
           preparedRuns={preparedRuns}

@@ -18,19 +18,17 @@ export function AppHeader({ context, title, subtitle }: AppHeaderProps) {
       }}
     >
       <div className="flex items-center justify-between gap-4">
+
+        {/* Page title — only rendered when explicitly provided */}
         <div className="min-w-0">
           {subtitle && (
             <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/30">
               {subtitle}
             </p>
           )}
-          {title ? (
+          {title && (
             <h1 className="mt-0.5 truncate font-display text-lg text-white/85">
               {title}
-            </h1>
-          ) : (
-            <h1 className="truncate font-display text-lg text-white/85">
-              {context.organization.name}
             </h1>
           )}
         </div>
@@ -51,6 +49,7 @@ export function AppHeader({ context, title, subtitle }: AppHeaderProps) {
             </span>
           </div>
         </div>
+
       </div>
     </header>
   );
