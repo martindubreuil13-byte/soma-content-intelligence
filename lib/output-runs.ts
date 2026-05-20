@@ -335,7 +335,9 @@ async function readRun(folderName: string): Promise<ContentRun> {
   };
 }
 
-export async function getContentRuns(): Promise<ContentRun[]> {
+export async function getContentRuns(options: { includeLegacyFallback?: boolean } = {}): Promise<ContentRun[]> {
+  const includeLegacyFallback = options.includeLegacyFallback ?? true;
+
   try {
     const dbRuns = await listGenerationRuns();
     if (dbRuns.length) {
@@ -343,6 +345,10 @@ export async function getContentRuns(): Promise<ContentRun[]> {
     }
   } catch {
     // Fall back to local outputs for legacy/dev compatibility.
+  }
+
+  if (!includeLegacyFallback) {
+    return [];
   }
 
   const outputPath = path.join(process.cwd(), "outputs");

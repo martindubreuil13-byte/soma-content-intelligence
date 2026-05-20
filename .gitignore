@@ -27,3 +27,4 @@ temp
 # logs
 logs
 *.log
+.vercel

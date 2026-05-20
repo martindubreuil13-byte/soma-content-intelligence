@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Plus } from "lucide-react";
 import { getAgentTrainingSummary } from "@/lib/agent-training";
+import { getSomaTruthState, isFirstContactState } from "@/lib/db/soma-truth-state-db";
 import { getContentRuns } from "@/lib/output-runs";
 import { AgentOrb } from "@/components/soma/agent-orb";
 import { MaturityIndicator } from "@/components/soma/maturity-indicator";
@@ -62,14 +63,19 @@ export default async function MemoryPage() {
   let stage = "Observer";
   let evaluatedSamples = 0;
   let approved = 0;
+  let isFirstContact = false;
 
   try {
-    const runs = await getContentRuns();
+    const [runs, truthState] = await Promise.all([
+      getContentRuns({ includeLegacyFallback: false }),
+      getSomaTruthState(),
+    ]);
     const summary = await getAgentTrainingSummary(runs);
     score = summary.score;
     stage = summary.stage;
     evaluatedSamples = summary.evaluatedSamples;
     approved = summary.approved;
+    isFirstContact = isFirstContactState(truthState);
   } catch {
     // Use defaults
   }
@@ -88,10 +94,12 @@ export default async function MemoryPage() {
               Memory
             </p>
             <h1 className="mt-1.5 font-display text-2xl text-white sm:text-3xl">
-              What SOMA knows
+              {isFirstContact ? "What SOMA understands so far" : "What SOMA knows"}
             </h1>
             <p className="mt-2 text-sm leading-6 text-white/45">
-              Everything SOMA has learned about your business, brand, audience, and creative preferences.
+              {isFirstContact
+                ? "No memory has been earned yet. Teach SOMA through context, references, and feedback."
+                : "Everything SOMA has learned about your business, brand, audience, and creative preferences."}
             </p>
           </div>
         </div>
@@ -104,20 +112,31 @@ export default async function MemoryPage() {
             </p>
             <span className="text-xs text-white/30">{stage}</span>
           </div>
-          <MaturityIndicator score={score} />
+          {isFirstContact ? (
+            <div className="space-y-1 text-sm leading-6 text-white/35">
+              <p>— No audience defined yet</p>
+              <p>— No visual references yet</p>
+              <p>— No learned tone patterns yet</p>
+              <p>— No approved directions yet</p>
+            </div>
+          ) : (
+            <>
+              <MaturityIndicator score={score} />
 
-          <div className="mt-5 grid grid-cols-3 gap-3">
-            {[
-              { label: "Evaluated",      value: evaluatedSamples },
-              { label: "Approved",       value: approved },
-              { label: "Approval rate",  value: `${approvalRate}%` },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-[14px] p-3 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
-                <p className="font-display text-lg text-soma-pearl">{stat.value}</p>
-                <p className="mt-0.5 text-[10px] text-white/30">{stat.label}</p>
+              <div className="mt-5 grid grid-cols-3 gap-3">
+                {[
+                  { label: "Evaluated",      value: evaluatedSamples },
+                  { label: "Approved",       value: approved },
+                  { label: "Approval rate",  value: `${approvalRate}%` },
+                ].map((stat) => (
+                  <div key={stat.label} className="rounded-[14px] p-3 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
+                    <p className="font-display text-lg text-soma-pearl">{stat.value}</p>
+                    <p className="mt-0.5 text-[10px] text-white/30">{stat.label}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
 
           <div className="mt-4 flex gap-2">
             <Link

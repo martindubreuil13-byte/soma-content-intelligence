@@ -25,6 +25,7 @@ interface ContextDrawerProps {
   preparedRuns: PreparedRun[];
   queueCount: number;
   activeJobCount: number;
+  isFirstContact?: boolean;
 }
 
 const statusBadge: Record<PreparedRun["statusColor"], string> = {
@@ -46,6 +47,7 @@ export function ContextDrawer({
   preparedRuns,
   queueCount,
   activeJobCount,
+  isFirstContact = false,
 }: ContextDrawerProps) {
   const [open, setOpen] = useState(false);
 
@@ -115,33 +117,45 @@ export function ContextDrawer({
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-7 px-5 py-5">
 
-            {/* What SOMA remembers */}
+            {/* What SOMA understands */}
             <section>
               <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.26em] text-white/25">
-                What SOMA remembers
+                {isFirstContact ? "What SOMA understands so far" : "What SOMA remembers"}
               </p>
-              <MaturityIndicator score={summary.score} compact />
-              <div className="mt-3 space-y-1 text-[12px] leading-5 text-white/30">
-                <p>— {summary.stage}: {summary.stageDescription}</p>
-                {summary.evaluatedSamples > 0 ? (
-                  <p>
-                    — {summary.evaluatedSamples} piece{summary.evaluatedSamples !== 1 ? "s" : ""} reviewed
-                    {" · "}{approvalRate}% approved
-                  </p>
-                ) : (
-                  <p>— No reviews yet. Learning from scratch.</p>
-                )}
-              </div>
-              <Link
-                href="/memory"
-                onClick={() => setOpen(false)}
-                className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-violet-pale/45 transition hover:text-violet-pale"
-              >
-                Full memory report <ArrowRight size={10} />
-              </Link>
+              {isFirstContact ? (
+                <div className="space-y-1 text-[12px] leading-5 text-white/30">
+                  <p>— No audience defined yet</p>
+                  <p>— No visual references yet</p>
+                  <p>— No learned tone patterns yet</p>
+                  <p>— No approved directions yet</p>
+                </div>
+              ) : (
+                <>
+                  <MaturityIndicator score={summary.score} compact />
+                  <div className="mt-3 space-y-1 text-[12px] leading-5 text-white/30">
+                    <p>— {summary.stage}: {summary.stageDescription}</p>
+                    {summary.evaluatedSamples > 0 ? (
+                      <p>
+                        — {summary.evaluatedSamples} piece{summary.evaluatedSamples !== 1 ? "s" : ""} reviewed
+                        {" · "}{approvalRate}% approved
+                      </p>
+                    ) : (
+                      <p>— No reviews yet. Learning from scratch.</p>
+                    )}
+                  </div>
+                  <Link
+                    href="/memory"
+                    onClick={() => setOpen(false)}
+                    className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-violet-pale/45 transition hover:text-violet-pale"
+                  >
+                    Full memory report <ArrowRight size={10} />
+                  </Link>
+                </>
+              )}
             </section>
 
             {/* What SOMA prepared */}
+            {!isFirstContact && (
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-[9px] font-semibold uppercase tracking-[0.26em] text-white/25">
@@ -196,6 +210,7 @@ export function ContextDrawer({
                 </div>
               )}
             </section>
+            )}
 
             {/* Queue */}
             {queueCount > 0 && (

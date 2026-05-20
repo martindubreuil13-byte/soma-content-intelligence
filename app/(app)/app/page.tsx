@@ -1,5 +1,6 @@
 import { getAgentTrainingSummary } from "@/lib/agent-training";
 import { listExecutionJobs } from "@/lib/db/execution-jobs-db";
+import { getSomaTruthState, isFirstContactState } from "@/lib/db/soma-truth-state-db";
 import { getContentRuns } from "@/lib/output-runs";
 import { readPublishingQueue } from "@/lib/publishing-queue";
 import type { ContentChannel, ContentRun } from "@/lib/content-types";
@@ -51,27 +52,41 @@ type SomaSpeech = {
   suggestions: string[];
 };
 
-function getSomaSpeech(score: number, runsCount: number, pending: number): SomaSpeech {
+function getSomaSpeech(score: number, runsCount: number, pending: number, isFirstContact: boolean): SomaSpeech {
   if (runsCount === 0) {
+    if (!isFirstContact) {
+      return {
+        headline: "I'm starting to understand.",
+        body: "I have early signals, but no directions created yet. Give me a brief or teach me what to notice next.",
+        primaryLabel: "Talk to SOMA",
+        composerPlaceholder: "Share a brief, a reference, or a sharper rule for SOMA to remember.",
+        suggestions: [
+          "Create the first direction from this idea",
+          "Here is another reference to learn from",
+          "This is the tone I want",
+        ],
+      };
+    }
+
     return {
-      headline: "I'm ready to learn.",
-      body: "I don't know your business yet. Let's get to know each other.",
+      headline: "I don't know your business yet.",
+      body: "Start by telling me what you're building. I learn through interaction, references, and feedback.",
       primaryLabel: "Teach SOMA",
-      composerPlaceholder: "What do you do? Who do you serve? What do you want to be known for?",
+      composerPlaceholder: "What are you building? Who is it for? What should SOMA notice first?",
       suggestions: [
-        "Let me tell you about my business",
-        "Here is who I serve",
-        "This is the tone I want",
-        "Here is an example I like",
-        "Help me define my brand voice",
+        "Let me tell you what I'm building",
+        "This is who I serve",
+        "Teach me how you think",
+        "Here is a reference I want you to observe",
+        "Help me define the first direction",
       ],
     };
   }
 
   if (pending > 0 && score >= 30) {
     return {
-      headline: pending === 1 ? "I prepared something." : "I prepared a few directions.",
-      body: "Based on what I've learned from your feedback so far. Your reaction is how I keep improving.",
+      headline: pending === 1 ? "One direction is waiting." : "There are directions to review.",
+      body: "There is work waiting for your review. Your reaction is how I keep improving.",
       primaryLabel: "Talk to SOMA",
       composerPlaceholder: "Tell me what you noticed, what changed, or what direction to explore…",
       suggestions: [
@@ -126,30 +141,30 @@ function getSomaSpeech(score: number, runsCount: number, pending: number): SomaS
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function TodayPage() {
-  const [runs, queue, jobs] = await Promise.all([
-    getContentRuns(),
+  const [runs, queue, jobs, truthState] = await Promise.all([
+    getContentRuns({ includeLegacyFallback: false }),
     readPublishingQueue(),
     listExecutionJobs({ limit: 4 }).catch(() => []),
+    getSomaTruthState(),
   ]);
   const summary = await getAgentTrainingSummary(runs);
+  const isFirstContact = isFirstContactState(truthState);
 
   const queueCount    = queue.filter((q) => q.status === "approved").length;
   const pendingRuns   = runs.filter((r) => getRunStatus(r).color === "violet").length;
-  const speech        = getSomaSpeech(summary.score, runs.length, pendingRuns);
+  const speech        = getSomaSpeech(summary.score, runs.length, pendingRuns, isFirstContact);
   const orbState      = getOrbState(summary.score, runs.length, pendingRuns);
   const maturityLevel = getMaturityLevel(summary.score);
 
   const secondaryLabel =
     pendingRuns > 0
       ? pendingRuns === 1
-        ? "Review the draft I prepared"
-        : `Review the ${pendingRuns} drafts I prepared`
-      : runs.length === 0
-      ? "Upload a reference"
+        ? "Review pending draft"
+        : `Review ${pendingRuns} pending drafts`
       : undefined;
 
   const secondaryHref =
-    pendingRuns > 0 ? "/review" : runs.length === 0 ? "/assets" : undefined;
+    pendingRuns > 0 ? "/review" : undefined;
 
   // Pre-transform for context drawer (crosses server→client boundary)
   const preparedRuns: PreparedRun[] = runs.map((run) => {
@@ -193,6 +208,7 @@ export default async function TodayPage() {
           preparedRuns={preparedRuns}
           queueCount={queueCount}
           activeJobCount={activeJobCount}
+          isFirstContact={isFirstContact}
         />
 
       </div>

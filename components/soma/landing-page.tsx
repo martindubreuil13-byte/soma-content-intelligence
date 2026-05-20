@@ -772,19 +772,19 @@ function DailyRitualSection() {
               {/* Mock today page content */}
               <div style={{ padding: "2.5rem 2rem 2rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "1.25rem" }}>
-                  <AgentOrb state="preparing" size="md" maturityLevel={3} />
+                  <AgentOrb state="idle" size="md" maturityLevel={0} />
                   <div>
-                    <p style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 22, color: "#EEE8E4", marginBottom: 6 }}>I prepared a few directions.</p>
-                    <p style={{ fontSize: 12, lineHeight: 1.7, color: "#5A5060", maxWidth: 260, margin: "0 auto" }}>Based on what I&apos;ve learned from your feedback so far. Your reaction is how I keep improving.</p>
+                    <p style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 22, color: "#EEE8E4", marginBottom: 6 }}>I don&apos;t know your business yet.</p>
+                    <p style={{ fontSize: 12, lineHeight: 1.7, color: "#5A5060", maxWidth: 260, margin: "0 auto" }}>Start by telling me what you&apos;re building. I learn through interaction, references, and feedback.</p>
                   </div>
                   <button style={{ borderRadius: 14, border: "1px solid rgba(128,112,184,0.28)", background: "rgba(74,56,128,0.12)", padding: "10px 20px", fontSize: 12, fontWeight: 600, color: "#B8ADDC", cursor: "default" }}>
-                    Talk to SOMA →
+                    Teach SOMA →
                   </button>
                 </div>
 
                 {/* Mock disclosure rows */}
                 <div style={{ marginTop: "2rem", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                  {["What SOMA remembers", "What SOMA prepared — 3"].map((label) => (
+                  {["No audience defined yet", "No learned tone patterns yet"].map((label) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.3)" }}>{label}</span>
                       <div style={{ width: 10, height: 10, borderRadius: 2, border: "1px solid rgba(255,255,255,0.12)" }} />
