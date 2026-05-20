@@ -20,6 +20,10 @@ export type OnboardingQuestion = {
   rationale?: string;
 };
 
+export type OnboardingMode = "answer" | "correction" | "skip";
+
+export type OnboardingFieldStatus = "inferred" | "corrected" | "confirmed" | "skipped";
+
 export type MissionReadiness = {
   ready: boolean;
   score: number;
@@ -45,6 +49,7 @@ export type OnboardingProfile = {
 
 export type OnboardingTurn = {
   id: string;
+  mode?: OnboardingMode;
   userMessage: string;
   somaResponse: string;
   extracted: Partial<OnboardingProfile>;
@@ -59,6 +64,8 @@ export type OnboardingState = {
   profile: OnboardingProfile;
   turns: OnboardingTurn[];
   lastQuestion?: OnboardingQuestion;
+  skippedFields?: Array<keyof OnboardingProfile>;
+  fieldStatus?: Partial<Record<keyof OnboardingProfile, OnboardingFieldStatus>>;
   confirmedAt?: string;
   missionBridge?: {
     missionType?: "caption_only" | "caption_visual" | "visual_direction" | "hook_variations" | "campaign_direction";
@@ -70,6 +77,7 @@ export type OnboardingState = {
 export type OnboardingAnalysisInput = {
   message: string;
   state?: OnboardingState;
+  mode?: OnboardingMode;
   action?: "message" | "confirm_understanding" | "start_mission" | "select_mission_type" | "select_channel" | "select_reference";
   missionType?: OnboardingState["missionBridge"] extends infer Bridge
     ? Bridge extends { missionType?: infer MissionType }

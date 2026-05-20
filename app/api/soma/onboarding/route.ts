@@ -11,6 +11,7 @@ type RequestBody = {
   message?: unknown;
   state?: unknown;
   action?: unknown;
+  mode?: unknown;
   missionType?: unknown;
   channel?: unknown;
   referenceChoice?: unknown;
@@ -28,6 +29,8 @@ function stateFrom(value: unknown): OnboardingState | undefined {
     profile: record.profile ?? {},
     turns: Array.isArray(record.turns) ? record.turns : [],
     lastQuestion: record.lastQuestion,
+    skippedFields: record.skippedFields,
+    fieldStatus: record.fieldStatus,
     confirmedAt: record.confirmedAt,
     missionBridge: record.missionBridge,
   };
@@ -40,9 +43,11 @@ function slug(value: string) {
 async function persistDraft({
   message,
   result,
+  mode,
 }: {
   message: string;
   result: Awaited<ReturnType<typeof analyzeOnboardingMessage>>;
+  mode: string;
 }) {
   const context = await requireWorkspaceContext();
   const supabase = await createServerSupabase();
@@ -59,6 +64,8 @@ async function persistDraft({
         status: result.state.status,
         ready_for_mission: result.readyForMission,
         missing_fields: result.missingFields,
+        skipped_fields: result.state.skippedFields ?? [],
+        field_status: result.state.fieldStatus ?? {},
         updated_at: now,
       },
     },
@@ -68,9 +75,9 @@ async function persistDraft({
 
   const { error: eventError } = await supabase.from("learning_events").insert({
     organization_id: context.organization.id,
-    event_type: "onboarding_turn",
+    event_type: mode === "correction" ? "onboarding_correction" : mode === "skip" ? "onboarding_question_skipped" : "onboarding_turn",
     target_type: "onboarding_profile",
-    tags: ["onboarding", result.state.status],
+    tags: ["onboarding", result.state.status, mode],
     notes: result.response.slice(0, 600),
     metadata: {
       message_excerpt: message.slice(0, 900),
@@ -79,6 +86,7 @@ async function persistDraft({
       missing_fields: result.missingFields,
       next_question: result.nextQuestion,
       confidence: result.confidence,
+      mode,
     },
   });
   if (eventError) throw eventError;
@@ -151,12 +159,14 @@ export async function POST(request: Request) {
     const body = (await request.json().catch(() => ({}))) as RequestBody;
     const message = typeof body.message === "string" ? body.message.trim() : "";
     const action = typeof body.action === "string" ? body.action : "message";
+    const mode = typeof body.mode === "string" ? body.mode : "answer";
 
-    if (!message && action === "message") return validationError("Tell SOMA something first.");
+    if (!message && action === "message" && mode !== "skip") return validationError("Tell SOMA something first.");
 
     const input: OnboardingAnalysisInput = {
       message,
       state: stateFrom(body.state),
+      mode: mode as OnboardingAnalysisInput["mode"],
       action: action as OnboardingAnalysisInput["action"],
       missionType: typeof body.missionType === "string" ? body.missionType as OnboardingAnalysisInput["missionType"] : undefined,
       channel: typeof body.channel === "string" ? body.channel as OnboardingAnalysisInput["channel"] : undefined,
@@ -164,7 +174,7 @@ export async function POST(request: Request) {
     };
     const result = await analyzeOnboardingMessage(input);
 
-    await persistDraft({ message, result }).catch((error) => {
+    await persistDraft({ message, result, mode }).catch((error) => {
       console.error("[soma/onboarding] draft persistence failed", error instanceof Error ? error.message : error);
     });
 

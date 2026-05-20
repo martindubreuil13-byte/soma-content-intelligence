@@ -22,23 +22,24 @@ interface OnboardingResponseProps {
   readyForMission: boolean;
   onAnswer: () => void;
   onCorrect: () => void;
+  onSkip: () => void;
   onConfirm: () => void;
   onStartMission: () => void;
   onMissionChoice: (choice: { missionType?: MissionType; channel?: ContentChannel | "multi"; referenceChoice?: ReferenceChoice }) => void;
 }
 
 const fieldLabels: Partial<Record<keyof OnboardingProfile, string>> = {
-  businessSummary: "business shape",
-  offer: "offer",
-  audience: "audience",
-  corePain: "pain",
-  desiredOutcome: "promise",
-  differentiator: "difference",
-  brandTone: "tone",
-  visualDirection: "visual direction",
-  preferredChannels: "channels",
-  ctaPreferences: "CTA style",
-  whatToBeKnownFor: "memory anchor",
+  businessSummary: "what you are building",
+  offer: "what people can buy or use",
+  audience: "who this should reach first",
+  corePain: "the struggle to lead with",
+  desiredOutcome: "the change you create",
+  differentiator: "why this is not the obvious alternative",
+  brandTone: "how this should sound",
+  visualDirection: "how this should look and feel",
+  preferredChannels: "where this should show up first",
+  ctaPreferences: "how you want to invite action",
+  whatToBeKnownFor: "what people should remember",
 };
 
 const missionOptions: Array<{ label: string; value: MissionType; needsReference?: boolean }> = [
@@ -65,14 +66,14 @@ const referenceOptions: Array<{ label: string; value: ReferenceChoice }> = [
 
 function profileItems(profile: OnboardingProfile) {
   return [
-    ["Business", profile.businessSummary],
-    ["Audience", profile.audience],
-    ["Pain", profile.corePain],
-    ["Promise", profile.desiredOutcome],
-    ["Difference", profile.differentiator],
-    ["Tone", profile.brandTone],
-    ["Visual", profile.visualDirection],
-    ["Channels", profile.preferredChannels?.join(", ")],
+    ["The business seems to be", profile.businessSummary],
+    ["It appears to serve", profile.audience],
+    ["The struggle may be", profile.corePain],
+    ["The change it creates", profile.desiredOutcome],
+    ["What may set it apart", profile.differentiator],
+    ["The voice forming", profile.brandTone],
+    ["The visual direction forming", profile.visualDirection],
+    ["The first places to show up", profile.preferredChannels?.join(", ")],
   ].filter(([, value]) => typeof value === "string" && value.trim().length > 0);
 }
 
@@ -85,6 +86,7 @@ export function OnboardingResponse({
   readyForMission,
   onAnswer,
   onCorrect,
+  onSkip,
   onConfirm,
   onStartMission,
   onMissionChoice,
@@ -128,7 +130,7 @@ export function OnboardingResponse({
           <div className="mb-4 flex items-center gap-2">
             <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-soft/65" />
             <span className="text-[9px] font-semibold uppercase tracking-[0.28em] text-violet-pale/40">
-              Strategic onboarding
+              SOMA is learning
             </span>
           </div>
 
@@ -137,7 +139,7 @@ export function OnboardingResponse({
           {understood.length ? (
             <div className="mt-5">
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/22">
-                What I understand so far
+                Here&apos;s the picture forming so far
               </p>
               <div className="space-y-1.5">
                 {understood.slice(0, 6).map(([label, value]) => (
@@ -152,7 +154,7 @@ export function OnboardingResponse({
           {missing.length && !readyForMission ? (
             <div className="mt-5">
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/22">
-                Still missing
+                What I&apos;m still uncertain about
               </p>
               <div className="flex flex-wrap gap-2">
                 {missing.map((label) => (
@@ -185,7 +187,10 @@ export function OnboardingResponse({
               </button>
               <button onClick={onCorrect} className="flex items-center gap-2 rounded-[13px] border border-white/[0.07] bg-transparent px-4 py-2 text-[13px] font-semibold text-white/35 transition hover:border-white/12 hover:text-white/60">
                 <Edit3 size={12} />
-                Correct this
+                Correct SOMA
+              </button>
+              <button onClick={onSkip} className="flex items-center gap-2 rounded-[13px] border border-white/[0.07] bg-transparent px-4 py-2 text-[13px] font-semibold text-white/35 transition hover:border-white/12 hover:text-white/60">
+                Skip for now
               </button>
               <button onClick={onConfirm} className="flex items-center gap-2 rounded-[13px] border border-white/[0.07] bg-transparent px-4 py-2 text-[13px] font-semibold text-white/35 transition hover:border-white/12 hover:text-white/60">
                 <Check size={12} />
@@ -204,7 +209,7 @@ export function OnboardingResponse({
                 Start first mission <ArrowRight size={12} />
               </button>
               <button onClick={onCorrect} className="flex items-center gap-2 rounded-[13px] border border-white/[0.07] bg-transparent px-4 py-2 text-[13px] font-semibold text-white/35 transition hover:border-white/12 hover:text-white/60">
-                Adjust this
+                Correct SOMA
               </button>
               <button onClick={onAnswer} className="flex items-center gap-2 rounded-[13px] border border-white/[0.07] bg-transparent px-4 py-2 text-[13px] font-semibold text-white/35 transition hover:border-white/12 hover:text-white/60">
                 Teach SOMA more

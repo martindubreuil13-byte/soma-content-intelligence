@@ -14,6 +14,7 @@ import type { ConversationExtraction } from "@/lib/intelligence/conversation-ext
 import type { SomaInterpretedResponse } from "@/lib/intelligence/soma-response";
 import type {
   OnboardingAnalysisResult,
+  OnboardingMode,
   OnboardingState,
 } from "@/lib/onboarding/onboarding-types";
 
@@ -56,6 +57,7 @@ export function TodayInteraction({
   const [errorMessage, setErrorMessage] = useState("");
   const [onboardingState, setOnboardingState] = useState<OnboardingState | null>(null);
   const [onboardingResult, setOnboardingResult] = useState<OnboardingAnalysisResult | null>(null);
+  const [onboardingMode, setOnboardingMode] = useState<OnboardingMode>("answer");
   const router = useRouter();
 
   const orbState: OrbState =
@@ -79,12 +81,13 @@ export function TodayInteraction({
       const onboarding = await safeJsonFetch<OnboardingAnalysisResult>("/api/soma/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, state: onboardingState }),
+        body: JSON.stringify({ message: text, state: onboardingState, mode: onboardingMode }),
       });
 
       if (onboarding.ok) {
         setOnboardingState(onboarding.data.state);
         setOnboardingResult(onboarding.data);
+        setOnboardingMode("answer");
         setMemorySaved(true);
       } else {
         setErrorMessage(onboarding.error.message);
@@ -145,10 +148,37 @@ export function TodayInteraction({
     if (result.ok) {
       setOnboardingState(result.data.state);
       setOnboardingResult(result.data);
+      setOnboardingMode("answer");
       setMemorySaved(true);
     } else {
       setErrorMessage(result.error.message);
     }
+  }
+
+  async function handleOnboardingSkip() {
+    setErrorMessage("");
+    setPhase("thinking");
+
+    const result = await safeJsonFetch<OnboardingAnalysisResult>("/api/soma/onboarding", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: "Skip for now.", state: onboardingState, mode: "skip" }),
+    });
+
+    if (result.ok) {
+      setOnboardingState(result.data.state);
+      setOnboardingResult(result.data);
+      setOnboardingMode("answer");
+      setMemorySaved(true);
+    } else {
+      setErrorMessage(result.error.message);
+    }
+    setPhase("responded");
+  }
+
+  function openOnboardingComposer(mode: OnboardingMode) {
+    setOnboardingMode(mode);
+    setPhase("composing");
   }
 
   function handleMissionChoice(choice: NonNullable<OnboardingState["missionBridge"]>) {
@@ -178,11 +208,24 @@ export function TodayInteraction({
     setExtraction(null);
     setSomaResponse(null);
     setOnboardingResult(null);
+    setOnboardingMode("answer");
     setSuggestedActions([]);
     setErrorMessage("");
   }
 
   const showBody = phase === "idle" || phase === "composing";
+  const onboardingPlaceholder =
+    onboardingMode === "correction"
+      ? "Correct my understanding in your own words."
+      : onboardingResult?.nextQuestion?.question ?? placeholder;
+  const onboardingSuggestions =
+    onboardingMode === "correction"
+      ? [
+          "Correction: here is what SOMA misunderstood",
+          "Not quite. The more accurate version is",
+          "Treat this as the stronger signal",
+        ]
+      : suggestions;
 
   return (
     <div className="flex flex-col items-center text-center">
@@ -228,8 +271,8 @@ export function TodayInteraction({
       {phase === "composing" && (
         <div className="mt-10 w-full animate-fade-up">
           <AgentComposer
-            suggestions={suggestions}
-            placeholder={onboardingResult?.nextQuestion?.question ?? placeholder}
+            suggestions={onboardingSuggestions}
+            placeholder={onboardingPlaceholder}
             onSend={handleSend}
           />
           <div className="mt-4 flex items-center justify-center gap-4">
@@ -283,8 +326,9 @@ export function TodayInteraction({
               nextQuestion={onboardingResult.nextQuestion}
               confidence={onboardingResult.confidence}
               readyForMission={onboardingResult.readyForMission}
-              onAnswer={() => setPhase("composing")}
-              onCorrect={() => setPhase("composing")}
+              onAnswer={() => openOnboardingComposer("answer")}
+              onCorrect={() => openOnboardingComposer("correction")}
+              onSkip={handleOnboardingSkip}
               onConfirm={() => handleOnboardingAction("confirm_understanding")}
               onStartMission={() => handleOnboardingAction("start_mission")}
               onMissionChoice={handleMissionChoice}

@@ -3,6 +3,8 @@ import type {
   OnboardingAnalysisInput,
   OnboardingAnalysisResult,
   OnboardingConfidence,
+  OnboardingFieldStatus,
+  OnboardingMode,
   OnboardingProfile,
   OnboardingQuestion,
   OnboardingState,
@@ -130,6 +132,13 @@ function extractAudienceSegments(message: string): string[] | undefined {
   return segments.length > 1 ? segments : undefined;
 }
 
+function contentFields(profile: OnboardingProfile): Array<keyof OnboardingProfile> {
+  return requiredFields.filter((field) => {
+    const value = profile[field];
+    return Array.isArray(value) ? value.length > 0 : hasText(value);
+  });
+}
+
 function mergeStrings(previous?: string, next?: string) {
   if (!hasText(next)) return previous;
   if (!hasText(previous)) return clean(next!);
@@ -199,7 +208,7 @@ export async function extractOnboardingWithLLM(
   if (!apiKey) return null;
 
   const model = process.env.OPENAI_TEXT_MODEL ?? "gpt-4.1-mini";
-  const prompt = `You are SOMA, a calm strategic apprentice. Extract onboarding understanding from the user's message.
+  const prompt = `You are SOMA, a calm strategic apprentice. Extract onboarding understanding from this message.
 Return JSON only with this shape:
 {
   "extracted": {
@@ -259,6 +268,18 @@ ${message}`;
   }
 }
 
+function fieldStatusFor(
+  previousStatus: Partial<Record<keyof OnboardingProfile, OnboardingFieldStatus>> = {},
+  extracted: Partial<OnboardingProfile>,
+  status: OnboardingFieldStatus
+) {
+  const next = { ...previousStatus };
+  (Object.keys(extracted) as Array<keyof OnboardingProfile>).forEach((field) => {
+    if (field !== "missionReadiness") next[field] = status;
+  });
+  return next;
+}
+
 export function mergeOnboardingProfile(
   previousProfile: OnboardingProfile = {},
   newExtraction: Partial<OnboardingProfile> = {}
@@ -291,8 +312,30 @@ export function detectMissingFields(profile: OnboardingProfile): Array<keyof Onb
   });
 }
 
+function detectMissingFieldsWithSkipped(profile: OnboardingProfile, skippedFields: Array<keyof OnboardingProfile> = []): Array<keyof OnboardingProfile> {
+  const skipped = new Set(skippedFields);
+  return requiredFields.filter((field) => {
+    if (skipped.has(field)) return false;
+    const value = profile[field];
+    return Array.isArray(value) ? value.length === 0 : !hasText(value);
+  });
+}
+
 export function calculateOnboardingReadiness(profile: OnboardingProfile): MissionReadiness {
   const missing = detectMissingFields(profile);
+  const answered = requiredFields.length - missing.length;
+  const score = Math.round((answered / requiredFields.length) * 100);
+  const essentialsPresent = Boolean(profile.businessSummary && profile.audience && profile.corePain && profile.desiredOutcome);
+
+  return {
+    ready: essentialsPresent && score >= 67,
+    score,
+    missing,
+  };
+}
+
+function calculateReadinessWithSkipped(profile: OnboardingProfile, skippedFields: Array<keyof OnboardingProfile> = []): MissionReadiness {
+  const missing = detectMissingFieldsWithSkipped(profile, skippedFields);
   const answered = requiredFields.length - missing.length;
   const score = Math.round((answered / requiredFields.length) * 100);
   const essentialsPresent = Boolean(profile.businessSummary && profile.audience && profile.corePain && profile.desiredOutcome);
@@ -311,8 +354,8 @@ function confidenceFor(score: number): OnboardingConfidence {
   return { score, label: "early", wording: "I only have early signals." };
 }
 
-export function chooseNextBestQuestion(profile: OnboardingProfile, lastMessage = ""): OnboardingQuestion | undefined {
-  const readiness = calculateOnboardingReadiness(profile);
+export function chooseNextBestQuestion(profile: OnboardingProfile, lastMessage = "", skippedFields: Array<keyof OnboardingProfile> = []): OnboardingQuestion | undefined {
+  const readiness = calculateReadinessWithSkipped(profile, skippedFields);
   if (readiness.ready) return questionBank.find((question) => question.id === "mission");
 
   const missing = new Set(readiness.missing);
@@ -328,7 +371,7 @@ export function chooseNextBestQuestion(profile: OnboardingProfile, lastMessage =
 function statusFor(profile: OnboardingProfile, missingFields: Array<keyof OnboardingProfile>, confirmed: boolean): OnboardingStatus {
   if (confirmed) return "ready_for_mission";
   if (!Object.keys(normalizeProfile(profile)).length) return "first_contact";
-  if (calculateOnboardingReadiness(profile).ready) return "confirming_profile";
+  if (profile.missionReadiness?.ready) return "confirming_profile";
   if (missingFields.length <= 4) return "clarifying";
   return "gathering_context";
 }
@@ -342,10 +385,10 @@ function buildProfileSummary(profile: OnboardingProfile, compact = false) {
   const lines = [
     profileLine("Business", profile.businessSummary),
     profileLine("Audience", profile.audience),
-    profileLine("Pain", profile.corePain),
-    profileLine("Promise", profile.desiredOutcome),
-    profileLine("Tone", profile.brandTone),
-    profileLine("Channels", profile.preferredChannels),
+    profileLine("Main struggle", profile.corePain),
+    profileLine("Outcome", profile.desiredOutcome),
+    profileLine("Voice", profile.brandTone),
+    profileLine("First places to show up", profile.preferredChannels),
   ].filter(Boolean);
 
   if (!lines.length) return "I do not know enough yet.";
@@ -353,15 +396,15 @@ function buildProfileSummary(profile: OnboardingProfile, compact = false) {
 }
 
 export function buildOnboardingResponse(state: OnboardingState): string {
-  const readiness = calculateOnboardingReadiness(state.profile);
+  const readiness = calculateReadinessWithSkipped(state.profile, state.skippedFields);
   const name = state.profile.businessName ? ` ${state.profile.businessName}` : "";
 
   if (state.status === "ready_for_mission" || readiness.ready) {
-    return `I think I understand the foundation now.${name ? `\n\n${name.trim()} is taking shape clearly.` : ""}\n\n${buildProfileSummary(state.profile, true)}\n\nIs this accurate enough for me to start creating with you?`;
+    return `I think I understand the foundation now.${name ? `\n\nThe picture forming around${name} is clear enough to create from.` : ""}\n\n${buildProfileSummary(state.profile, true)}\n\nIs this accurate enough for me to start creating with you?`;
   }
 
   const summary = state.profile.businessSummary
-    ? `It seems ${state.profile.businessSummary}.`
+    ? `It sounds like ${state.profile.businessSummary}.`
     : "I’m beginning to understand the shape of the business.";
   const missing = state.lastQuestion?.rationale ?? "The missing piece is the next strategic anchor.";
   const next = state.lastQuestion?.question ? `\n\nBefore I shape this, I need one thing:\n${state.lastQuestion.question}` : "";
@@ -373,12 +416,83 @@ function actionsFor(state: OnboardingState, ready: boolean) {
   if (ready || state.status === "ready_for_mission") {
     return ["Confirm this understanding", "Start first mission", "Adjust this", "Add visual reference"];
   }
-  return ["Answer this", "Correct this", "Confirm this understanding"];
+  return ["Answer this", "Correct SOMA", "Skip for now", "Confirm this understanding"];
+}
+
+function correctionFieldFromText(text: string, fallback?: keyof OnboardingProfile | "mission"): keyof OnboardingProfile | undefined {
+  const lower = text.toLowerCase();
+  if (/\b(offer|provide|provides|sell|service|product|include|includes)\b/.test(lower)) return "offer";
+  if (/\b(audience|serve|for|customer|client|buyer)\b/.test(lower)) return "audience";
+  if (/\b(pain|problem|struggle|frustration|wasted|manual|poor|inconsistent)\b/.test(lower)) return "corePain";
+  if (/\b(outcome|result|promise|so they can|helps them|clarity|pipeline|faster)\b/.test(lower)) return "desiredOutcome";
+  if (/\b(different|unlike|instead|edge|unique)\b/.test(lower)) return "differentiator";
+  if (/\b(tone|voice|sound|feel|calm|direct|premium|bold|honest)\b/.test(lower)) return "brandTone";
+  if (/\b(visual|look|style|aesthetic|image|design)\b/.test(lower)) return "visualDirection";
+  if (/\b(linkedin|instagram|facebook|tiktok|channel)\b/.test(lower)) return "preferredChannels";
+  if (fallback && fallback !== "mission") return fallback;
+  return undefined;
+}
+
+export function applyCorrectionToProfile(
+  previousProfile: OnboardingProfile,
+  correctionText: string,
+  lastQuestion?: OnboardingQuestion
+): { profile: OnboardingProfile; extracted: Partial<OnboardingProfile>; correctedFields: Array<keyof OnboardingProfile>; hadConflict: boolean } {
+  const cleaned = clip(correctionText.replace(/^\s*(correction|actually|not quite|no[:,]?|to clarify)[:,]?\s*/i, ""), 260);
+  const extracted = heuristicExtractOnboarding(cleaned, previousProfile);
+  const field = correctionFieldFromText(cleaned, lastQuestion?.field);
+  const correction: Partial<OnboardingProfile> = { ...extracted };
+
+  if (field && field !== "preferredChannels" && !correction[field]) {
+    (correction as Record<string, unknown>)[field] = cleaned;
+  }
+  if (field === "preferredChannels" && !correction.preferredChannels) {
+    correction.preferredChannels = extractChannels(cleaned);
+  }
+
+  const correctedFields = (Object.keys(correction) as Array<keyof OnboardingProfile>).filter((item) => item !== "missionReadiness");
+  const hadConflict = correctedFields.some((item) => {
+    const previous = previousProfile[item];
+    const next = correction[item];
+    if (!previous || !next) return false;
+    return JSON.stringify(previous).toLowerCase() !== JSON.stringify(next).toLowerCase();
+  });
+  const profile = { ...previousProfile };
+
+  correctedFields.forEach((item) => {
+    const value = correction[item];
+    if (Array.isArray(value)) {
+      (profile as Record<string, unknown>)[item] = value;
+    } else if (typeof value === "string" && value.trim()) {
+      (profile as Record<string, unknown>)[item] = value.trim();
+    }
+  });
+
+  return { profile, extracted: normalizeProfile(correction), correctedFields, hadConflict };
+}
+
+function buildCorrectionResponse(profile: OnboardingProfile, correctedFields: Array<keyof OnboardingProfile>, nextQuestion?: OnboardingQuestion) {
+  const corrected = correctedFields
+    .map((field) => profileLine(field === "corePain" ? "Main struggle" : field === "desiredOutcome" ? "Outcome" : field === "brandTone" ? "Voice" : field === "preferredChannels" ? "First places to show up" : "Updated", profile[field] as string | string[] | undefined))
+    .filter(Boolean)
+    .join("\n");
+  const next = nextQuestion ? `\n\nThe next useful question is:\n${nextQuestion.question}` : "";
+
+  return `Got it. I’ve corrected that.\n\n${corrected || "I’ll treat your correction as the stronger signal going forward."}${next}`;
+}
+
+function buildSkipResponse(nextQuestion?: OnboardingQuestion, ready?: boolean) {
+  if (ready) {
+    return "Understood. I’ll leave that open for now.\n\nI think I have enough of the foundation to confirm the picture before we create.";
+  }
+
+  return `Understood. I’ll leave that open for now.${nextQuestion ? `\n\nThe next useful question is:\n${nextQuestion.question}` : ""}`;
 }
 
 export async function analyzeOnboardingMessage(input: OnboardingAnalysisInput): Promise<OnboardingAnalysisResult> {
   const previousState = input.state ?? { status: "first_contact", profile: {}, turns: [] };
   const message = clean(input.message);
+  const mode: OnboardingMode = input.mode ?? "answer";
 
   if (input.action === "start_mission") {
     const state: OnboardingState = {
@@ -392,10 +506,142 @@ export async function analyzeOnboardingMessage(input: OnboardingAnalysisInput): 
       response: "Good. Choose the first shape of the mission, then I’ll ask for the channel.",
       profile: state.profile,
       extracted: {},
-      missingFields: detectMissingFields(state.profile),
+      missingFields: detectMissingFieldsWithSkipped(state.profile, state.skippedFields),
       confidence,
       readyForMission: true,
       suggestedActions: ["Caption only", "Caption + visual", "Visual direction only", "Hook variations", "Campaign direction"],
+    };
+  }
+
+  if (input.action === "confirm_understanding") {
+    const skippedFields = previousState.skippedFields ?? [];
+    const readiness = calculateReadinessWithSkipped(previousState.profile, skippedFields);
+    const profile: OnboardingProfile = { ...previousState.profile, missionReadiness: readiness };
+    const confidence = confidenceFor(Math.max(readiness.score, 75));
+    const state: OnboardingState = {
+      ...previousState,
+      status: "ready_for_mission",
+      profile,
+      skippedFields,
+      fieldStatus: Object.fromEntries(contentFields(profile).map((field) => [field, "confirmed"])) as Partial<Record<keyof OnboardingProfile, OnboardingFieldStatus>>,
+      confirmedAt: new Date().toISOString(),
+    };
+    const response = buildOnboardingResponse(state);
+    const turn = {
+      id: `onboarding_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      mode,
+      userMessage: message || "Confirm this understanding.",
+      somaResponse: response,
+      extracted: {},
+      missingFields: readiness.missing,
+      nextQuestion: state.lastQuestion,
+      confidence,
+      createdAt: new Date().toISOString(),
+    };
+    const nextState = { ...state, turns: [...previousState.turns, turn].slice(-12) };
+
+    return {
+      state: nextState,
+      response,
+      profile,
+      extracted: {},
+      missingFields: readiness.missing,
+      nextQuestion: state.lastQuestion,
+      confidence,
+      readyForMission: true,
+      suggestedActions: actionsFor(nextState, true),
+    };
+  }
+
+  if (mode === "skip") {
+    const skippedField = previousState.lastQuestion?.field;
+    const skippedFields = skippedField && skippedField !== "mission"
+      ? Array.from(new Set([...(previousState.skippedFields ?? []), skippedField]))
+      : previousState.skippedFields ?? [];
+    const readiness = calculateReadinessWithSkipped(previousState.profile, skippedFields);
+    const profile: OnboardingProfile = { ...previousState.profile, missionReadiness: readiness };
+    const nextQuestion = chooseNextBestQuestion(profile, message, skippedFields);
+    const status = statusFor(profile, readiness.missing, false);
+    const state: OnboardingState = {
+      ...previousState,
+      status,
+      profile,
+      skippedFields,
+      fieldStatus: skippedField && skippedField !== "mission"
+        ? { ...previousState.fieldStatus, [skippedField]: "skipped" }
+        : previousState.fieldStatus,
+      lastQuestion: nextQuestion,
+    };
+    const readyForMission = readiness.ready || status === "confirming_profile";
+    const response = buildSkipResponse(nextQuestion, readyForMission);
+    const confidence = confidenceFor(readiness.score);
+    const turn = {
+      id: `onboarding_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      mode,
+      userMessage: message || "Skip for now.",
+      somaResponse: response,
+      extracted: {},
+      missingFields: readiness.missing,
+      nextQuestion,
+      confidence,
+      createdAt: new Date().toISOString(),
+    };
+    const nextState = { ...state, turns: [...previousState.turns, turn].slice(-12) };
+
+    return {
+      state: nextState,
+      response,
+      profile,
+      extracted: {},
+      missingFields: readiness.missing,
+      nextQuestion,
+      confidence,
+      readyForMission,
+      suggestedActions: actionsFor(nextState, readyForMission),
+    };
+  }
+
+  if (mode === "correction") {
+    const correction = applyCorrectionToProfile(previousState.profile, message, previousState.lastQuestion);
+    const skippedFields = previousState.skippedFields ?? [];
+    const readiness = calculateReadinessWithSkipped(correction.profile, skippedFields);
+    const profile: OnboardingProfile = { ...correction.profile, missionReadiness: readiness };
+    const nextQuestion = chooseNextBestQuestion(profile, message, skippedFields);
+    const status = statusFor(profile, readiness.missing, false);
+    const confidence = confidenceFor(Math.max(0, readiness.score - (correction.hadConflict ? 8 : 0)));
+    const response = buildCorrectionResponse(profile, correction.correctedFields, nextQuestion);
+    const state: OnboardingState = {
+      ...previousState,
+      status,
+      profile,
+      skippedFields,
+      fieldStatus: fieldStatusFor(previousState.fieldStatus, correction.extracted, "corrected"),
+      lastQuestion: nextQuestion,
+    };
+    const turn = {
+      id: `onboarding_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      mode,
+      userMessage: message,
+      somaResponse: response,
+      extracted: correction.extracted,
+      missingFields: readiness.missing,
+      nextQuestion,
+      confidence,
+      createdAt: new Date().toISOString(),
+    };
+    const nextState = { ...state, turns: [...previousState.turns, turn].slice(-12) };
+    const readyForMission = readiness.ready;
+
+    return {
+      state: nextState,
+      response,
+      profile,
+      extracted: correction.extracted,
+      missingFields: readiness.missing,
+      nextQuestion,
+      confidence,
+      readyForMission,
+      suggestedActions: actionsFor(nextState, readyForMission),
     };
   }
 
@@ -403,28 +649,28 @@ export async function analyzeOnboardingMessage(input: OnboardingAnalysisInput): 
   const llmExtraction = await extractOnboardingWithLLM(message, previousState.profile);
   const extracted = normalizeProfile({ ...heuristicExtraction, ...(llmExtraction?.extracted ?? {}) });
   const mergedWithoutReadiness = mergeOnboardingProfile(previousState.profile, extracted);
-  const readiness = calculateOnboardingReadiness(mergedWithoutReadiness);
+  const skippedFields = previousState.skippedFields ?? [];
+  const readiness = calculateReadinessWithSkipped(mergedWithoutReadiness, skippedFields);
   const profile: OnboardingProfile = {
     ...mergedWithoutReadiness,
     missionReadiness: readiness,
   };
-  const missingFields = detectMissingFields(profile);
-  const nextQuestion = chooseNextBestQuestion(profile, message);
-  const confirmed = input.action === "confirm_understanding";
-  const status = confirmed ? "ready_for_mission" : statusFor(profile, missingFields, false);
+  const missingFields = detectMissingFieldsWithSkipped(profile, skippedFields);
+  const nextQuestion = chooseNextBestQuestion(profile, message, skippedFields);
+  const status = statusFor(profile, missingFields, false);
   const confidence = confidenceFor(readiness.score);
   const draftState: OnboardingState = {
     ...previousState,
     status,
     profile,
+    skippedFields,
+    fieldStatus: fieldStatusFor(previousState.fieldStatus, extracted, "inferred"),
     lastQuestion: nextQuestion,
-    ...(confirmed ? { confirmedAt: new Date().toISOString() } : {}),
   };
-  const response = llmExtraction?.summary && llmExtraction.summary.length > 20 && !readiness.ready
-    ? `${llmExtraction.summary}\n\n${nextQuestion ? `Before I shape this, I need one thing:\n${nextQuestion.question}` : ""}`.trim()
-    : buildOnboardingResponse(draftState);
+  const response = buildOnboardingResponse(draftState);
   const turn = {
     id: `onboarding_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    mode,
     userMessage: message,
     somaResponse: response,
     extracted,
@@ -446,7 +692,7 @@ export async function analyzeOnboardingMessage(input: OnboardingAnalysisInput): 
     missingFields,
     nextQuestion,
     confidence,
-    readyForMission: readiness.ready || confirmed,
-    suggestedActions: actionsFor(state, readiness.ready || confirmed),
+    readyForMission: readiness.ready,
+    suggestedActions: actionsFor(state, readiness.ready),
   };
 }
