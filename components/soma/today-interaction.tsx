@@ -33,6 +33,7 @@ interface TodayInteractionProps {
   secondaryLabel?: string;
   secondaryHref?: string;
   isFirstContact?: boolean;
+  visualReferenceCount?: number;
 }
 
 export function TodayInteraction({
@@ -46,6 +47,7 @@ export function TodayInteraction({
   secondaryLabel,
   secondaryHref,
   isFirstContact = false,
+  visualReferenceCount = 0,
 }: TodayInteractionProps) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [submittedText, setSubmittedText] = useState("");
@@ -326,6 +328,8 @@ export function TodayInteraction({
               nextQuestion={onboardingResult.nextQuestion}
               confidence={onboardingResult.confidence}
               readyForMission={onboardingResult.readyForMission}
+              needsCorrection={onboardingResult.needsCorrection}
+              visualReferenceCount={visualReferenceCount}
               onAnswer={() => openOnboardingComposer("answer")}
               onCorrect={() => openOnboardingComposer("correction")}
               onSkip={handleOnboardingSkip}

@@ -97,5 +97,6 @@ export type OnboardingAnalysisResult = {
   nextQuestion?: OnboardingQuestion;
   confidence: OnboardingConfidence;
   readyForMission: boolean;
+  needsCorrection?: boolean;
   suggestedActions: string[];
 };

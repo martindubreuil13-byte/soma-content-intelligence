@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Brain, ChevronRight, Clock, Layers, Settings, X } from "lucide-react";
 import { MaturityIndicator } from "@/components/soma/maturity-indicator";
+import type { OnboardingProfile } from "@/lib/onboarding/onboarding-types";
 
 export interface PreparedRun {
   id: string;
@@ -26,6 +27,8 @@ interface ContextDrawerProps {
   queueCount: number;
   activeJobCount: number;
   isFirstContact?: boolean;
+  onboardingDraft?: OnboardingProfile;
+  visualReferenceCount?: number;
 }
 
 const statusBadge: Record<PreparedRun["statusColor"], string> = {
@@ -48,6 +51,8 @@ export function ContextDrawer({
   queueCount,
   activeJobCount,
   isFirstContact = false,
+  onboardingDraft,
+  visualReferenceCount = 0,
 }: ContextDrawerProps) {
   const [open, setOpen] = useState(false);
 
@@ -120,14 +125,16 @@ export function ContextDrawer({
             {/* What SOMA understands */}
             <section>
               <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.26em] text-white/25">
-                {isFirstContact ? "What SOMA understands so far" : "What SOMA remembers"}
+                {isFirstContact ? "What SOMA is learning" : "What SOMA remembers"}
               </p>
               {isFirstContact ? (
-                <div className="space-y-1 text-[12px] leading-5 text-white/30">
-                  <p>— No audience defined yet</p>
-                  <p>— No visual references yet</p>
-                  <p>— No learned tone patterns yet</p>
-                  <p>— No approved directions yet</p>
+                <div className="space-y-2 text-[12px] leading-5 text-white/30">
+                  <p>{onboardingDraft?.audience ? "Audience is starting to form." : "Audience is still open."}</p>
+                  <p>{onboardingDraft?.corePain ? "The main struggle is coming into focus." : "The main struggle is not clear yet."}</p>
+                  <p>{onboardingDraft?.offer ? "The offer is beginning to take shape." : "The offer still needs a sharper explanation."}</p>
+                  <p>{onboardingDraft?.brandTone ? "Tone is beginning to emerge." : "Tone is not clear yet."}</p>
+                  <p>{visualReferenceCount > 0 ? "Visual memory has a first reference." : "Visual memory is still empty."}</p>
+                  <p>No approved creative direction yet.</p>
                 </div>
               ) : (
                 <>

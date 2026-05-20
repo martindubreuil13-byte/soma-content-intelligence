@@ -1,5 +1,7 @@
 import { getAgentTrainingSummary } from "@/lib/agent-training";
 import { listExecutionJobs } from "@/lib/db/execution-jobs-db";
+import { listOrganizationAssets } from "@/lib/db/organization-assets-db";
+import { listPreferenceMemories } from "@/lib/db/intelligence-db";
 import { getSomaTruthState, isFirstContactState } from "@/lib/db/soma-truth-state-db";
 import { getContentRuns } from "@/lib/output-runs";
 import { readPublishingQueue } from "@/lib/publishing-queue";
@@ -8,6 +10,7 @@ import { TodayInteraction } from "@/components/soma/today-interaction";
 import { ContextDrawer } from "@/components/soma/context-drawer";
 import type { OrbState } from "@/components/soma/agent-orb";
 import type { PreparedRun, DrawerSummary } from "@/components/soma/context-drawer";
+import type { OnboardingProfile } from "@/lib/onboarding/onboarding-types";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -141,11 +144,13 @@ function getSomaSpeech(score: number, runsCount: number, pending: number, isFirs
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function TodayPage() {
-  const [runs, queue, jobs, truthState] = await Promise.all([
+  const [runs, queue, jobs, truthState, memories, visualReferences] = await Promise.all([
     getContentRuns({ includeLegacyFallback: false }),
     readPublishingQueue(),
     listExecutionJobs({ limit: 4 }).catch(() => []),
     getSomaTruthState(),
+    listPreferenceMemories().catch(() => []),
+    listOrganizationAssets({ assetType: "visual_reference", isActive: true }).catch(() => []),
   ]);
   const summary = await getAgentTrainingSummary(runs);
   const isFirstContact = isFirstContactState(truthState);
@@ -184,6 +189,7 @@ export default async function TodayPage() {
   };
 
   const activeJobCount = jobs.filter((j) => j.status === "running").length;
+  const onboardingDraft = memories.find((memory) => memory.category === "onboarding_profile_draft" && memory.key === "current")?.value as OnboardingProfile | undefined;
 
   return (
     <div className="min-h-screen px-5 py-14 sm:px-6 lg:px-8 lg:py-20">
@@ -201,6 +207,7 @@ export default async function TodayPage() {
           secondaryLabel={secondaryLabel}
           secondaryHref={secondaryHref}
           isFirstContact={runs.length === 0}
+          visualReferenceCount={visualReferences.length}
         />
 
         {/* Context drawer (trigger + panel) */}
@@ -210,6 +217,8 @@ export default async function TodayPage() {
           queueCount={queueCount}
           activeJobCount={activeJobCount}
           isFirstContact={isFirstContact}
+          onboardingDraft={onboardingDraft}
+          visualReferenceCount={visualReferences.length}
         />
 
       </div>

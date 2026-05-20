@@ -193,6 +193,7 @@ export async function POST(request: Request) {
       nextQuestion: result.nextQuestion,
       confidence: result.confidence,
       readyForMission: result.readyForMission,
+      needsCorrection: result.needsCorrection,
       suggestedActions: result.suggestedActions,
     });
   } catch (error) {

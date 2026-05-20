@@ -11,6 +11,13 @@ import type {
   OnboardingStatus,
 } from "@/lib/onboarding/onboarding-types";
 import type { ContentChannel } from "@/lib/content-types";
+import {
+  buildCorrectionNarrative,
+  buildNarrativeSummary,
+  buildNaturalUncertainty,
+  buildNextQuestionIntro,
+  buildReadinessNarrative,
+} from "@/lib/onboarding/onboarding-narrative";
 
 type LlmExtraction = {
   extracted?: Partial<OnboardingProfile>;
@@ -77,7 +84,7 @@ const questionBank: Array<OnboardingQuestion> = [
   {
     id: "channels",
     field: "preferredChannels",
-    question: "Which channel should matter first: LinkedIn, Instagram, Facebook, TikTok, or several at once?",
+    question: "Where should this live first: LinkedIn, Instagram, Facebook, TikTok, or across channels?",
   },
   {
     id: "mission",
@@ -321,14 +328,37 @@ function detectMissingFieldsWithSkipped(profile: OnboardingProfile, skippedField
   });
 }
 
+function hasContamination(profile: OnboardingProfile) {
+  const audience = profile.audience?.toLowerCase() ?? "";
+  const pain = profile.corePain?.toLowerCase() ?? "";
+  const audienceLeak = [
+    "main struggle",
+    "benefit",
+    "search in seconds",
+    "spending hours",
+    "ready to contact",
+    "wasted time",
+  ].some((phrase) => audience.includes(phrase));
+  const painLeak = [
+    "in seconds",
+    "ready to contact leads",
+    "contact-ready leads",
+    "quickly",
+    "faster",
+  ].some((phrase) => pain.includes(phrase));
+
+  return audienceLeak || painLeak;
+}
+
 export function calculateOnboardingReadiness(profile: OnboardingProfile): MissionReadiness {
   const missing = detectMissingFields(profile);
   const answered = requiredFields.length - missing.length;
-  const score = Math.round((answered / requiredFields.length) * 100);
+  const contaminated = hasContamination(profile);
+  const score = Math.max(0, Math.round((answered / requiredFields.length) * 100) - (contaminated ? 22 : 0));
   const essentialsPresent = Boolean(profile.businessSummary && profile.audience && profile.corePain && profile.desiredOutcome);
 
   return {
-    ready: essentialsPresent && score >= 67,
+    ready: essentialsPresent && score >= 67 && !contaminated,
     score,
     missing,
   };
@@ -337,24 +367,33 @@ export function calculateOnboardingReadiness(profile: OnboardingProfile): Missio
 function calculateReadinessWithSkipped(profile: OnboardingProfile, skippedFields: Array<keyof OnboardingProfile> = []): MissionReadiness {
   const missing = detectMissingFieldsWithSkipped(profile, skippedFields);
   const answered = requiredFields.length - missing.length;
-  const score = Math.round((answered / requiredFields.length) * 100);
+  const contaminated = hasContamination(profile);
+  const score = Math.max(0, Math.round((answered / requiredFields.length) * 100) - (contaminated ? 22 : 0));
   const essentialsPresent = Boolean(profile.businessSummary && profile.audience && profile.corePain && profile.desiredOutcome);
 
   return {
-    ready: essentialsPresent && score >= 67,
+    ready: essentialsPresent && score >= 67 && !contaminated,
     score,
     missing,
   };
 }
 
 function confidenceFor(score: number): OnboardingConfidence {
-  if (score >= 75) return { score, label: "ready", wording: "The foundation is clear enough to create from." };
+  if (score >= 75) return { score, label: "ready", wording: "This is enough to begin carefully." };
   if (score >= 52) return { score, label: "clear", wording: "The shape is becoming clear." };
   if (score >= 28) return { score, label: "forming", wording: "The outline is forming." };
   return { score, label: "early", wording: "I only have early signals." };
 }
 
 export function chooseNextBestQuestion(profile: OnboardingProfile, lastMessage = "", skippedFields: Array<keyof OnboardingProfile> = []): OnboardingQuestion | undefined {
+  if (hasContamination(profile)) {
+    return {
+      id: "clarify_mixed_signal",
+      field: "audience",
+      question: "I may be mixing the audience with the problem. Who is this specifically for, separate from the struggle they have?",
+    };
+  }
+
   const readiness = calculateReadinessWithSkipped(profile, skippedFields);
   if (readiness.ready) return questionBank.find((question) => question.id === "mission");
 
@@ -376,40 +415,20 @@ function statusFor(profile: OnboardingProfile, missingFields: Array<keyof Onboar
   return "gathering_context";
 }
 
-function profileLine(label: string, value?: string | string[]) {
-  if (Array.isArray(value)) return value.length ? `${label}: ${value.join(", ")}` : "";
-  return value ? `${label}: ${value}` : "";
-}
-
-function buildProfileSummary(profile: OnboardingProfile, compact = false) {
-  const lines = [
-    profileLine("Business", profile.businessSummary),
-    profileLine("Audience", profile.audience),
-    profileLine("Main struggle", profile.corePain),
-    profileLine("Outcome", profile.desiredOutcome),
-    profileLine("Voice", profile.brandTone),
-    profileLine("First places to show up", profile.preferredChannels),
-  ].filter(Boolean);
-
-  if (!lines.length) return "I do not know enough yet.";
-  return compact ? lines.slice(0, 6).join("\n") : lines.join("\n");
-}
-
 export function buildOnboardingResponse(state: OnboardingState): string {
   const readiness = calculateReadinessWithSkipped(state.profile, state.skippedFields);
-  const name = state.profile.businessName ? ` ${state.profile.businessName}` : "";
+  const confidence = confidenceFor(readiness.score);
+  const turnCount = state.turns.length;
 
   if (state.status === "ready_for_mission" || readiness.ready) {
-    return `I think I understand the foundation now.${name ? `\n\nThe picture forming around${name} is clear enough to create from.` : ""}\n\n${buildProfileSummary(state.profile, true)}\n\nIs this accurate enough for me to start creating with you?`;
+    return buildReadinessNarrative(state.profile, confidence, turnCount);
   }
 
-  const summary = state.profile.businessSummary
-    ? `It sounds like ${state.profile.businessSummary}.`
-    : "I’m beginning to understand the shape of the business.";
-  const missing = state.lastQuestion?.rationale ?? "The missing piece is the next strategic anchor.";
-  const next = state.lastQuestion?.question ? `\n\nBefore I shape this, I need one thing:\n${state.lastQuestion.question}` : "";
-
-  return `I’m starting to understand${name}.\n\n${summary}\n\n${missing}${next}`;
+  return [
+    buildNarrativeSummary(state.profile, confidence, state.status, turnCount),
+    buildNaturalUncertainty(state.profile, readiness.missing, hasContamination(state.profile), turnCount),
+    buildNextQuestionIntro(state.lastQuestion, state.status, turnCount),
+  ].filter(Boolean).join("\n\n");
 }
 
 function actionsFor(state: OnboardingState, ready: boolean) {
@@ -472,21 +491,15 @@ export function applyCorrectionToProfile(
 }
 
 function buildCorrectionResponse(profile: OnboardingProfile, correctedFields: Array<keyof OnboardingProfile>, nextQuestion?: OnboardingQuestion) {
-  const corrected = correctedFields
-    .map((field) => profileLine(field === "corePain" ? "Main struggle" : field === "desiredOutcome" ? "Outcome" : field === "brandTone" ? "Voice" : field === "preferredChannels" ? "First places to show up" : "Updated", profile[field] as string | string[] | undefined))
-    .filter(Boolean)
-    .join("\n");
-  const next = nextQuestion ? `\n\nThe next useful question is:\n${nextQuestion.question}` : "";
-
-  return `Got it. I’ve corrected that.\n\n${corrected || "I’ll treat your correction as the stronger signal going forward."}${next}`;
+  return buildCorrectionNarrative(profile, correctedFields, nextQuestion);
 }
 
 function buildSkipResponse(nextQuestion?: OnboardingQuestion, ready?: boolean) {
   if (ready) {
-    return "Understood. I’ll leave that open for now.\n\nI think I have enough of the foundation to confirm the picture before we create.";
+    return "Understood. I’ll leave that open for now.\n\nThis is still enough to try a first direction carefully, if you want to keep moving.";
   }
 
-  return `Understood. I’ll leave that open for now.${nextQuestion ? `\n\nThe next useful question is:\n${nextQuestion.question}` : ""}`;
+  return `Understood. I’ll leave that open for now.${nextQuestion ? `\n\n${buildNextQuestionIntro(nextQuestion)}` : ""}`;
 }
 
 export async function analyzeOnboardingMessage(input: OnboardingAnalysisInput): Promise<OnboardingAnalysisResult> {
@@ -503,12 +516,13 @@ export async function analyzeOnboardingMessage(input: OnboardingAnalysisInput): 
     const confidence = confidenceFor(calculateOnboardingReadiness(state.profile).score);
     return {
       state,
-      response: "Good. Choose the first shape of the mission, then I’ll ask for the channel.",
+      response: "Good. Let’s decide the first move.",
       profile: state.profile,
       extracted: {},
       missingFields: detectMissingFieldsWithSkipped(state.profile, state.skippedFields),
       confidence,
       readyForMission: true,
+      needsCorrection: false,
       suggestedActions: ["Caption only", "Caption + visual", "Visual direction only", "Hook variations", "Campaign direction"],
     };
   }
@@ -549,6 +563,7 @@ export async function analyzeOnboardingMessage(input: OnboardingAnalysisInput): 
       nextQuestion: state.lastQuestion,
       confidence,
       readyForMission: true,
+      needsCorrection: false,
       suggestedActions: actionsFor(nextState, true),
     };
   }
@@ -597,6 +612,7 @@ export async function analyzeOnboardingMessage(input: OnboardingAnalysisInput): 
       nextQuestion,
       confidence,
       readyForMission,
+      needsCorrection: false,
       suggestedActions: actionsFor(nextState, readyForMission),
     };
   }
@@ -641,6 +657,7 @@ export async function analyzeOnboardingMessage(input: OnboardingAnalysisInput): 
       nextQuestion,
       confidence,
       readyForMission,
+      needsCorrection: hasContamination(profile),
       suggestedActions: actionsFor(nextState, readyForMission),
     };
   }
@@ -693,6 +710,7 @@ export async function analyzeOnboardingMessage(input: OnboardingAnalysisInput): 
     nextQuestion,
     confidence,
     readyForMission: readiness.ready,
+    needsCorrection: hasContamination(profile),
     suggestedActions: actionsFor(state, readiness.ready),
   };
 }
